@@ -101,8 +101,6 @@ private:
     void setupKeyboardShortcuts();
     void setupNewNoteButtonAndTrahButton();
     void setupSplitter();
-    void setupLine();
-    void setupRightFrame();
     void setupTitleBarButtons();
     void setupSignalsSlots();
     void setupLineEdit();

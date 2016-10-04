@@ -15,6 +15,7 @@
 #include <QScrollArea>
 #include <QtConcurrent>
 #include <QProgressDialog>
+#include <QGraphicsDropShadowEffect>
 #define FIRST_LINE_MAX 80
 
 /**
@@ -58,8 +59,6 @@ MainWindow::MainWindow (QWidget *parent) :
     setupKeyboardShortcuts();
     setupNewNoteButtonAndTrahButton();
     setupSplitter();
-    setupLine();
-    setupRightFrame ();
     setupTitleBarButtons();
     setupLineEdit();
     setupTextEdit();
@@ -184,6 +183,7 @@ void MainWindow::setupFonts()
     id = QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Bold.ttf");
     QString robotoFontBold = QFontDatabase::applicationFontFamilies(id).at(0);
 
+    this->setFont(QFont(robotoFontRegular, 10));
     m_lineEdit->setFont(QFont(robotoFontRegular, 10));
     m_editorDateLabel->setFont(QFont(robotoFontBold, 10, QFont::Bold));
 }
@@ -249,14 +249,6 @@ void MainWindow::setupKeyboardShortcuts ()
 */
 void MainWindow::setupNewNoteButtonAndTrahButton ()
 {
-    QString ss = "QPushButton { "
-                 "  border: none; "
-                 "  padding: 0px; "
-                 "}";
-
-    m_newNoteButton->setStyleSheet(ss);
-    m_trashButton->setStyleSheet(ss);
-
     m_newNoteButton->installEventFilter(this);
     m_trashButton->installEventFilter(this);
 }
@@ -273,43 +265,12 @@ void MainWindow::setupSplitter()
 
 /**
 * @brief
-* Set up the vertical line that seperate between the scrollArea to the textEdit
-*/
-void MainWindow::setupLine ()
-{
-    ui->line->setStyleSheet("border: 1px solid rgb(221, 221, 221)");
-}
-
-/**
-* @brief
-* Set up a frame above textEdit and behind the other widgets for a unifed background in thet editor section
-*/
-void MainWindow::setupRightFrame ()
-{
-    QString ss = "QFrame{ "
-                 "  background-image: url(:images/textEdit_background_pattern.png); "
-                 "  border: none;"
-                 "}";
-    ui->frameRight->setStyleSheet(ss);
-}
-
-/**
-* @brief
 * Setting up the red (close), yellow (minimize), and green (maximize) buttons
 * Make only the buttons icon visible
 * And install this class event filter to them, to act when hovering on one of them
 */
 void MainWindow::setupTitleBarButtons ()
 {
-    QString ss = "QPushButton { "
-                 "  border: none; "
-                 "  padding: 0px; "
-                 "}";
-
-    m_redCloseButton->setStyleSheet(ss);
-    m_yellowMinimizeButton->setStyleSheet(ss);
-    m_greenMaximizeButton->setStyleSheet(ss);
-
     m_redCloseButton->installEventFilter(this);
     m_yellowMinimizeButton->installEventFilter(this);
     m_greenMaximizeButton->installEventFilter(this);
@@ -382,29 +343,8 @@ void MainWindow::setupSignalsSlots()
 */
 void MainWindow::setupLineEdit ()
 {
-
-    QLineEdit* lineEdit = m_lineEdit;
-
-    int frameWidth = m_lineEdit->style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-    QString ss = QString("QLineEdit{ "
-                         "  padding-right: %1px; "
-                         "  padding-left: 21px;"
-                         "  padding-right: 19px;"
-                         "  border: 1px solid rgb(205, 205, 205);"
-                         "  border-radius: 3px;"
-                         "  background: rgb(255, 255, 255);"
-                         "  selection-background-color: rgb(61, 155, 218);"
-                         "} "
-                         "QToolButton { "
-                         "  border: none; "
-                         "  padding: 0px;"
-                         "}"
-                         ).arg(frameWidth + 1);
-
-    lineEdit->setStyleSheet(ss);
-
     // clear button
-    m_clearButton = new QToolButton(lineEdit);
+    m_clearButton = new QToolButton(m_lineEdit);
     QPixmap pixmap(":images/closeButton.png");
     m_clearButton->setIcon(QIcon(pixmap));
     QSize clearSize(15, 15);
@@ -413,7 +353,7 @@ void MainWindow::setupLineEdit ()
     m_clearButton->hide();
 
     // search button
-    QToolButton *searchButton = new QToolButton(lineEdit);
+    QToolButton *searchButton = new QToolButton(m_lineEdit);
     QPixmap newPixmap(":images/magnifyingGlass.png");
     searchButton->setIcon(QIcon(newPixmap));
     QSize searchSize(24, 25);
@@ -421,14 +361,12 @@ void MainWindow::setupLineEdit ()
     searchButton->setCursor(Qt::ArrowCursor);
 
     // layout
-    QBoxLayout* layout = new QBoxLayout(QBoxLayout::RightToLeft, lineEdit);
+    QBoxLayout* layout = new QBoxLayout(QBoxLayout::RightToLeft, m_lineEdit);
     layout->setContentsMargins(0,0,3,0);
     layout->addWidget(m_clearButton);
     layout->addStretch();
     layout->addWidget(searchButton);
-    lineEdit->setLayout(layout);
-
-    lineEdit->installEventFilter(this);
+    m_lineEdit->setLayout(layout);
 }
 
 /**
@@ -440,19 +378,6 @@ void MainWindow::setupLineEdit ()
 */
 void MainWindow::setupTextEdit ()
 {
-    QString ss = QString("QTextEdit {background-image: url(:images/textEdit_background_pattern.png); padding-left: %1px; padding-right: %2px; padding-bottom:2px;} "
-                         "QScrollBar::handle:vertical:hover { background: rgb(170, 170, 171); } "
-                         "QScrollBar::handle:vertical:pressed { background: rgb(149, 149, 149); } "
-                         "QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }  "
-                         "QScrollBar::vertical {border-radius: 4px; width: 8px; color: rgba(255, 255, 255,0);} "
-                         "QScrollBar {margin: 0; background: transparent;} "
-                         "QScrollBar:hover { background-color: rgb(217, 217, 217);}"
-                         "QScrollBar::add-line:vertical { width:0px; height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }  "
-                         "QScrollBar::sub-line:vertical { width:0px; height: 0px; subcontrol-position: top; subcontrol-origin: margin; }"
-                         ).arg("27", "27");
-
-    m_textEdit->setStyleSheet(ss);
-
     m_textEdit->installEventFilter(this);
     m_textEdit->verticalScrollBar()->installEventFilter(this);
 
@@ -543,16 +468,6 @@ void MainWindow::restoreStates()
     this->restoreGeometry(m_settingsDatabase->value("windowGeometry").toByteArray());
 
     m_splitter->restoreState(m_settingsDatabase->value("splitterSizes").toByteArray());
-
-    // If scrollArea is collapsed
-    if(m_splitter->sizes().at(0) == 0){
-        ui->verticalLayout_scrollArea->removeItem(ui->horizontalLayout_scrollArea_2);
-        ui->verticalLayout_textEdit->insertLayout(0, ui->horizontalLayout_scrollArea_2, 0);
-
-        ui->verticalLayout_scrollArea->removeItem(ui->verticalSpacer_upLineEdit);
-        ui->verticalLayout_textEdit->insertItem(0, ui->verticalSpacer_upLineEdit);
-        ui->verticalSpacer_upEditorDateLabel->changeSize(20, 5);
-    }
 }
 
 /**
@@ -1606,25 +1521,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
             }
         }
 
-        if(object == m_lineEdit){
-            int frameWidth = m_lineEdit->style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-            QString ss = QString("QLineEdit{ "
-                                 "  padding-right: %1px; "
-                                 "  padding-left: 21px;"
-                                 "  padding-right: 19px;"
-                                 "  border: 1px solid rgb(61, 155, 218);"
-                                 "  border-radius: 3px;"
-                                 "  background: rgb(255, 255, 255);"
-                                 "  selection-background-color: rgb(61, 155, 218);"
-                                 "} "
-                                 "QToolButton { "
-                                 "  border: none; "
-                                 "  padding: 0px;"
-                                 "}"
-                                 ).arg(frameWidth + 1);
-
-            m_lineEdit->setStyleSheet(ss);
-        }
         break;
     }
     case QEvent::FocusOut:{
@@ -1632,25 +1528,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
             m_noteView->setCurrentRowActive(false);
         }
 
-        if(object == m_lineEdit){
-            int frameWidth = m_lineEdit->style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-            QString ss = QString("QLineEdit{ "
-                                 "  padding-right: %1px; "
-                                 "  padding-left: 21px;"
-                                 "  padding-right: 19px;"
-                                 "  border: 1px solid rgb(205, 205, 205);"
-                                 "  border-radius: 3px;"
-                                 "  background: rgb(255, 255, 255);"
-                                 "  selection-background-color: rgb(61, 155, 218);"
-                                 "} "
-                                 "QToolButton { "
-                                 "  border: none; "
-                                 "  padding: 0px;"
-                                 "}"
-                                 ).arg(frameWidth + 1);
-
-            m_lineEdit->setStyleSheet(ss);
-        }
         break;
     }
     default:

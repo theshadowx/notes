@@ -2,6 +2,7 @@
 #define DBMANAGER_H
 
 #include "notedata.h"
+#include "folderdata.h"
 
 #include <QObject>
 #include <QtSql/QSqlDatabase>
@@ -20,9 +21,11 @@ private:
 
 signals:
     void notesReceived(QList<NoteData*> noteList);
+    void foldersReceived(QList<FolderData*> folderList);
 
 public slots:
     QList<NoteData*> getAllNotes();
+    QList<FolderData*> getAllFolders();
     bool addNote(NoteData* note);
     bool removeNote(NoteData* note);
     bool modifyNote(NoteData* note);

@@ -104,6 +104,34 @@ QList<NoteData *> DBManager::getAllNotes()
     return noteList;
 }
 
+QList<FolderData*> DBManager::getAllFolders()
+{
+    QList<FolderData*> folderList;
+    QSqlQuery query;
+    query.prepare("SELECT * FROM folders");
+    bool status = query.exec();
+    if(status){
+        while(query.next()){
+            FolderData* folder = new FolderData(this);
+            int id =  query.value(0).toInt();
+            QString folderName = query.value(1).toString();
+            QString folderPath = query.value(2).toString();
+            int noteCnt = query.value(0).toInt();
+
+            folder->setId(id);
+            folder->setName(folderName);
+            folder->setParentPath(folderPath);
+            folder->setNoteCnt(noteCnt);
+
+            folderList.append(folder);
+        }
+
+        emit foldersReceived(folderList);
+    }
+
+    return folderList;
+}
+
 bool DBManager::addNote(NoteData* note)
 {
     QSqlQuery query;

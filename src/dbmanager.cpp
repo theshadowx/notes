@@ -46,8 +46,8 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
         QString folders = "CREATE TABLE folders ("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                           "name TEXT,"
-                          "parent TEXT,"
-                          "numNotes INTEGER NOT NULL DEFAULT (0));";
+                          "parent_path TEXT,"
+                          "notes_cnt INTEGER NOT NULL DEFAULT (0));";
         query.exec(folders);
 
         QString folder_index = "CREATE UNIQUE INDEX folder_index on folder_notes (id ASC);";
@@ -102,34 +102,6 @@ QList<NoteData *> DBManager::getAllNotes()
     }
 
     return noteList;
-}
-
-QList<FolderData*> DBManager::getAllFolders()
-{
-    QList<FolderData*> folderList;
-    QSqlQuery query;
-    query.prepare("SELECT * FROM folders");
-    bool status = query.exec();
-    if(status){
-        while(query.next()){
-            FolderData* folder = new FolderData(this);
-            int id =  query.value(0).toInt();
-            QString folderName = query.value(1).toString();
-            QString folderPath = query.value(2).toString();
-            int noteCnt = query.value(0).toInt();
-
-            folder->setId(id);
-            folder->setName(folderName);
-            folder->setParentPath(folderPath);
-            folder->setNoteCnt(noteCnt);
-
-            folderList.append(folder);
-        }
-
-        emit foldersReceived(folderList);
-    }
-
-    return folderList;
 }
 
 bool DBManager::addNote(NoteData* note)
@@ -289,4 +261,91 @@ int DBManager::getLastRowID()
     query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='active_notes';");
     query.next();
     return query.value(0).toInt();
+}
+
+QList<FolderData*> DBManager::getAllFolders()
+{
+    QList<FolderData*> folderList;
+    QSqlQuery query;
+    query.prepare("SELECT * FROM folders");
+    bool status = query.exec();
+    if(status){
+        while(query.next()){
+            FolderData* folder = new FolderData(this);
+            int id =  query.value(0).toInt();
+            QString folderName = query.value(1).toString();
+            QString folderPath = query.value(2).toString();
+            int noteCnt = query.value(0).toInt();
+
+            folder->setId(id);
+            folder->setName(folderName);
+            folder->setParentPath(folderPath);
+            folder->setNoteCnt(noteCnt);
+
+            folderList.append(folder);
+        }
+
+        emit foldersReceived(folderList);
+    }
+
+    return folderList;
+}
+
+bool DBManager::addFolder(FolderData* folder)
+{
+    QSqlQuery query;
+
+    QString name = folder->name();
+    QString parentPath = folder->parentPath();
+    QString NoteCnt = 0;
+
+    QString queryStr = QString("INSERT INTO folders (name, parent_path, notes_cnt) "
+                               "VALUES ('%1', '%2', %3);")
+                       .arg(name)
+                       .arg(parentPath)
+                       .arg(NoteCnt);
+
+    query.exec(queryStr);
+
+    bool isInserted = query.numRowsAffected() == 1;
+
+    int insertedFolderID = isInserted ? query.lastInsertId().toInt() : -1;
+    folder->setId(insertedFolderID);
+
+    return isInserted;
+}
+
+bool DBManager::removeFolder(FolderData* folder)
+{
+    QSqlQuery query;
+
+    int id = folder->id();
+    QString queryStr = QStringLiteral("DELETE FROM folders "
+                                      "WHERE id=%1")
+                       .arg(id);
+    query.exec(queryStr);
+    bool isRemoved = (query.numRowsAffected() == 1);
+
+    return isRemoved;
+}
+
+bool DBManager::modifyFolder(FolderData* folder)
+{
+    QSqlQuery query;
+
+    int id = folder->id();
+    QString name = folder->name();
+    QString parentPath = folder->parentPath();
+    int NoteCnt = folder->noteCnt();
+
+    QString queryStr = QStringLiteral("UPDATE folders "
+                                      "SET name='%1', parent_path='%2', notes_cnt=%3 "
+                                      "WHERE id=%4")
+                       .arg(name)
+                       .arg(parentPath)
+                       .arg(NoteCnt)
+                       .arg(id);
+    query.exec(queryStr);
+
+    return (query.numRowsAffected() == 1);
 }

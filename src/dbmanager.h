@@ -25,13 +25,17 @@ signals:
 
 public slots:
     QList<NoteData*> getAllNotes();
-    QList<FolderData*> getAllFolders();
     bool addNote(NoteData* note);
     bool removeNote(NoteData* note);
     bool modifyNote(NoteData* note);
     bool migrateNote(NoteData* note);
     bool migrateTrash(NoteData* note);
     int getLastRowID();
+
+    QList<FolderData*> getAllFolders();
+    bool addFolder(FolderData* folder);
+    bool removeFolder(FolderData* folder);
+    bool modifyFolder(FolderData* folder);
 
 };
 

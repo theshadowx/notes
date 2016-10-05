@@ -107,6 +107,8 @@ QVariant NoteModel::data(const QModelIndex &index, int role) const
         return note->content();
     }else if(role == NoteScrollbarPos){
         return note->scrollBarPosition();
+    }else if(role == NotePath){
+        return note->fullPath();
     }
 
     return QVariant();
@@ -134,6 +136,8 @@ bool NoteModel::setData(const QModelIndex &index, const QVariant &value, int rol
         note->setContent(value.toString());
     }else if(role == NoteScrollbarPos){
         note->setScrollBarPosition(value.toInt());
+    }else if(role == NotePath){
+        note->setFullPath(value.toString());
     }else{
         return false;
     }

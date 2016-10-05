@@ -89,6 +89,16 @@ void NoteData::setDeletionDateTime(const QDateTime& deletionDateTime)
     m_deletionDateTime = deletionDateTime;
 }
 
+QString NoteData::fullPath() const
+{
+    return m_fullPath;
+}
+
+void NoteData::setFullPath(const QString&fullPath)
+{
+    m_fullPath = fullPath;
+}
+
 QDateTime NoteData::creationDateTime() const
 {
     return m_creationDateTime;

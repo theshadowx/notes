@@ -40,9 +40,13 @@ public:
     QDateTime deletionDateTime() const;
     void setDeletionDateTime(const QDateTime& deletionDateTime);
 
+    QString fullPath() const;
+    void setFullPath(const QString&fullPath);
+
 private:
     QString m_id;
     QString m_fullTitle;
+    QString m_fullPath;
     QDateTime m_lastModificationDateTime;
     QDateTime m_creationDateTime;
     QDateTime m_deletionDateTime;

@@ -33,7 +33,9 @@ SOURCES += \
     $$PWD/noteview.cpp \
     $$PWD/singleinstance.cpp \
     dbmanager.cpp \
-    folderdata.cpp
+    folderdata.cpp \
+    foldermodel.cpp \
+    folderitem.cpp
 
 HEADERS  += \
     $$PWD/mainwindow.h \
@@ -43,7 +45,9 @@ HEADERS  += \
     $$PWD/noteview.h \
     $$PWD/singleinstance.h \
     dbmanager.h \
-    folderdata.h
+    folderdata.h \
+    foldermodel.h \
+    folderitem.h
 
 FORMS += $$PWD/mainwindow.ui
 RESOURCES += $$PWD/images.qrc \

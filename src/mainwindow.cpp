@@ -40,15 +40,17 @@ MainWindow::MainWindow (QWidget *parent) :
     m_restoreAction(new QAction(tr("&Hide Notes"), this)),
     m_quitAction(new QAction(tr("&Quit"), this)),
     m_trayIconMenu(new QMenu(this)),
+    m_folderTreeView(Q_NULLPTR),
+    m_tagListW(Q_NULLPTR),
     m_noteModel(new NoteModel(this)),
     m_deletedNotesModel(new NoteModel(this)),
     m_proxyModel(new QSortFilterProxyModel(this)),
+    m_folderModel(new FolderModel(this)),
     m_dbManager(Q_NULLPTR),
     m_noteCounter(0),
     m_trashCounter(0),
     m_canMoveWindow(false),
     m_isTemp(false),
-    m_isListViewScrollBarHidden(true),
     m_isContentModified(false),
     m_isOperationRunning(false)
 {
@@ -81,7 +83,7 @@ void MainWindow::InitData()
     QString oldTrashDBPath(dir.path() + "/Trash.ini");
 
     bool exist = (QFile::exists(oldNoteDBPath) || QFile::exists(oldTrashDBPath));
-
+    // migrate the old notes contained in files to  SQLite DB
     if(exist){
         QProgressDialog* pd = new QProgressDialog("Migrating database, please wait.", "", 0, 0, this);
         pd->setCancelButton(0);
@@ -94,22 +96,15 @@ void MainWindow::InitData()
         QFutureWatcher<void>* watcher = new QFutureWatcher<void>(this);
         connect(watcher, &QFutureWatcher<void>::finished, this, [&, pd](){
             pd->deleteLater();
-
             setButtonsAndFieldsEnabled(true);
-
-            loadNotes();
-            createNewNoteIfEmpty();
-            selectFirstNote();
+            initFolders();
         });
 
         QFuture<void> migration = QtConcurrent::run(this, &MainWindow::checkMigration);
         watcher->setFuture(migration);
 
     }else{
-
-        loadNotes();
-        createNewNoteIfEmpty();
-        selectFirstNote();
+        initFolders();
     }
 }
 
@@ -165,6 +160,8 @@ void MainWindow::setupMainWindow ()
     m_textEdit = ui->textEdit;
     m_editorDateLabel = ui->editorDateLabel;
     m_splitter = ui->splitter;
+    m_folderTreeView = ui->folderTree;
+    m_tagListW = ui->tagsList;
 
     QPalette pal(palette());
     pal.setColor(QPalette::Background, QColor(248, 248, 248));
@@ -303,6 +300,8 @@ void MainWindow::setupSignalsSlots()
     connect(m_lineEdit, &QLineEdit::textChanged, this, &MainWindow::onLineEditTextChanged);
     // note pressed
     connect(m_noteView, &NoteView::pressed, this, &MainWindow::onNotePressed);
+    // folder selected
+    connect(m_folderTreeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onFolderSelectionChanged);
     // noteView viewport pressed
     connect(m_noteView, &NoteView::viewportPressed, this, [this](){
         if(m_isTemp && m_proxyModel->rowCount() > 1){
@@ -433,10 +432,12 @@ void MainWindow::setupDatabases ()
     QDir dir(fi.absolutePath());
     QString noteDBFilePath(dir.path() + "/notes.db");
 
+    // create database if it doesn't exist
     if(!QFile::exists(noteDBFilePath)){
         QFile noteDBFile(noteDBFilePath);
         if(!noteDBFile.open(QIODevice::WriteOnly)){
-            qDebug() << "can't create db file";
+            qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
+                     << " can't create db file";
             qApp->exit(-1);
         }
         noteDBFile.close();
@@ -457,6 +458,8 @@ void MainWindow::setupModelView()
 
     m_noteView->setItemDelegate(new NoteWidgetDelegate(m_noteView));
     m_noteView->setModel(m_proxyModel);
+
+    m_folderTreeView->setModel(m_folderModel);
 }
 
 /**
@@ -523,6 +526,7 @@ NoteData *MainWindow::generateNote(QString noteName)
     newNote->setCreationDateTime(noteDate);
     newNote->setLastModificationDateTime(noteDate);
     newNote->setFullTitle(QStringLiteral("New Note"));
+    newNote->setFullPath(m_currentFolderPath);
 
     return newNote;
 }
@@ -549,20 +553,23 @@ void MainWindow::showNoteInEditor(const QModelIndex &noteIndex)
     m_textEdit->blockSignals(false);
 }
 
-/**
-* @brief
-* Load all the notes from database
-* add data to the models
-* sort them according to the date
-* update scrollbar stylesheet
-*/
-void MainWindow::loadNotes ()
-{
-    QList<NoteData*> noteList = m_dbManager->getAllNotes();
 
-    if(!noteList.isEmpty()){
-        m_noteModel->addListNote(noteList);
-        m_noteModel->sort(0,Qt::AscendingOrder);
+void MainWindow::initFolders ()
+{
+    // get Folder list
+    QList<FolderData *> folderDataList = m_dbManager->getAllFolders();
+    // push folders to the treeview
+    m_folderModel->setupModelData(folderDataList);
+
+    // select the folders first row if folders exists
+    // otherwise create new Folder
+    if(!folderDataList.isEmpty()){
+        m_folderTreeView->selectionModel()->select(m_folderModel->index(0,0), QItemSelectionModel::Select);
+    }else{
+        FolderData* folderData = new FolderData;
+        folderData->setName(QStringLiteral("Notes"));
+        FolderItem* folderItem = new FolderItem(folderData, this);
+        m_folderModel->insertFolder(folderItem, 0);
     }
 }
 
@@ -705,6 +712,41 @@ void MainWindow::onNotePressed (const QModelIndex& index)
     }
 }
 
+void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+{
+    Q_UNUSED(deselected)
+
+    // init Note List variables
+    clearSearch();
+
+    m_textEdit->blockSignals(true);
+    m_editorDateLabel->clear();
+    m_textEdit->clear();
+    m_textEdit->blockSignals(false);
+
+    m_noteModel->clearNotes();
+    m_currentSelectedNoteProxy = QModelIndex();
+    m_selectedNoteBeforeSearchingInSource = QModelIndex();
+    m_isTemp = false;
+    m_isContentModified = false;
+
+
+    if(!selected.indexes().isEmpty()){
+        QModelIndex selectedFolderIndex = selected.indexes().at(0);
+        // update the current Folder Path
+        m_currentFolderPath = m_folderModel->data(selectedFolderIndex,
+                                                  (int) FolderItem::FolderDataEnum::FullPath).toString();
+        // get all notes contained in the selected path
+        QList<NoteData*> noteList = m_dbManager->getAllNotes(m_currentFolderPath);
+        // add notes to the model
+        if(!noteList.isEmpty()){
+            m_noteModel->addListNote(noteList);
+            m_noteModel->sort(0,Qt::AscendingOrder);
+            selectFirstNote();
+        }
+    }
+}
+
 /**
 * @brief
 * When the text on textEdit change:
@@ -717,7 +759,7 @@ void MainWindow::onTextEditTextChanged ()
         m_textEdit->blockSignals(true);
         QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
         if(m_textEdit->toPlainText() != content){
-
+            // start/restart the timer
             m_autoSaveTimer->start(500);
 
             // move note to the top of the list
@@ -746,7 +788,8 @@ void MainWindow::onTextEditTextChanged ()
 
         m_isTemp = false;
     }else{
-        qDebug() << "MainWindow::onTextEditTextChanged() : m_currentSelectedNoteProxy is not valid";
+        qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
+                 << " MainWindow::onTextEditTextChanged() : m_currentSelectedNoteProxy is not valid";
     }
 }
 
@@ -921,7 +964,8 @@ void MainWindow::deleteNote(const QModelIndex &noteIndex, bool isFromUser)
             }
         }
     }else{
-        qDebug() << "MainWindow::deleteNote noteIndex is not valid";
+        qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
+                 << " MainWindow::deleteNote noteIndex is not valid";
     }
 
     m_noteView->setFocus();
@@ -1290,7 +1334,8 @@ void MainWindow::selectNote(const QModelIndex &noteIndex)
         m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
         m_noteView->scrollTo(m_currentSelectedNoteProxy);
     }else{
-        qDebug() << "MainWindow::selectNote() : noteIndex is not valid";
+        qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
+                 << " MainWindow::selectNote() : noteIndex is not valid " << __LINE__;
     }
 }
 

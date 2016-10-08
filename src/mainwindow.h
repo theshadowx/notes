@@ -21,10 +21,13 @@
 #include <QSplitter>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <QTreeView>
+#include <QListWidget>
 #include <qaction.h>
 #include "notedata.h"
 #include "notemodel.h"
 #include "noteview.h"
+#include "foldermodel.h"
 #include "dbmanager.h"
 
 namespace Ui {
@@ -73,11 +76,14 @@ private:
     QAction* m_restoreAction;
     QAction* m_quitAction;
     QMenu* m_trayIconMenu;
+    QTreeView* m_folderTreeView;
+    QListWidget* m_tagListW;
 
     NoteView* m_noteView;
     NoteModel* m_noteModel;
     NoteModel* m_deletedNotesModel;
     QSortFilterProxyModel* m_proxyModel;
+    FolderModel* m_folderModel;
     QModelIndex m_currentSelectedNoteProxy;
     QModelIndex m_selectedNoteBeforeSearchingInSource;
     QQueue<QString> m_searchQueue;
@@ -91,9 +97,9 @@ private:
     int m_trashCounter;
     bool m_canMoveWindow;
     bool m_isTemp;
-    bool m_isListViewScrollBarHidden;
     bool m_isContentModified;
     bool m_isOperationRunning;
+    QString m_currentFolderPath;
 
     void setupMainWindow();
     void setupFonts();
@@ -114,11 +120,11 @@ private:
     void restoreStates();
     QString getFirstLine(const QString& str);
     QString getNoteDateEditor (QString dateEdited);
-    NoteData *generateNote(QString noteName);
+    NoteData* generateNote(QString noteName);
     QDateTime getQDateTime(QString date);
     void showNoteInEditor(const QModelIndex& noteIndex);
     void sortNotesList(QStringList &stringNotesList);
-    void loadNotes();
+    void initFolders();
     void saveNoteToDB(const QModelIndex& noteIndex);
     void removeNoteFromDB(const QModelIndex& noteIndex);
     void selectFirstNote();
@@ -137,6 +143,7 @@ private slots:
     void onTrashButtonPressed();
     void onTrashButtonClicked();
     void onNotePressed(const QModelIndex &index);
+    void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onTextEditTextChanged();
     void onLineEditTextChanged(const QString& keyword);
     void onClearButtonClicked();

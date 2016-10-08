@@ -82,7 +82,22 @@ NoteView QScrollBar:vertical { border: none; width: 10px; border-radius: 4px;}
 NoteView QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }
 NoteView QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
 NoteView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
-                         </string>
+
+QTreeView QScrollBar {margin-right: 2px; background: transparent;}
+QTreeView QScrollBar:hover { background-color: rgb(217, 217, 217);}
+QTreeView QScrollBar:handle:vertical:hover { background: rgb(170, 170, 171); }
+QTreeView QScrollBar:handle:vertical:pressed { background: rgb(149, 149, 149);}
+QTreeView QScrollBar:vertical { border: none; width: 10px; border-radius: 4px;}
+QTreeView QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }
+QTreeView QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
+QTreeView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
+  
+
+
+QTreeView {border: none; selection-background-color: rgb(68, 138, 201); font-size: 11pt; font-family: &quot;Roboto&quot;;}
+QTreeView::item {padding-top:1px; padding-bottom:1px; min-height: 21px}
+QTreeView::item:selected {background-color: rgb(68, 138, 201);}
+QTreeView QFrame{background-color: transparent;}</string>
   </property>
   <property name="documentMode">
    <bool>false</bool>
@@ -509,6 +524,12 @@ NoteView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; 
              <iconset resource="images.qrc">
               <normaloff>:/images/newNote_Regular.png</normaloff>:/images/newNote_Regular.png</iconset>
             </property>
+            <property name="iconSize">
+             <size>
+              <width>12</width>
+              <height>12</height>
+             </size>
+            </property>
             <property name="flat">
              <bool>true</bool>
             </property>
@@ -757,6 +778,12 @@ NoteView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; 
              <iconset resource="images.qrc">
               <normaloff>:/images/newNote_Regular.png</normaloff>:/images/newNote_Regular.png</iconset>
             </property>
+            <property name="iconSize">
+             <size>
+              <width>12</width>
+              <height>12</height>
+             </size>
+            </property>
             <property name="flat">
              <bool>true</bool>
             </property>
@@ -766,18 +793,25 @@ NoteView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; 
         </widget>
        </item>
        <item row="15" column="0">
-        <widget class="QTreeWidget" name="folderTree">
+        <widget class="QTreeView" name="folderTree">
+         <property name="font">
+          <font>
+           <family>Roboto</family>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
          </property>
          <attribute name="headerVisible">
           <bool>false</bool>
          </attribute>
-         <column>
-          <property name="text">
-           <string>Folders</string>
-          </property>
-         </column>
+         <attribute name="headerDefaultSectionSize">
+          <number>35</number>
+         </attribute>
+         <attribute name="headerMinimumSectionSize">
+          <number>35</number>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -975,40 +1009,6 @@ NoteView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; 
           </property>
          </widget>
         </item>
-        <item row="0" column="2" rowspan="2">
-         <widget class="Line" name="line">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>1</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>1</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QFrame" name="frame_2">
           <property name="sizePolicy">
@@ -1062,6 +1062,40 @@ NoteView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; 
             </widget>
            </item>
           </layout>
+         </widget>
+        </item>
+        <item row="0" column="2" rowspan="3">
+         <widget class="Line" name="line">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>1</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>1</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
          </widget>
         </item>
        </layout>

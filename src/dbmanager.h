@@ -25,6 +25,7 @@ signals:
 
 public slots:
     QList<NoteData*> getAllNotes();
+    QList<NoteData*> getAllNotes(QString fullPath);
     bool addNote(NoteData* note);
     bool removeNote(NoteData* note);
     bool modifyNote(NoteData* note);

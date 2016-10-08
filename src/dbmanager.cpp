@@ -104,6 +104,46 @@ QList<NoteData *> DBManager::getAllNotes()
     return noteList;
 }
 
+QList<NoteData*> DBManager::getAllNotes(QString fullPath)
+{
+    if(fullPath.isEmpty())
+        return getAllNotes();
+
+    QList<NoteData *> noteList;
+
+    QSqlQuery query;
+    QString queryStr = QStringLiteral("SELECT * FROM active_notes WHERE full_path='%1'")
+                       .arg(fullPath);
+
+    bool status = query.exec(queryStr);
+    if(status){
+        while(query.next()){
+            NoteData* note = new NoteData(this);
+            int id =  query.value(0).toInt();
+            qint64 epochDateTimeCreation = query.value(1).toLongLong();
+            QDateTime dateTimeCreation = QDateTime::fromMSecsSinceEpoch(epochDateTimeCreation, QTimeZone::systemTimeZone());
+            qint64 epochDateTimeModification= query.value(2).toLongLong();
+            QDateTime dateTimeModification = QDateTime::fromMSecsSinceEpoch(epochDateTimeModification, QTimeZone::systemTimeZone());
+            QString content = query.value(4).toString();
+            QString fullTitle = query.value(5).toString();
+            QString fullPath = query.value(6).toString();
+
+            note->setId(QStringLiteral("noteID_%1").arg(id));
+            note->setCreationDateTime(dateTimeCreation);
+            note->setLastModificationDateTime(dateTimeModification);
+            note->setContent(content);
+            note->setFullTitle(fullTitle);
+            note->setFullPath(fullPath);
+
+            noteList.push_back(note);
+        }
+
+        emit notesReceived(noteList);
+    }
+
+    return noteList;
+}
+
 bool DBManager::addNote(NoteData* note)
 {
     QSqlQuery query;

@@ -13,7 +13,7 @@ public:
     void setName(const QString&name);
 
     QString parentPath() const;
-    void setParentPath(const QString&parentPath);
+    void setParentPath(const QString& parentPath);
 
     int noteCnt() const;
     void setNoteCnt(int noteCnt);
@@ -21,15 +21,17 @@ public:
     int id() const;
     void setId(int id);
 
+    QString fullPath() const;
+
+    static const QString PathSeparator;
+
 private:
     int m_id;
     QString m_name;
     QString m_parentPath;
+    QString m_fullPath;
     int m_noteCnt;
 
-signals:
-
-public slots:
 };
 
 #endif // FOLDERDATA_H

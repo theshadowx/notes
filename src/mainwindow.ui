@@ -48,17 +48,20 @@ QFrame{
     padding: 0px; 
 }
 
-QLineEdit#lineEdit{
-    padding-right: 2px;
-    padding-left: 21px;
-    padding-right: 19px;
+QLineEdit{
     border: 1px solid rgb(205, 205, 205);
-    border-radius: 3px;
+    padding-right: 4px;
+    border-radius: 4px;
     background: rgb(251, 251, 251);
     selection-background-color: rgb(61, 155, 218);
 } 
 
-QLineEdit:focus#lineEdit{
+QLineEdit#lineEdit{
+    padding-left: 21px;
+    padding-right: 19px;
+} 
+
+QLineEdit:focus{
     border: 1px solid rgb(61, 155, 218);
 }
 
@@ -97,7 +100,25 @@ QTreeView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top;
 QTreeView {border: none; selection-background-color: rgb(68, 138, 201); font-size: 11pt; font-family: &quot;Roboto&quot;;}
 QTreeView::item {padding-top:1px; padding-bottom:1px; min-height: 21px}
 QTreeView::item:selected {background-color: rgb(68, 138, 201);}
-QTreeView QFrame{background-color: transparent;}</string>
+QTreeView QFrame{background-color: transparent;}
+
+#trashButton{background-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center;}
+#trashButton:pressed{background-image: url(:/images/trashCan_Pressed.png);}
+#trashButton:!pressed:hover{background-image: url(:/images/trashCan_Hovered.png);}
+
+#newNoteButton{background-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center;}
+#newNoteButton:pressed{background-image: url(:/images/newNote_Pressed.png);}
+#newNoteButton:!pressed:hover{background-image: url(:/images/newNote_Hovered.png);}
+
+#newFolderButton{background-image: url(:/images/newNote_Regular.png);background-repeat: no-repeat; background-position: center center;}
+#newFolderButton:pressed{background-image: url(:/images/newNote_Pressed.png);}
+#newFolderButton:!pressed:hover{background-image: url(:/images/newNote_Hovered.png);}
+
+#newTagButton{background-image: url(:/images/newNote_Regular.png);background-repeat: no-repeat; background-position: center center;}
+#newTagButton:pressed{background-image: url(:/images/newNote_Pressed.png);}
+#newTagButton:!pressed:hover{background-image: url(:/images/newNote_Hovered.png);}
+
+</string>
   </property>
   <property name="documentMode">
    <bool>false</bool>
@@ -517,12 +538,23 @@ QTreeView QFrame{background-color: transparent;}</string>
           </item>
           <item>
            <widget class="QPushButton" name="newTagButton">
+            <property name="minimumSize">
+             <size>
+              <width>12</width>
+              <height>12</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>12</width>
+              <height>12</height>
+             </size>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="images.qrc">
-              <normaloff>:/images/newNote_Regular.png</normaloff>:/images/newNote_Regular.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -771,12 +803,23 @@ QTreeView QFrame{background-color: transparent;}</string>
           </item>
           <item>
            <widget class="QPushButton" name="newFolderButton">
+            <property name="minimumSize">
+             <size>
+              <width>12</width>
+              <height>12</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>12</width>
+              <height>12</height>
+             </size>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="images.qrc">
-              <normaloff>:/images/newNote_Regular.png</normaloff>:/images/newNote_Regular.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -802,6 +845,15 @@ QTreeView QFrame{background-color: transparent;}</string>
          </property>
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+         </property>
+         <property name="tabKeyNavigation">
+          <bool>false</bool>
+         </property>
+         <property name="animated">
+          <bool>true</bool>
          </property>
          <attribute name="headerVisible">
           <bool>false</bool>
@@ -1043,7 +1095,7 @@ QTreeView QFrame{background-color: transparent;}</string>
             <number>3</number>
            </property>
            <item>
-            <widget class="QLabel" name="label_4">
+            <widget class="QLabel" name="noteCntLabel">
              <property name="font">
               <font>
                <family>Roboto</family>
@@ -1126,63 +1178,40 @@ QTreeView QFrame{background-color: transparent;}</string>
            <enum>QFrame::Raised</enum>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <property name="leftMargin">
+           <property name="spacing">
             <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>24</number>
            </property>
            <property name="topMargin">
             <number>0</number>
            </property>
            <property name="rightMargin">
-            <number>0</number>
+            <number>24</number>
            </property>
            <property name="bottomMargin">
             <number>2</number>
            </property>
            <item>
-            <spacer name="horizontalSpacer_leftNewNoteButton">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Minimum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>24</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
             <widget class="QPushButton" name="newNoteButton">
              <property name="minimumSize">
-              <size>
-               <width>33</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>33</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::TabFocus</enum>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="images.qrc">
-               <normaloff>:/images/newNote_Regular.png</normaloff>:/images/newNote_Regular.png</iconset>
-             </property>
-             <property name="iconSize">
               <size>
                <width>16</width>
                <height>16</height>
               </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::TabFocus</enum>
              </property>
              <property name="flat">
               <bool>true</bool>
@@ -1250,17 +1279,26 @@ color: rgb(132, 132, 132);
            </item>
            <item>
             <widget class="QPushButton" name="trashButton">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>33</width>
-               <height>25</height>
+               <width>18</width>
+               <height>18</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>33</width>
-               <height>25</height>
+               <width>18</width>
+               <height>18</height>
               </size>
+             </property>
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
              </property>
              <property name="focusPolicy">
               <enum>Qt::TabFocus</enum>
@@ -1268,13 +1306,9 @@ color: rgb(132, 132, 132);
              <property name="text">
               <string/>
              </property>
-             <property name="icon">
-              <iconset resource="images.qrc">
-               <normaloff>:/images/trashCan_Regular.png</normaloff>:/images/trashCan_Regular.png</iconset>
-             </property>
              <property name="iconSize">
               <size>
-               <width>14</width>
+               <width>18</width>
                <height>18</height>
               </size>
              </property>
@@ -1282,22 +1316,6 @@ color: rgb(132, 132, 132);
               <bool>true</bool>
              </property>
             </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_rightTrashButton">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Minimum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>23</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>

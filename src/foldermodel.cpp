@@ -14,6 +14,7 @@ QVariant FolderModel::data(const QModelIndex& index, int role) const
     FolderItem* item = getFolderItem(index);
 
     switch (role) {
+    case Qt::EditRole:
     case Qt::DisplayRole:
         return item->data(FolderItem::FolderDataEnum::Name);
     default:
@@ -27,8 +28,14 @@ bool FolderModel::setData(const QModelIndex& index, const QVariant& value, int r
         return false;
 
     FolderItem* item = getFolderItem(index);
-    return item->setData((FolderItem::FolderDataEnum) role, value);
 
+    switch (role) {
+    case Qt::EditRole:
+    case Qt::DisplayRole:
+        return item->setData(FolderItem::FolderDataEnum::Name, value);
+    default:
+        return item->setData((FolderItem::FolderDataEnum) role, value);
+    }
 }
 
 QModelIndex FolderModel::index(int row, int column, const QModelIndex& parent) const
@@ -83,7 +90,7 @@ Qt::ItemFlags FolderModel::flags(const QModelIndex& index) const
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
-    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEditable ;
+    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
 bool FolderModel::removeFolder(int row, const QModelIndex& parent)

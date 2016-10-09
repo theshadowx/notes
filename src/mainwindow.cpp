@@ -60,7 +60,6 @@ MainWindow::MainWindow (QWidget *parent) :
     setupFonts();
     setupTrayIcon();
     setupKeyboardShortcuts();
-    setupNewNoteButtonAndTrahButton();
     setupSplitter();
     setupTitleBarButtons();
     setupLineEdit();
@@ -239,20 +238,6 @@ void MainWindow::setupKeyboardShortcuts ()
 
 /**
 * @brief
-* We need to set up some different values when using apple os x
-* This is because if we want to get the native button look in os x,
-* due to some bug in Qt, I think, the values of width and height of buttons
-* needs to be more than 50 and less than 34 respectively.
-* So some modifications needs to be done.
-*/
-void MainWindow::setupNewNoteButtonAndTrahButton ()
-{
-    m_newNoteButton->installEventFilter(this);
-    m_trashButton->installEventFilter(this);
-}
-
-/**
-* @brief
 * Set up the splitter that control the size of the scrollArea and the textEdit
 */
 void MainWindow::setupSplitter()
@@ -289,10 +274,8 @@ void MainWindow::setupSignalsSlots()
     connect(m_yellowMinimizeButton, &QPushButton::pressed, this, &MainWindow::onYellowMinimizeButtonPressed);
     connect(m_yellowMinimizeButton, &QPushButton::clicked, this, &MainWindow::onYellowMinimizeButtonClicked);
     // new note button
-    connect(m_newNoteButton, &QPushButton::pressed, this, &MainWindow::onNewNoteButtonPressed);
     connect(m_newNoteButton, &QPushButton::clicked, this, &MainWindow::onNewNoteButtonClicked);
     // delete note button
-    connect(m_trashButton, &QPushButton::pressed, this, &MainWindow::onTrashButtonPressed);
     connect(m_trashButton, &QPushButton::clicked, this, &MainWindow::onTrashButtonClicked);
     connect(m_noteModel, &NoteModel::rowsRemoved, [this](){m_trashButton->setEnabled(true);});
     // text edit text changed
@@ -645,21 +628,10 @@ void MainWindow::setButtonsAndFieldsEnabled(bool doEnable)
 
 /**
 * @brief
-* When the new-note button is pressed, set it's icon accordingly
-*/
-void MainWindow::onNewNoteButtonPressed()
-{
-    m_newNoteButton->setIcon(QIcon(":/images/newNote_Pressed.png"));
-}
-
-/**
-* @brief
 * Create a new note when clicking the 'new note' button
 */
 void MainWindow::onNewNoteButtonClicked()
 {
-    m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-
     if(!m_lineEdit->text().isEmpty()){
         clearSearch();
         m_selectedNoteBeforeSearchingInSource = QModelIndex();
@@ -678,21 +650,10 @@ void MainWindow::onNewNoteButtonClicked()
 
 /**
 * @brief
-* When the trash button is pressed, set it's icon accordingly
-*/
-void MainWindow::onTrashButtonPressed()
-{
-    m_trashButton->setIcon(QIcon(":/images/trashCan_Pressed.png"));
-}
-
-/**
-* @brief
 * Delete selected note when clicking the 'delete note' button
 */
 void MainWindow::onTrashButtonClicked()
 {
-    m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
-
     m_trashButton->blockSignals(true);
     this->deleteSelectedNote();
     m_trashButton->blockSignals(false);
@@ -1459,16 +1420,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                     m_greenMaximizeButton->setIcon(QIcon(":images/greenHovered.png"));
                 }
             }
-
-            if(object == m_newNoteButton){
-                this->setCursor(Qt::PointingHandCursor);
-                m_newNoteButton->setIcon(QIcon(":/images/newNote_Hovered.png"));
-            }
-
-            if(object == m_trashButton){
-                this->setCursor(Qt::PointingHandCursor);
-                m_trashButton->setIcon(QIcon(":/images/trashCan_Hovered.png"));
-            }
         }
         break;
     }
@@ -1483,16 +1434,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                 m_yellowMinimizeButton->setIcon(QIcon(":images/yellow.png"));
                 m_greenMaximizeButton->setIcon(QIcon(":images/green.png"));
             }
-
-            if(object == m_newNoteButton){
-                this->unsetCursor();
-                m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-            }
-
-            if(object == m_trashButton){
-                this->unsetCursor();
-                m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
-            }
         }
         break;
     }
@@ -1500,16 +1441,16 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
         m_redCloseButton->setIcon(QIcon(":images/unfocusedButton"));
         m_yellowMinimizeButton->setIcon(QIcon(":images/unfocusedButton"));
         m_greenMaximizeButton->setIcon(QIcon(":images/unfocusedButton"));
-        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
+//        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
+//        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
         break;
     }
     case QEvent::WindowActivate:{
         m_redCloseButton->setIcon(QIcon(":images/red.png"));
         m_yellowMinimizeButton->setIcon(QIcon(":images/yellow.png"));
         m_greenMaximizeButton->setIcon(QIcon(":images/green.png"));
-        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
+//        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
+//        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
         break;
     }
     case QEvent::HoverEnter:{

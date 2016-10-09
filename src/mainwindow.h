@@ -105,7 +105,6 @@ private:
     void setupFonts();
     void setupTrayIcon();
     void setupKeyboardShortcuts();
-    void setupNewNoteButtonAndTrahButton();
     void setupSplitter();
     void setupTitleBarButtons();
     void setupSignalsSlots();
@@ -138,9 +137,7 @@ private:
 
 private slots:
     void InitData();
-    void onNewNoteButtonPressed();
     void onNewNoteButtonClicked();
-    void onTrashButtonPressed();
     void onTrashButtonClicked();
     void onNotePressed(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);

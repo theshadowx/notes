@@ -35,7 +35,8 @@ SOURCES += \
     dbmanager.cpp \
     folderdata.cpp \
     foldermodel.cpp \
-    folderitem.cpp
+    folderitem.cpp \
+    folderwidgetdelegate.cpp
 
 HEADERS  += \
     $$PWD/mainwindow.h \
@@ -47,7 +48,8 @@ HEADERS  += \
     dbmanager.h \
     folderdata.h \
     foldermodel.h \
-    folderitem.h
+    folderitem.h \
+    folderwidgetdelegate.h
 
 FORMS += $$PWD/mainwindow.ui
 RESOURCES += $$PWD/images.qrc \

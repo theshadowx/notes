@@ -218,8 +218,8 @@ void MainWindow::setupKeyboardShortcuts ()
     new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(selectNoteUp()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Enter), this, SLOT(setFocusOnText()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Return), this, SLOT(setFocusOnText()));
-    new QShortcut(QKeySequence(Qt::Key_Enter), this, SLOT(setFocusOnText()));
-    new QShortcut(QKeySequence(Qt::Key_Return), this, SLOT(setFocusOnText()));
+//    new QShortcut(QKeySequence(Qt::Key_Enter), this, SLOT(setFocusOnText()));
+//    new QShortcut(QKeySequence(Qt::Key_Return), this, SLOT(setFocusOnText()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_F), this, SLOT(fullscreenWindow()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_L), this, SLOT(maximizeWindow()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M), this, SLOT(minimizeWindow()));
@@ -774,6 +774,16 @@ void MainWindow::onTextEditTextChanged ()
 {
     if(m_currentSelectedNoteProxy.isValid()){
         m_textEdit->blockSignals(true);
+
+        // if it's a new note, incremente the number of notes in the correspondent folder
+        if(m_isTemp){
+            QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
+            qDebug() << folderIndex;
+            int noteCnt = m_folderModel->data(folderIndex, (int) FolderItem::FolderDataEnum::NoteCount).toInt();
+            m_folderModel->setData(folderIndex, QVariant::fromValue(++noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
+            // TODO: save to FolderData to database
+        }
+
         QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
         if(m_textEdit->toPlainText() != content){
             // start/restart the timer

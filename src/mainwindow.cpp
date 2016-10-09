@@ -7,6 +7,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "notewidgetdelegate.h"
+#include "folderwidgetdelegate.h"
 #include "qxtglobalshortcut.h"
 
 #include <QScrollBar>
@@ -460,6 +461,7 @@ void MainWindow::setupModelView()
     m_noteView->setModel(m_proxyModel);
 
     m_folderTreeView->setModel(m_folderModel);
+    m_folderTreeView->setItemDelegate(new FolderWidgetDelegate(m_folderTreeView));
 }
 
 /**

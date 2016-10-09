@@ -68,6 +68,8 @@ private:
     QPushButton* m_yellowMinimizeButton;
     QPushButton* m_newNoteButton;
     QPushButton* m_trashButton;
+    QPushButton* m_newFolderButton;
+    QPushButton* m_newTagButton;
     QTextEdit* m_textEdit;
     QLineEdit* m_lineEdit;
     QLabel* m_editorDateLabel;
@@ -139,6 +141,7 @@ private slots:
     void InitData();
     void onNewNoteButtonClicked();
     void onTrashButtonClicked();
+    void onNewFolderButtonClicked();
     void onNotePressed(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onTextEditTextChanged();

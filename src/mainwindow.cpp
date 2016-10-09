@@ -34,6 +34,8 @@ MainWindow::MainWindow (QWidget *parent) :
     m_yellowMinimizeButton(Q_NULLPTR),
     m_newNoteButton(Q_NULLPTR),
     m_trashButton(Q_NULLPTR),
+    m_newFolderButton(Q_NULLPTR),
+    m_newTagButton(Q_NULLPTR),
     m_textEdit(Q_NULLPTR),
     m_lineEdit(Q_NULLPTR),
     m_editorDateLabel(Q_NULLPTR),
@@ -162,6 +164,8 @@ void MainWindow::setupMainWindow ()
     m_splitter = ui->splitter;
     m_folderTreeView = ui->folderTree;
     m_tagListW = ui->tagsList;
+    m_newFolderButton = ui->newFolderButton;
+    m_newTagButton = ui->newTagButton;
 
     QPalette pal(palette());
     pal.setColor(QPalette::Background, QColor(248, 248, 248));
@@ -275,6 +279,8 @@ void MainWindow::setupSignalsSlots()
     connect(m_yellowMinimizeButton, &QPushButton::clicked, this, &MainWindow::onYellowMinimizeButtonClicked);
     // new note button
     connect(m_newNoteButton, &QPushButton::clicked, this, &MainWindow::onNewNoteButtonClicked);
+    // new folder button
+    connect(m_newFolderButton, &QPushButton::clicked, this, &MainWindow::onNewFolderButtonClicked);
     // delete note button
     connect(m_trashButton, &QPushButton::clicked, this, &MainWindow::onTrashButtonClicked);
     connect(m_noteModel, &NoteModel::rowsRemoved, [this](){m_trashButton->setEnabled(true);});
@@ -296,6 +302,12 @@ void MainWindow::setupSignalsSlots()
             m_editorDateLabel->clear();
             deleteNote(indexInProxy, false);
         }
+    });
+    connect(m_proxyModel, &QSortFilterProxyModel::rowsInserted,[&](){
+        ui->noteCntLabel->setText(QStringLiteral("%1 Notes").arg(m_proxyModel->rowCount()));
+    });
+    connect(m_proxyModel, &QSortFilterProxyModel::rowsRemoved,[&](){
+        ui->noteCntLabel->setText(QStringLiteral("%1 Notes").arg(m_proxyModel->rowCount()));
     });
     // note model rows moved
     connect(m_noteModel, &NoteModel::rowsAboutToBeMoved, m_noteView, &NoteView::rowsAboutToBeMoved);
@@ -546,16 +558,20 @@ void MainWindow::initFolders ()
     // push folders to the treeview
     m_folderModel->setupModelData(folderDataList);
 
-    // select the folders first row if folders exists
-    // otherwise create new Folder
-    if(!folderDataList.isEmpty()){
-        m_folderTreeView->selectionModel()->select(m_folderModel->index(0,0), QItemSelectionModel::Select);
-    }else{
+    // create new Folder if no folder exists
+    if(folderDataList.isEmpty()){
         FolderData* folderData = new FolderData;
-        folderData->setName(QStringLiteral("Notes"));
+        folderData->setName(QStringLiteral("Notes0"));
         FolderItem* folderItem = new FolderItem(folderData, this);
         m_folderModel->insertFolder(folderItem, 0);
+
+        m_dbManager->addFolder(folderData);
+
+        m_folderTreeView->setEditTriggers(m_folderTreeView->editTriggers() | QAbstractItemView::CurrentChanged);
     }
+
+    // select the first folder in the treeview
+    m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
 }
 
 /**
@@ -575,7 +591,6 @@ void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
                 QtConcurrent::run(m_dbManager, &DBManager::addNote, note);
             }
         }
-
         m_isContentModified = false;
     }
 }
@@ -659,6 +674,35 @@ void MainWindow::onTrashButtonClicked()
     m_trashButton->blockSignals(false);
 }
 
+void MainWindow::onNewFolderButtonClicked()
+{
+    // getting the current selected folder (parent)
+    m_folderTreeView->setFocus();
+    QModelIndex index =  m_folderTreeView->selectionModel()->currentIndex();
+
+    // getting folder data for the new child folder
+    // building the item and insert it to the model
+    int row = m_folderModel->rowCount(index);
+    QString folderName = QStringLiteral("Folder%1").arg(row);
+    QString parentPath = m_folderModel->data(index, (int) FolderItem::FolderDataEnum::FullPath).toString();
+
+    FolderData* folderData = new FolderData;
+    folderData->setName(folderName);
+    folderData->setParentPath(parentPath);
+
+    FolderItem* folderItem = new FolderItem(folderData, this);
+    m_folderModel->insertFolder(folderItem, row, index);
+
+    m_folderTreeView->expand(index);
+
+    // Set the current index to the newly crealted folder
+    QModelIndex newFolderIndex = m_folderModel->index(row,0,index);
+    m_folderTreeView->selectionModel()->setCurrentIndex(newFolderIndex, QItemSelectionModel::ClearAndSelect);
+
+    // save the new folder to the database
+    m_dbManager->addFolder(folderData);
+}
+
 /**
 * @brief
 * When clicking on a note in the scrollArea:
@@ -693,19 +737,29 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
     m_isTemp = false;
     m_isContentModified = false;
 
+    m_folderTreeView->setFocus();
 
     if(!selected.indexes().isEmpty()){
         QModelIndex selectedFolderIndex = selected.indexes().at(0);
+
         // update the current Folder Path
         m_currentFolderPath = m_folderModel->data(selectedFolderIndex,
                                                   (int) FolderItem::FolderDataEnum::FullPath).toString();
-        // get all notes contained in the selected path
-        QList<NoteData*> noteList = m_dbManager->getAllNotes(m_currentFolderPath);
-        // add notes to the model
-        if(!noteList.isEmpty()){
-            m_noteModel->addListNote(noteList);
-            m_noteModel->sort(0,Qt::AscendingOrder);
-            selectFirstNote();
+
+        // check the number of notes contained in the current selected folder
+        // if the folder contains notes, grab them from database
+        int noteCnt =  m_folderModel->data(selectedFolderIndex,
+                                           (int) FolderItem::FolderDataEnum::NoteCount).toInt();
+
+        if(noteCnt > 0){
+            // get all notes contained in the selected path
+            QList<NoteData*> noteList = m_dbManager->getAllNotes(m_currentFolderPath);
+            // add notes to the model
+            if(!noteList.isEmpty()){
+                m_noteModel->addListNote(noteList);
+                m_noteModel->sort(0,Qt::AscendingOrder);
+                selectFirstNote();
+            }
         }
     }
 }

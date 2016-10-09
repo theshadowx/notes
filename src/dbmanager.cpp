@@ -315,7 +315,7 @@ QList<FolderData*> DBManager::getAllFolders()
             int id =  query.value(0).toInt();
             QString folderName = query.value(1).toString();
             QString folderPath = query.value(2).toString();
-            int noteCnt = query.value(0).toInt();
+            int noteCnt = query.value(3).toInt();
 
             folder->setId(id);
             folder->setName(folderName);
@@ -337,7 +337,7 @@ bool DBManager::addFolder(FolderData* folder)
 
     QString name = folder->name();
     QString parentPath = folder->parentPath();
-    QString NoteCnt = 0;
+    int NoteCnt = folder->noteCnt();
 
     QString queryStr = QString("INSERT INTO folders (name, parent_path, notes_cnt) "
                                "VALUES ('%1', '%2', %3);")

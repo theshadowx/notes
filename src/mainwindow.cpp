@@ -670,14 +670,10 @@ void MainWindow::onNewNoteButtonClicked()
     }
 
     // save the data of the previous selected
-    if(m_currentSelectedNoteProxy.isValid()
-            && m_isContentModified){
-
+    if(m_currentSelectedNoteProxy.isValid())
         saveNoteToDB(m_currentSelectedNoteProxy);
-        m_isContentModified = false;
-    }
 
-    this->createNewNote();
+    createNewNote();
 }
 
 /**

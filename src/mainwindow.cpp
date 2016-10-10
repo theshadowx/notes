@@ -967,51 +967,30 @@ void MainWindow::createNewNote ()
  * @param note  : note to delete
  * @param isFromUser :  true if the user clicked on trash button
  */
-void MainWindow::deleteNote(const QModelIndex &noteIndex, bool isFromUser)
+void MainWindow::deleteNote(const QModelIndex &noteIndex)
 {
-    if(noteIndex.isValid()){
-        // delete from model
-        QModelIndex indexToBeRemoved = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
-        NoteData* noteTobeRemoved = m_noteModel->removeNote(indexToBeRemoved);
+    Q_ASSERT_X(noteIndex.isValid(), "MainWindow::deleteNote", "noteIndex is not valid");
 
-        if(m_isTemp){
-            m_isTemp = false;
-        }else{
-            noteTobeRemoved->setDeletionDateTime(QDateTime::currentDateTime());
-            QtConcurrent::run(m_dbManager, &DBManager::removeNote, noteTobeRemoved);
-        }
+    // delete from model
+    QModelIndex indexToBeRemoved = m_proxyModel->mapToSource(noteIndex);
+    NoteData* noteTobeRemoved = m_noteModel->removeNote(indexToBeRemoved);
 
-        if(isFromUser){
-            // clear text edit and time date label
-            m_editorDateLabel->clear();
-            m_textEdit->blockSignals(true);
-            m_textEdit->clear();
-            m_textEdit->clearFocus();
-            m_textEdit->blockSignals(false);
-
-            if(m_noteModel->rowCount() > 0){
-                QModelIndex index = m_noteView->currentIndex();
-                m_currentSelectedNoteProxy = index;
-            }else{
-                m_currentSelectedNoteProxy = QModelIndex();
-            }
-        }
+    if(m_isTemp){
+        m_isTemp = false;
     }else{
-        qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
-                 << " MainWindow::deleteNote noteIndex is not valid";
+        // remove from database
+        noteTobeRemoved->setDeletionDateTime(QDateTime::currentDateTime());
+        QtConcurrent::run(m_dbManager, &DBManager::removeNote, noteTobeRemoved);
     }
 
     m_noteView->setFocus();
 }
 
-/**
-* @brief
-* Delete the selected note
-*/
 void MainWindow::deleteSelectedNote ()
 {
     if(!m_isOperationRunning){
         m_isOperationRunning = true;
+
         if(m_currentSelectedNoteProxy.isValid()){
 
             // update the index of the selected note before searching
@@ -1023,8 +1002,16 @@ void MainWindow::deleteSelectedNote ()
                 }
             }
 
+            // clear text edit and time date label
+            clearTextAndHeader();
+
+            // delete the note
             deleteNote(m_currentSelectedNoteProxy);
-            showNoteInEditor(m_currentSelectedNoteProxy);
+
+            // update the the current selected note
+            m_currentSelectedNoteProxy = m_noteView->currentIndex();
+            if(m_currentSelectedNoteProxy.isValid())
+                showNoteInEditor(m_currentSelectedNoteProxy);
         }
         m_isOperationRunning = false;
     }
@@ -1337,39 +1324,38 @@ void MainWindow::findNotesContain(const QString& keyword)
 
 void MainWindow::selectNote(const QModelIndex &noteIndex)
 {
-    if(noteIndex.isValid()){
-        // save the position of text edit scrollbar
-        if(!m_isTemp && m_currentSelectedNoteProxy.isValid()){
+    Q_ASSERT_X(noteIndex.isValid(), "MainWindow::selectNote", "noteIndex is not valid");
+
+    if(noteIndex == m_currentSelectedNoteProxy){
+        return;
+    }else if(m_currentSelectedNoteProxy.isValid()){
+        if(m_isTemp){
+            m_isTemp = false;
+            // delete the unmodified new note from model
+            QModelIndex indexToBeRemoved = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
+            m_noteModel->removeNote(indexToBeRemoved);
+            // update the current selected note
+            m_currentSelectedNoteProxy = m_proxyModel->index(noteIndex.row()-1, 0);
+
+        }else{
+            // save the position of scrollbar to the settings
             int pos = m_textEdit->verticalScrollBar()->value();
             QModelIndex indexSrc = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
             m_noteModel->setData(indexSrc, QVariant::fromValue(pos), NoteModel::NoteScrollbarPos);
-        }
-
-        // show the content of the pressed note in the text editor
-        showNoteInEditor(noteIndex);
-
-        if(m_isTemp && noteIndex.row() != 0){
-            // delete the unmodified new note
-            deleteNote(m_currentSelectedNoteProxy, false);
-            m_currentSelectedNoteProxy = m_proxyModel->index(noteIndex.row()-1, 0);
-        }else if(!m_isTemp
-                 && m_currentSelectedNoteProxy.isValid()
-                 && noteIndex != m_currentSelectedNoteProxy
-                 && m_isContentModified){
             // save if the previous selected note was modified
             saveNoteToDB(m_currentSelectedNoteProxy);
-            m_currentSelectedNoteProxy = noteIndex;
-        }else{
+            // update the current selected note
             m_currentSelectedNoteProxy = noteIndex;
         }
-
-        m_noteView->selectionModel()->select(m_currentSelectedNoteProxy, QItemSelectionModel::ClearAndSelect);
-        m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
-        m_noteView->scrollTo(m_currentSelectedNoteProxy);
     }else{
-        qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
-                 << " MainWindow::selectNote() : noteIndex is not valid " << __LINE__;
+        m_currentSelectedNoteProxy = noteIndex;
     }
+
+    // show the content of the pressed note in the text editor
+    showNoteInEditor(m_currentSelectedNoteProxy);
+
+    m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
+    m_noteView->scrollTo(m_currentSelectedNoteProxy);
 }
 
 void MainWindow::checkMigration()

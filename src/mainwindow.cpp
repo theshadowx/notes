@@ -303,10 +303,14 @@ void MainWindow::setupSignalsSlots()
             deleteNote(indexInProxy, false);
         }
     });
+    // Update note count label
     connect(m_proxyModel, &QSortFilterProxyModel::rowsInserted,[&](){
         ui->noteCntLabel->setText(QStringLiteral("%1 Notes").arg(m_proxyModel->rowCount()));
     });
     connect(m_proxyModel, &QSortFilterProxyModel::rowsRemoved,[&](){
+        ui->noteCntLabel->setText(QStringLiteral("%1 Notes").arg(m_proxyModel->rowCount()));
+    });
+    connect(m_proxyModel, &QSortFilterProxyModel::modelReset,[&](){
         ui->noteCntLabel->setText(QStringLiteral("%1 Notes").arg(m_proxyModel->rowCount()));
     });
     // note model rows moved

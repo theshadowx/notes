@@ -957,6 +957,7 @@ void MainWindow::createNewNote ()
             m_noteView->animateAddedRow(QModelIndex(),row, row);
         }
 
+        m_textEdit->setFocus();
         m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
         m_isOperationRunning = false;
     }

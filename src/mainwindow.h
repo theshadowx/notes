@@ -127,6 +127,7 @@ private:
     void sortNotesList(QStringList &stringNotesList);
     void initFolders();
     void saveNoteToDB(const QModelIndex& noteIndex);
+    void saveFolderToDB(const QModelIndex& folderIndex);
     void removeNoteFromDB(const QModelIndex& noteIndex);
     void selectFirstNote();
     void clearTextAndHeader();

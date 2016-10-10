@@ -594,7 +594,7 @@ void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
         QModelIndex indexInSrc = m_proxyModel->mapToSource(noteIndex);
         NoteData* note = m_noteModel->getNote(indexInSrc);
         if(note != Q_NULLPTR){
-            bool doExist = m_dbManager->isNoteExist(note);
+            bool doExist = m_dbManager->noteExist(note);
             if(doExist){
                 QtConcurrent::run(m_dbManager, &DBManager::modifyNote, note);
             }else{
@@ -602,6 +602,15 @@ void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
             }
         }
     }
+}
+
+void MainWindow::saveFolderToDB(const QModelIndex& folderIndex)
+{
+    Q_ASSERT_X(folderIndex.isValid(), "MainWindow::saveFolderToDB", "noteIndex is not valid");
+
+    const FolderData* folderData = m_folderModel->folderData(folderIndex);
+    if(folderData != Q_NULLPTR)
+        QtConcurrent::run(m_dbManager, &DBManager::modifyFolder, folderData);
 }
 
 void MainWindow::removeNoteFromDB(const QModelIndex& noteIndex)
@@ -795,9 +804,9 @@ void MainWindow::onTextEditTextChanged ()
 
         QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
 
-        int noteCnt = m_folderModel->data(folderIndex, (int) FolderItem::FolderDataEnum::NoteCount).toInt();
-        m_folderModel->setData(folderIndex, QVariant::fromValue(++noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
-        // TODO: save to FolderData to database
+        int noteCnt = m_noteModel->rowCount();
+        m_folderModel->setData(folderIndex, QVariant::fromValue(noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
+        saveFolderToDB(folderIndex);
     }
 
     QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
@@ -982,6 +991,12 @@ void MainWindow::deleteNote(const QModelIndex &noteIndex)
         // remove from database
         noteTobeRemoved->setDeletionDateTime(QDateTime::currentDateTime());
         QtConcurrent::run(m_dbManager, &DBManager::removeNote, noteTobeRemoved);
+
+        // decrement the number of note stored in the current folder and saving to database
+        int noteCnt = m_noteModel->rowCount();
+        QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
+        m_folderModel->setData(folderIndex, QVariant::fromValue(noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
+        saveFolderToDB(folderIndex);
     }
 
     m_noteView->setFocus();

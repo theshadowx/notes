@@ -540,6 +540,8 @@ NoteData *MainWindow::generateNote(QString noteName)
  */
 void MainWindow::showNoteInEditor(const QModelIndex &noteIndex)
 {
+    Q_ASSERT_X(noteIndex.isValid(), "MainWindow::showNoteInEditor", "noteIndex is not valid");
+
     m_textEdit->blockSignals(true);
     QString content = noteIndex.data(NoteModel::NoteContent).toString();
     QDateTime dateTime = noteIndex.data(NoteModel::NoteLastModificationDateTime).toDateTime();
@@ -604,6 +606,8 @@ void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
 
 void MainWindow::removeNoteFromDB(const QModelIndex& noteIndex)
 {
+    Q_ASSERT_X(noteIndex.isValid(), "MainWindow::removeNoteFromDB", "noteIndex is not valid");
+
     if(noteIndex.isValid()){
         QModelIndex indexInSrc = m_proxyModel->mapToSource(noteIndex);
         NoteData* note = m_noteModel->getNote(indexInSrc);
@@ -781,52 +785,49 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
 */
 void MainWindow::onTextEditTextChanged ()
 {
-    if(m_currentSelectedNoteProxy.isValid()){
-        m_textEdit->blockSignals(true);
+    Q_ASSERT_X(m_currentSelectedNoteProxy.isValid(), "MainWindow::onTextEditTextChanged", "m_currentSelectedNoteProxy is not valid");
 
-        // if it's a new note, incremente the number of notes in the correspondent folder
-        if(m_isTemp){
-            QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
-            qDebug() << folderIndex;
-            int noteCnt = m_folderModel->data(folderIndex, (int) FolderItem::FolderDataEnum::NoteCount).toInt();
-            m_folderModel->setData(folderIndex, QVariant::fromValue(++noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
-            // TODO: save to FolderData to database
-        }
+    m_textEdit->blockSignals(true);
 
-        QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
-        if(m_textEdit->toPlainText() != content){
-            // start/restart the timer
-            m_autoSaveTimer->start(500);
-
-            // move note to the top of the list
-            if(m_currentSelectedNoteProxy.row() != 0)
-                moveNoteToTop();
-
-            // Get the new data
-            QString firstline = getFirstLine(m_textEdit->toPlainText());
-            QDateTime dateTime = QDateTime::currentDateTime();
-            QString noteDate = dateTime.toString(Qt::ISODate);
-            m_editorDateLabel->setText(getNoteDateEditor(noteDate));
-
-            // update model
-            QMap<int, QVariant> dataValue;
-            dataValue[NoteModel::NoteContent] = QVariant::fromValue(m_textEdit->toPlainText());
-            dataValue[NoteModel::NoteFullTitle] = QVariant::fromValue(firstline);
-            dataValue[NoteModel::NoteLastModificationDateTime] = QVariant::fromValue(dateTime);
-
-            QModelIndex index = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
-            m_noteModel->setItemData(index, dataValue);
-
-            m_isContentModified = true;
-        }
-
-        m_textEdit->blockSignals(false);
-
+    // if it's a new note, incremente the number of notes in the correspondent folder
+    if(m_isTemp){
         m_isTemp = false;
-    }else{
-        qDebug() << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
-                 << " MainWindow::onTextEditTextChanged() : m_currentSelectedNoteProxy is not valid";
+
+        QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
+
+        int noteCnt = m_folderModel->data(folderIndex, (int) FolderItem::FolderDataEnum::NoteCount).toInt();
+        m_folderModel->setData(folderIndex, QVariant::fromValue(++noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
+        // TODO: save to FolderData to database
     }
+
+    QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
+    if(m_textEdit->toPlainText() != content){
+        // start/restart the timer
+        m_autoSaveTimer->start(500);
+
+        // move note to the top of the list
+        if(m_currentSelectedNoteProxy.row() != 0)
+            moveNoteToTop();
+
+        // Get the new data
+        QString firstline = getFirstLine(m_textEdit->toPlainText());
+        QDateTime dateTime = QDateTime::currentDateTime();
+        QString noteDate = dateTime.toString(Qt::ISODate);
+        m_editorDateLabel->setText(getNoteDateEditor(noteDate));
+
+        // update model
+        QMap<int, QVariant> dataValue;
+        dataValue[NoteModel::NoteContent] = QVariant::fromValue(m_textEdit->toPlainText());
+        dataValue[NoteModel::NoteFullTitle] = QVariant::fromValue(firstline);
+        dataValue[NoteModel::NoteLastModificationDateTime] = QVariant::fromValue(dateTime);
+
+        QModelIndex index = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
+        m_noteModel->setItemData(index, dataValue);
+
+        m_isContentModified = true;
+    }
+
+    m_textEdit->blockSignals(false);
 }
 
 /**

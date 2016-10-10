@@ -13,7 +13,8 @@ class DBManager : public QObject
 public:
     explicit DBManager(const QString& path, bool doCreate = false, QObject *parent = 0);
 
-    bool isNoteExist(NoteData* note);
+    bool noteExist(NoteData* note);
+    bool folderExist(int id);
 
 private:
     QSqlDatabase m_db;

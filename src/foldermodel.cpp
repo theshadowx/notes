@@ -159,7 +159,7 @@ void FolderModel::setupModelData(QList<FolderData*>& folderDataList)
 const FolderData* FolderModel::folderData(const QModelIndex& folderIndex) const
 {
     if (folderIndex.isValid()) {
-        FolderItem *item = static_cast<FolderItem*>(index.internalPointer());
+        const FolderItem *item = static_cast<const FolderItem*>(folderIndex.internalPointer());
         if (item != Q_NULLPTR)
             return item->folderData();
     }

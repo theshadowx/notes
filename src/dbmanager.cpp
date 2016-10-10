@@ -56,7 +56,7 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
 
 }
 
-bool DBManager::isNoteExist(NoteData* note)
+bool DBManager::noteExist(NoteData* note)
 {
     QSqlQuery query;
 
@@ -388,4 +388,15 @@ bool DBManager::modifyFolder(FolderData* folder)
     query.exec(queryStr);
 
     return (query.numRowsAffected() == 1);
+}
+
+bool DBManager::folderExist(int id)
+{
+    QSqlQuery query;
+    QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM folders WHERE id = %1 LIMIT 1 )")
+                       .arg(id);
+    query.exec(queryStr);
+    query.next();
+
+    return query.value(0).toInt() == 1;
 }

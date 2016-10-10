@@ -184,11 +184,11 @@ bool NoteView::viewportEvent(QEvent*e)
             }
             break;
         }
-        case QEvent::MouseButtonPress:{
+        case QEvent::MouseButtonRelease:{
             QPoint pt = mapFromGlobal(QCursor::pos());
             QModelIndex index = indexAt(QPoint(10, pt.y()));
             if(!index.isValid())
-                emit viewportPressed();
+                emit viewportClicked();
 
             break;
         }

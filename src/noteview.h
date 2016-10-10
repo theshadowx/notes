@@ -48,7 +48,7 @@ protected slots:
     void rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end) Q_DECL_OVERRIDE;
 
 signals:
-    void viewportPressed();
+    void viewportClicked();
 
 };
 

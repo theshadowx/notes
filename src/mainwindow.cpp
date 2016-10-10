@@ -293,7 +293,7 @@ void MainWindow::setupSignalsSlots()
     // folder selected
     connect(m_folderTreeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onFolderSelectionChanged);
     // noteView viewport pressed
-    connect(m_noteView, &NoteView::viewportPressed, this, [this](){
+    connect(m_noteView, &NoteView::viewportClicked, this, [this](){
         if(m_isTemp && m_proxyModel->rowCount() > 1){
             QModelIndex indexInProxy = m_proxyModel->index(1, 0);
             selectNote(indexInProxy);

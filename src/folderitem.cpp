@@ -151,3 +151,8 @@ bool FolderItem::hasName(QString folderName)
     return m_folderData->name() == folderName;
 }
 
+const FolderData*FolderItem::folderData() const
+{
+    return m_folderData;
+}
+

@@ -29,6 +29,8 @@ public:
         QModelIndex parentIndexFromPath(const QString&path, const QModelIndex parentIndex = QModelIndex());
         void setupModelData(QList<FolderData*>& folderDataList);
 
+        const FolderData* folderData(const QModelIndex& folderIndex) const;
+
     private:
         FolderItem* getFolderItem(const QModelIndex &index) const;
 

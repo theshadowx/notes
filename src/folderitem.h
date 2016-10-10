@@ -41,6 +41,8 @@ public:
     bool contains(QString folderName);
     bool hasName(QString folderName);
 
+    const FolderData* folderData() const;
+
 private:
     QList<FolderItem *> m_childFolders;
     FolderData* m_folderData;

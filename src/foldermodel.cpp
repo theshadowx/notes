@@ -156,6 +156,17 @@ void FolderModel::setupModelData(QList<FolderData*>& folderDataList)
     }
 }
 
+const FolderData* FolderModel::folderData(const QModelIndex& folderIndex) const
+{
+    if (folderIndex.isValid()) {
+        FolderItem *item = static_cast<FolderItem*>(index.internalPointer());
+        if (item != Q_NULLPTR)
+            return item->folderData();
+    }
+
+    return Q_NULLPTR;
+}
+
 bool FolderModel::insertFolder(FolderItem* folderItem, int row, const QModelIndex& parent)
 {
     bool success = false;
@@ -188,7 +199,7 @@ FolderItem* FolderModel::getFolderItem(const QModelIndex& index) const
 {
     if (index.isValid()) {
         FolderItem *item = static_cast<FolderItem*>(index.internalPointer());
-        if (item)
+        if (item != Q_NULLPTR)
             return item;
     }
 

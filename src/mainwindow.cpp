@@ -585,7 +585,10 @@ void MainWindow::initFolders ()
 */
 void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
 {
-    if(noteIndex.isValid() && m_isContentModified){
+    Q_ASSERT_X(noteIndex.isValid(), "MainWindow::saveNoteToDB", "noteIndex is not valid");
+
+    if(!m_isTemp && m_isContentModified){
+        m_isContentModified = false;
         QModelIndex indexInSrc = m_proxyModel->mapToSource(noteIndex);
         NoteData* note = m_noteModel->getNote(indexInSrc);
         if(note != Q_NULLPTR){
@@ -596,7 +599,6 @@ void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
                 QtConcurrent::run(m_dbManager, &DBManager::addNote, note);
             }
         }
-        m_isContentModified = false;
     }
 }
 

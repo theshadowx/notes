@@ -300,7 +300,7 @@ void MainWindow::setupSignalsSlots()
         }else if(m_isTemp && m_proxyModel->rowCount() == 1){
             QModelIndex indexInProxy = m_proxyModel->index(0, 0);
             m_editorDateLabel->clear();
-            deleteNote(indexInProxy, false);
+            deleteNote(indexInProxy);
         }
     });
     // Update note count label
@@ -627,6 +627,16 @@ void MainWindow::selectFirstNote ()
     }
 }
 
+void MainWindow::clearTextAndHeader()
+{
+    // clear text edit and time date label
+    m_editorDateLabel->clear();
+    m_textEdit->blockSignals(true);
+    m_textEdit->clear();
+    m_textEdit->clearFocus();
+    m_textEdit->blockSignals(false);
+}
+
 /**
 * @brief
 * create a new note if there are no notes
@@ -732,11 +742,7 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
 
     // init Note List variables
     clearSearch();
-
-    m_textEdit->blockSignals(true);
-    m_editorDateLabel->clear();
-    m_textEdit->clear();
-    m_textEdit->blockSignals(false);
+    clearTextAndHeader();
 
     m_noteModel->clearNotes();
     m_currentSelectedNoteProxy = QModelIndex();
@@ -930,11 +936,7 @@ void MainWindow::createNewNote ()
 
         m_noteView->scrollToTop();
 
-        // clear the textEdit
-        m_textEdit->blockSignals(true);
-        m_textEdit->clear();
-        m_textEdit->setFocus();
-        m_textEdit->blockSignals(false);
+        clearTextAndHeader();
 
         if(!m_isTemp){
             ++m_noteCounter;
@@ -1024,7 +1026,7 @@ void MainWindow::deleteSelectedNote ()
                 }
             }
 
-            deleteNote(m_currentSelectedNoteProxy, true);
+            deleteNote(m_currentSelectedNoteProxy);
             showNoteInEditor(m_currentSelectedNoteProxy);
         }
         m_isOperationRunning = false;
@@ -1077,7 +1079,7 @@ void MainWindow::selectNoteDown ()
 {
     if(m_currentSelectedNoteProxy.isValid()){
         if(m_isTemp){
-            deleteNote(m_currentSelectedNoteProxy, false);
+            deleteNote(m_currentSelectedNoteProxy);
             m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
             showNoteInEditor(m_currentSelectedNoteProxy);
         }else{

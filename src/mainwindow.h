@@ -129,6 +129,7 @@ private:
     void saveNoteToDB(const QModelIndex& noteIndex);
     void removeNoteFromDB(const QModelIndex& noteIndex);
     void selectFirstNote();
+    void clearTextAndHeader();
     void moveNoteToTop();
     void clearSearch();
     void findNotesContain(const QString &keyword);
@@ -154,7 +155,7 @@ private slots:
     void onYellowMinimizeButtonClicked();
     void onRedCloseButtonClicked();
     void createNewNote();
-    void deleteNote(const QModelIndex& noteIndex, bool isFromUser=true);
+    void deleteNote(const QModelIndex& noteIndex);
     void deleteSelectedNote();
     void setFocusOnCurrentNote();
     void selectNoteDown();

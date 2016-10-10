@@ -1199,15 +1199,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(windowState() != Qt::WindowFullScreen && windowState() != Qt::WindowMaximized)
         m_settingsDatabase->setValue("windowGeometry", saveGeometry());
 
-    if(m_currentSelectedNoteProxy.isValid()
-            &&  m_isContentModified
-            && !m_isTemp){
-
-        saveNoteToDB(m_currentSelectedNoteProxy);
-    }
-
     m_settingsDatabase->setValue("splitterSizes", m_splitter->saveState());
     m_settingsDatabase->sync();
+
+    if(m_currentSelectedNoteProxy.isValid())
+        saveNoteToDB(m_currentSelectedNoteProxy);
 
     QWidget::closeEvent(event);
 }

@@ -13,8 +13,8 @@ class DBManager : public QObject
 public:
     explicit DBManager(const QString& path, bool doCreate = false, QObject *parent = 0);
 
-    bool noteExist(NoteData* note);
-    bool folderExist(int id);
+    bool noteExist(NoteData* note) const;
+    bool folderExist(int id) const;
 
 private:
     QSqlDatabase m_db;
@@ -26,18 +26,18 @@ signals:
 
 public slots:
     QList<NoteData*> getAllNotes();
-    QList<NoteData*> getAllNotes(QString fullPath);
-    bool addNote(NoteData* note);
-    bool removeNote(NoteData* note);
-    bool modifyNote(NoteData* note);
-    bool migrateNote(NoteData* note);
-    bool migrateTrash(NoteData* note);
-    int getLastRowID();
+    QList<NoteData*> getAllNotes(const QString& fullPath);
+    bool addNote(const NoteData*note) const;
+    bool removeNote(const NoteData* note) const;
+    bool modifyNote(const NoteData* note) const;
+    bool migrateNote(const NoteData* note) const;
+    bool migrateTrash(const NoteData* note) const;
+    int getLastRowID() const;
 
     QList<FolderData*> getAllFolders();
-    bool addFolder(FolderData* folder);
-    bool removeFolder(FolderData* folder);
-    bool modifyFolder(FolderData* folder);
+    bool addFolder(FolderData*folder) const;
+    bool removeFolder(const FolderData* folder) const;
+    bool modifyFolder(const FolderData*folder) const;
 
 };
 

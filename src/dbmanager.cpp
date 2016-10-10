@@ -56,7 +56,7 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
 
 }
 
-bool DBManager::noteExist(NoteData* note)
+bool DBManager::noteExist(NoteData* note) const
 {
     QSqlQuery query;
 
@@ -104,7 +104,7 @@ QList<NoteData *> DBManager::getAllNotes()
     return noteList;
 }
 
-QList<NoteData*> DBManager::getAllNotes(QString fullPath)
+QList<NoteData*> DBManager::getAllNotes(const QString& fullPath)
 {
     if(fullPath.isEmpty())
         return getAllNotes();
@@ -144,7 +144,7 @@ QList<NoteData*> DBManager::getAllNotes(QString fullPath)
     return noteList;
 }
 
-bool DBManager::addNote(NoteData* note)
+bool DBManager::addNote(const NoteData* note) const
 {
     QSqlQuery query;
     QString emptyStr;
@@ -171,7 +171,7 @@ bool DBManager::addNote(NoteData* note)
 
 }
 
-bool DBManager::removeNote(NoteData* note)
+bool DBManager::removeNote(const NoteData* note) const
 {
     QSqlQuery query;
     QString emptyStr;
@@ -211,7 +211,7 @@ bool DBManager::removeNote(NoteData* note)
     return (removed && addedToTrashDB);
 }
 
-bool DBManager::modifyNote(NoteData* note)
+bool DBManager::modifyNote(const NoteData* note) const
 {
     QSqlQuery query;
     QString emptyStr;
@@ -238,10 +238,9 @@ bool DBManager::modifyNote(NoteData* note)
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::migrateNote(NoteData* note)
+bool DBManager::migrateNote(const NoteData* note) const
 {
     QSqlQuery query;
-
     QString emptyStr;
 
     int id = note->id().split('_')[1].toInt();
@@ -266,7 +265,7 @@ bool DBManager::migrateNote(NoteData* note)
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::migrateTrash(NoteData* note)
+bool DBManager::migrateTrash(const NoteData* note) const
 {
     QSqlQuery query;
     QString emptyStr;
@@ -295,7 +294,7 @@ bool DBManager::migrateTrash(NoteData* note)
     return (query.numRowsAffected() == 1);
 }
 
-int DBManager::getLastRowID()
+int DBManager::getLastRowID() const
 {
     QSqlQuery query;
     query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='active_notes';");
@@ -331,7 +330,7 @@ QList<FolderData*> DBManager::getAllFolders()
     return folderList;
 }
 
-bool DBManager::addFolder(FolderData* folder)
+bool DBManager::addFolder(FolderData* folder) const
 {
     QSqlQuery query;
 
@@ -355,7 +354,7 @@ bool DBManager::addFolder(FolderData* folder)
     return isInserted;
 }
 
-bool DBManager::removeFolder(FolderData* folder)
+bool DBManager::removeFolder(const FolderData* folder) const
 {
     QSqlQuery query;
 
@@ -369,7 +368,7 @@ bool DBManager::removeFolder(FolderData* folder)
     return isRemoved;
 }
 
-bool DBManager::modifyFolder(FolderData* folder)
+bool DBManager::modifyFolder(const FolderData* folder) const
 {
     QSqlQuery query;
 
@@ -390,7 +389,7 @@ bool DBManager::modifyFolder(FolderData* folder)
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::folderExist(int id)
+bool DBManager::folderExist(int id) const
 {
     QSqlQuery query;
     QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM folders WHERE id = %1 LIMIT 1 )")

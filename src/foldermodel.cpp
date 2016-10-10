@@ -27,15 +27,21 @@ bool FolderModel::setData(const QModelIndex& index, const QVariant& value, int r
     if(!index.isValid())
         return false;
 
+    bool success = false;
     FolderItem* item = getFolderItem(index);
 
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:
-        return item->setData(FolderItem::FolderDataEnum::Name, value);
+        success = item->setData(FolderItem::FolderDataEnum::Name, value);
     default:
-        return item->setData((FolderItem::FolderDataEnum) role, value);
+        success = item->setData((FolderItem::FolderDataEnum) role, value);
     }
+
+    if(success)
+        emit dataChanged(index,index, QVector<int>(1,role));
+
+    return success;
 }
 
 QModelIndex FolderModel::index(int row, int column, const QModelIndex& parent) const

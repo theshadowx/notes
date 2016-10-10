@@ -82,9 +82,13 @@ bool NoteModel::moveRow(const QModelIndex &sourceParent, int sourceRow, const QM
 
 void NoteModel::clearNotes()
 {
+    QList<NoteData*> toBeDeletedList = m_noteList;
+
     beginResetModel();
     m_noteList.clear();
     endResetModel();
+
+    qDeleteAll(toBeDeletedList);
 }
 
 QVariant NoteModel::data(const QModelIndex &index, int role) const

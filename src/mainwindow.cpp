@@ -720,6 +720,10 @@ void MainWindow::onNewFolderButtonClicked()
     folderData->setName(folderName);
     folderData->setParentPath(parentPath);
 
+    // save the new folder to the database and set id
+    m_dbManager->addFolder(folderData);
+
+    // create folderItem and insert it to the model
     FolderItem* folderItem = new FolderItem(folderData, this);
     m_folderModel->insertFolder(folderItem, row, index);
 
@@ -728,9 +732,6 @@ void MainWindow::onNewFolderButtonClicked()
     // Set the current index to the newly crealted folder
     QModelIndex newFolderIndex = m_folderModel->index(row,0,index);
     m_folderTreeView->selectionModel()->setCurrentIndex(newFolderIndex, QItemSelectionModel::ClearAndSelect);
-
-    // save the new folder to the database
-    m_dbManager->addFolder(folderData);
 }
 
 /**

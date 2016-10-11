@@ -316,6 +316,10 @@ void MainWindow::setupSignalsSlots()
     // note model rows moved
     connect(m_noteModel, &NoteModel::rowsAboutToBeMoved, m_noteView, &NoteView::rowsAboutToBeMoved);
     connect(m_noteModel, &NoteModel::rowsMoved, m_noteView, &NoteView::rowsMoved);
+    // folder data changed
+    connect(m_folderModel, &FolderModel::dataChanged,[&](const QModelIndex &topLeft){
+        saveFolderToDB(topLeft);
+    });
     // auto save timer
     connect(m_autoSaveTimer, &QTimer::timeout, [this](){
         m_autoSaveTimer->stop();
@@ -802,11 +806,10 @@ void MainWindow::onTextEditTextChanged ()
     if(m_isTemp){
         m_isTemp = false;
 
-        QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
-
+        // update the number of note contained in the folder
         int noteCnt = m_noteModel->rowCount();
+        QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
         m_folderModel->setData(folderIndex, QVariant::fromValue(noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
-        saveFolderToDB(folderIndex);
     }
 
     QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
@@ -996,7 +999,6 @@ void MainWindow::deleteNote(const QModelIndex &noteIndex)
         int noteCnt = m_noteModel->rowCount();
         QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
         m_folderModel->setData(folderIndex, QVariant::fromValue(noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
-        saveFolderToDB(folderIndex);
     }
 
     m_noteView->setFocus();

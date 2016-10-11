@@ -32,10 +32,11 @@ bool FolderModel::setData(const QModelIndex& index, const QVariant& value, int r
 
     switch (role) {
     case Qt::EditRole:
-    case Qt::DisplayRole:
         success = item->setData(FolderItem::FolderDataEnum::Name, value);
+        break;
     default:
         success = item->setData((FolderItem::FolderDataEnum) role, value);
+        break;
     }
 
     if(success)

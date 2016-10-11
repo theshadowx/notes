@@ -246,8 +246,10 @@ void MainWindow::setupKeyboardShortcuts ()
 */
 void MainWindow::setupSplitter()
 {
-    m_splitter->setStretchFactor(1, 1);
-    m_splitter->setStretchFactor(2, 0);
+    QList<int> sizes;
+    int width = this->minimumWidth();
+    sizes << 0.25*width << 0.25*width << 0.5*width;
+    ui->splitter->setSizes(sizes);
 }
 
 /**

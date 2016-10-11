@@ -22,9 +22,9 @@ public:
 
     explicit FolderItem(FolderData* folderData, QObject *parent = 0);
 
-    int childIndex(QString childName);
-    int childIndex(FolderItem* childItem);
-    FolderItem* child(int number);
+    int childIndex(int childID) const;
+    int childIndex(FolderItem* childItem) const;
+    FolderItem* child(int number) const;
     int childCount() const;
 
     bool appendChild(FolderItem* childFolder);
@@ -38,8 +38,9 @@ public:
     void setParentFolder(FolderItem* parentFolder);
 
     int row();
-    bool contains(QString folderName);
-    bool hasName(QString folderName);
+    bool contains(const QString& folderName) const;
+    bool hasName(const QString& folderName) const;
+    bool hasID(int id) const;
 
     const FolderData* folderData() const;
 

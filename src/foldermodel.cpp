@@ -119,7 +119,7 @@ QModelIndex FolderModel::parentIndexFromPath(const QString& path, const QModelIn
 
     QStringList parentFoldersList = path.split(FolderData::PathSeparator);
 
-    QString parentFolderName = parentFoldersList.takeAt(0);
+    int parentFolderID = parentFoldersList.takeAt(0).toInt();
     QString newPath = parentFoldersList.join(FolderData::PathSeparator);
 
     QModelIndex newParentIndex;
@@ -127,7 +127,7 @@ QModelIndex FolderModel::parentIndexFromPath(const QString& path, const QModelIn
     if(!parentIndex.isValid()){
         int row = 0;
         foreach (FolderItem* folder, m_rootFolders) {
-            bool exist =  folder->hasName(parentFolderName);
+            bool exist =  folder->hasID(parentFolderID);
             if(exist)
                 break;
 
@@ -138,7 +138,7 @@ QModelIndex FolderModel::parentIndexFromPath(const QString& path, const QModelIn
 
     }else{
         FolderItem *parentItem = static_cast<FolderItem*>(parentIndex.internalPointer());
-        int row = parentItem->childIndex(parentFolderName);
+        int row = parentItem->childIndex(parentFolderID);
         newParentIndex = index(row, 0, parentIndex);
     }
 

@@ -19,7 +19,6 @@ QString FolderData::name() const
 void FolderData::setName(const QString& name)
 {
     m_name = name;
-    m_fullPath = m_parentPath.isEmpty()? m_name : m_parentPath + PathSeparator + m_name;
 }
 
 QString FolderData::parentPath() const
@@ -30,7 +29,7 @@ QString FolderData::parentPath() const
 void FolderData::setParentPath(const QString&parentPath)
 {
     m_parentPath = parentPath;
-    m_fullPath = m_parentPath.isEmpty()? m_name : m_parentPath + PathSeparator + m_name;
+    m_fullPath = m_parentPath.isEmpty()? QString("%1").arg(m_id) : m_parentPath + PathSeparator + QString("%1").arg(m_id);
 }
 
 int FolderData::noteCnt() const
@@ -51,6 +50,7 @@ int FolderData::id() const
 void FolderData::setId(int id)
 {
     m_id = id;
+    m_fullPath = m_parentPath.isEmpty()? QString("%1").arg(m_id) : m_parentPath + PathSeparator + QString("%1").arg(m_id);
 }
 
 QString FolderData::fullPath() const

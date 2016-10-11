@@ -8,11 +8,11 @@ FolderItem::FolderItem(FolderData* folderData, QObject *parent)
     m_folderData->setParent(this);
 }
 
-int FolderItem::childIndex(QString childName)
+int FolderItem::childIndex(int childID) const
 {
     int row = 0;
     foreach (FolderItem* item, m_childFolders) {
-        if(item->hasName(childName))
+        if(item->hasID(childID))
             return row;
         ++row;
     }
@@ -20,14 +20,14 @@ int FolderItem::childIndex(QString childName)
     return -1;
 }
 
-int FolderItem::childIndex(FolderItem* childItem)
+int FolderItem::childIndex(FolderItem* childItem) const
 {
     Q_ASSERT(childItem != Q_NULLPTR);
 
     return m_childFolders.indexOf(childItem);
 }
 
-FolderItem* FolderItem::child(int number)
+FolderItem* FolderItem::child(int number) const
 {
     return m_childFolders.value(number);
 }
@@ -37,7 +37,7 @@ int FolderItem::childCount() const
     return m_childFolders.count();
 }
 
-bool FolderItem::appendChild(FolderItem*childFolder)
+bool FolderItem::appendChild(FolderItem* childFolder)
 {
     childFolder->setParentFolder(this);
     childFolder->setParent(this);
@@ -134,7 +134,7 @@ int FolderItem::row()
     return m_parentFolder->m_childFolders.indexOf(this);
 }
 
-bool FolderItem::contains(QString folderName)
+bool FolderItem::contains(const QString& folderName) const
 {
     bool contained = false;
     foreach (FolderItem* item, m_childFolders) {
@@ -146,12 +146,17 @@ bool FolderItem::contains(QString folderName)
     return contained;
 }
 
-bool FolderItem::hasName(QString folderName)
+bool FolderItem::hasName(const QString& folderName) const
 {
     return m_folderData->name() == folderName;
 }
 
-const FolderData*FolderItem::folderData() const
+bool FolderItem::hasID(int id) const
+{
+    return m_folderData->id() == id;
+}
+
+const FolderData* FolderItem::folderData() const
 {
     return m_folderData;
 }

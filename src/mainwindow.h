@@ -105,7 +105,6 @@ private:
     QString m_currentFolderPath;
 
     void setupMainWindow();
-    void setupFonts();
     void setupTrayIcon();
     void setupKeyboardShortcuts();
     void setupSplitter();

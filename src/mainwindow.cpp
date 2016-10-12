@@ -60,7 +60,6 @@ MainWindow::MainWindow (QWidget *parent) :
 {
     ui->setupUi(this);
     setupMainWindow();
-    setupFonts();
     setupTrayIcon();
     setupKeyboardShortcuts();
     setupSplitter();
@@ -178,19 +177,6 @@ void MainWindow::setupMainWindow ()
     m_trashButton->setToolTip("Delete Selected Note");
 }
 
-void MainWindow::setupFonts()
-{
-    int id = QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Regular.ttf");
-    QString robotoFontRegular = QFontDatabase::applicationFontFamilies(id).at(0);
-
-    id = QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Bold.ttf");
-    QString robotoFontBold = QFontDatabase::applicationFontFamilies(id).at(0);
-
-    this->setFont(QFont(robotoFontRegular, 10));
-    m_lineEdit->setFont(QFont(robotoFontRegular, 10));
-    m_editorDateLabel->setFont(QFont(robotoFontBold, 10, QFont::Bold));
-}
-
 void MainWindow::setupTrayIcon()
 {
     m_trayIconMenu->addAction(m_restoreAction);
@@ -209,11 +195,15 @@ void MainWindow::setupTrayIcon()
 */
 void MainWindow::setupKeyboardShortcuts ()
 {
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_N), this, SLOT(onNewNoteButtonClicked()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Delete), this, SLOT(deleteSelectedNote()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_F), m_lineEdit, SLOT(setFocus()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_E), m_lineEdit, SLOT(clear()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_F), m_lineEdit, SLOT(setFocus()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_F), this, SLOT(fullscreenWindow()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_L), this, SLOT(setFocusOnCurrentNote()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_M), this, SLOT(maximizeWindow()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M), this, SLOT(minimizeWindow()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_N), this, SLOT(onNewNoteButtonClicked()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(QuitApplication()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Delete), this, SLOT(deleteSelectedNote()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Down), this, SLOT(selectNoteDown()));
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Up), this, SLOT(selectNoteUp()));
     new QShortcut(QKeySequence(Qt::Key_Down), this, SLOT(selectNoteDown()));
@@ -222,11 +212,6 @@ void MainWindow::setupKeyboardShortcuts ()
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Return), this, SLOT(setFocusOnText()));
 //    new QShortcut(QKeySequence(Qt::Key_Enter), this, SLOT(setFocusOnText()));
 //    new QShortcut(QKeySequence(Qt::Key_Return), this, SLOT(setFocusOnText()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_F), this, SLOT(fullscreenWindow()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_L), this, SLOT(maximizeWindow()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M), this, SLOT(minimizeWindow()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(QuitApplication()));
-
     QxtGlobalShortcut *shortcut = new QxtGlobalShortcut(this);
     shortcut->setShortcut(QKeySequence("META+N"));
     connect(shortcut, &QxtGlobalShortcut::activated,[=]() {

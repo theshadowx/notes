@@ -150,9 +150,6 @@ private slots:
     void onTextEditTextChanged();
     void onLineEditTextChanged(const QString& keyword);
     void onClearButtonClicked();
-    void onGreenMaximizeButtonPressed ();
-    void onYellowMinimizeButtonPressed ();
-    void onRedCloseButtonPressed ();
     void onGreenMaximizeButtonClicked();
     void onYellowMinimizeButtonClicked();
     void onRedCloseButtonClicked();

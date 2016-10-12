@@ -258,13 +258,10 @@ void MainWindow::setupTitleBarButtons ()
 void MainWindow::setupSignalsSlots()
 {
     // green button
-    connect(m_greenMaximizeButton, &QPushButton::pressed, this, &MainWindow::onGreenMaximizeButtonPressed);
     connect(m_greenMaximizeButton, &QPushButton::clicked, this, &MainWindow::onGreenMaximizeButtonClicked);
     // red button
-    connect(m_redCloseButton, &QPushButton::pressed, this, &MainWindow::onRedCloseButtonPressed);
     connect(m_redCloseButton, &QPushButton::clicked, this, &MainWindow::onRedCloseButtonClicked);
     // yellow button
-    connect(m_yellowMinimizeButton, &QPushButton::pressed, this, &MainWindow::onYellowMinimizeButtonPressed);
     connect(m_yellowMinimizeButton, &QPushButton::clicked, this, &MainWindow::onYellowMinimizeButtonClicked);
     // new note button
     connect(m_newNoteButton, &QPushButton::clicked, this, &MainWindow::onNewNoteButtonClicked);
@@ -1096,10 +1093,15 @@ void MainWindow::selectNoteDown ()
 */
 void MainWindow::fullscreenWindow ()
 {
-    if(this->windowState() == Qt::WindowFullScreen){
-        this->setWindowState(Qt::WindowNoState);
-    }else{
-        this->setWindowState(Qt::WindowFullScreen);
+    switch (windowState()){
+    case Qt::WindowFullScreen:
+        m_greenMaximizeButton->setProperty("fullscreen",false);
+        setWindowState(Qt::WindowNoState);
+        break;
+    default:
+        m_greenMaximizeButton->setProperty("fullscreen",true);
+        setWindowState(Qt::WindowFullScreen);
+        break;
     }
 }
 
@@ -1109,10 +1111,16 @@ void MainWindow::fullscreenWindow ()
 */
 void MainWindow::maximizeWindow ()
 {
-    if(this->windowState() == Qt::WindowMaximized || this->windowState() == Qt::WindowFullScreen){
-        this->setWindowState(Qt::WindowNoState);
-    }else{
-        this->setWindowState(Qt::WindowMaximized);
+     m_greenMaximizeButton->setProperty("fullscreen",false);
+
+    switch (windowState()) {
+    case Qt::WindowFullScreen:
+    case Qt::WindowMaximized:
+        setWindowState(Qt::WindowNoState);
+        break;
+    default:
+        setWindowState(Qt::WindowMaximized);
+        break;
     }
 }
 
@@ -1137,43 +1145,10 @@ void MainWindow::QuitApplication ()
 
 /**
 * @brief
-* When the green button is pressed set it's icon accordingly
-*/
-void MainWindow::onGreenMaximizeButtonPressed ()
-{
-    if(this->windowState() == Qt::WindowFullScreen){
-        m_greenMaximizeButton->setIcon(QIcon(":images/greenInPressed.png"));
-    }else{
-        m_greenMaximizeButton->setIcon(QIcon(":images/greenPressed.png"));
-    }
-}
-
-/**
-* @brief
-* When the yellow button is pressed set it's icon accordingly
-*/
-void MainWindow::onYellowMinimizeButtonPressed ()
-{
-    m_yellowMinimizeButton->setIcon(QIcon(":images/yellowPressed.png"));
-}
-
-/**
-* @brief
-* When the red button is pressed set it's icon accordingly
-*/
-void MainWindow::onRedCloseButtonPressed ()
-{
-    m_redCloseButton->setIcon(QIcon(":images/redPressed.png"));
-}
-
-/**
-* @brief
 * When the green button is released the window goes fullscrren
 */
 void MainWindow::onGreenMaximizeButtonClicked()
 {
-    m_greenMaximizeButton->setIcon(QIcon(":images/green.png"));
-
     fullscreenWindow();
 }
 
@@ -1183,8 +1158,6 @@ void MainWindow::onGreenMaximizeButtonClicked()
 */
 void MainWindow::onYellowMinimizeButtonClicked()
 {
-    m_yellowMinimizeButton->setIcon(QIcon(":images/yellow.png"));
-
     minimizeWindow();
     m_restoreAction->setText(tr("&Show Notes"));
 }
@@ -1196,7 +1169,6 @@ void MainWindow::onYellowMinimizeButtonClicked()
 */
 void MainWindow::onRedCloseButtonClicked()
 {
-    m_redCloseButton->setIcon(QIcon(":images/red.png"));
     setMainWindowVisibility(false);
 }
 
@@ -1490,13 +1462,10 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                     || object == m_yellowMinimizeButton
                     || object == m_greenMaximizeButton){
 
-                m_redCloseButton->setIcon(QIcon(":images/redHovered.png"));
-                m_yellowMinimizeButton->setIcon(QIcon(":images/yellowHovered.png"));
-                if(this->windowState() == Qt::WindowFullScreen){
-                    m_greenMaximizeButton->setIcon(QIcon(":images/greenInHovered.png"));
-                }else{
-                    m_greenMaximizeButton->setIcon(QIcon(":images/greenHovered.png"));
-                }
+                m_redCloseButton->setProperty("hovered", true);
+                m_yellowMinimizeButton->setProperty("hovered", true);
+                m_greenMaximizeButton->setProperty("hovered", true);
+                qApp->setStyleSheet(qApp->styleSheet());
             }
         }
         break;
@@ -1508,27 +1477,27 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                     || object == m_yellowMinimizeButton
                     || object == m_greenMaximizeButton){
 
-                m_redCloseButton->setIcon(QIcon(":images/red.png"));
-                m_yellowMinimizeButton->setIcon(QIcon(":images/yellow.png"));
-                m_greenMaximizeButton->setIcon(QIcon(":images/green.png"));
+                m_redCloseButton->setProperty("hovered", false);
+                m_yellowMinimizeButton->setProperty("hovered", false);
+                m_greenMaximizeButton->setProperty("hovered", false);
+
+                qApp->setStyleSheet(qApp->styleSheet());
             }
         }
         break;
     }
     case QEvent::WindowDeactivate:{
-        m_redCloseButton->setIcon(QIcon(":images/unfocusedButton"));
-        m_yellowMinimizeButton->setIcon(QIcon(":images/unfocusedButton"));
-        m_greenMaximizeButton->setIcon(QIcon(":images/unfocusedButton"));
-//        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-//        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
+        m_redCloseButton->setEnabled(false);
+        m_yellowMinimizeButton->setEnabled(false);
+        m_greenMaximizeButton->setEnabled(false);
+        m_folderTreeView->setEnabled(false);
         break;
     }
     case QEvent::WindowActivate:{
-        m_redCloseButton->setIcon(QIcon(":images/red.png"));
-        m_yellowMinimizeButton->setIcon(QIcon(":images/yellow.png"));
-        m_greenMaximizeButton->setIcon(QIcon(":images/green.png"));
-//        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-//        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
+        m_redCloseButton->setEnabled(true);
+        m_yellowMinimizeButton->setEnabled(true);
+        m_greenMaximizeButton->setEnabled(true);
+         m_folderTreeView->setEnabled(true);
         break;
     }
     case QEvent::HoverEnter:{

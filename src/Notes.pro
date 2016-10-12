@@ -53,7 +53,8 @@ HEADERS  += \
 
 FORMS += $$PWD/mainwindow.ui
 RESOURCES += $$PWD/images.qrc \
-    fonts.qrc
+    fonts.qrc \
+    styles.qrc
 
 linux:!android {
     isEmpty (PREFIX) {

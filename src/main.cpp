@@ -36,6 +36,17 @@ int main(int argc, char *argv[])
     QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Regular.ttf");
     QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Bold.ttf");
 
+    //set styleSheet
+    QFile f(":/css/stylesheet.qss");
+    if (!f.exists()){
+        qDebug() << "Unable to set stylesheet, file not found";
+    }else{
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+        qApp->setStyleSheet(ts.readAll());
+        f.close();
+    }
+
     // Create and Show the app
     MainWindow w;
     w.show();

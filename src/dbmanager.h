@@ -32,12 +32,13 @@ public slots:
     bool modifyNote(const NoteData* note) const;
     bool migrateNote(const NoteData* note) const;
     bool migrateTrash(const NoteData* note) const;
-    int getLastRowID() const;
+    int getNotesLastRowID() const;
 
     QList<FolderData*> getAllFolders();
     bool addFolder(FolderData*folder) const;
-    bool removeFolder(const FolderData* folder) const;
+    bool removeFolder(int id) const;
     bool modifyFolder(const FolderData*folder) const;
+    int getFoldersLastRowID() const;
 
 };
 

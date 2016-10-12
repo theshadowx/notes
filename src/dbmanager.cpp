@@ -294,7 +294,7 @@ bool DBManager::migrateTrash(const NoteData* note) const
     return (query.numRowsAffected() == 1);
 }
 
-int DBManager::getLastRowID() const
+int DBManager::getNotesLastRowID() const
 {
     QSqlQuery query;
     query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='active_notes';");
@@ -345,27 +345,75 @@ bool DBManager::addFolder(FolderData* folder) const
                        .arg(NoteCnt);
 
     query.exec(queryStr);
-
-    bool isInserted = query.numRowsAffected() == 1;
-
-    int insertedFolderID = isInserted ? query.lastInsertId().toInt() : -1;
-    folder->setId(insertedFolderID);
-
-    return isInserted;
+    return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::removeFolder(const FolderData* folder) const
+bool DBManager::removeFolder(int id) const
 {
-    QSqlQuery query;
+    QSqlQuery queryGetNotes;
+    QSqlQuery queryDeleteNotes;
+    QSqlQuery queryAddTrashNotes;
+    QSqlQuery queryDeleteFolders;
 
-    int id = folder->id();
-    QString queryStr = QStringLiteral("DELETE FROM folders "
-                                      "WHERE id=%1")
-                       .arg(id);
-    query.exec(queryStr);
-    bool isRemoved = (query.numRowsAffected() == 1);
+    bool success = true;
 
-    return isRemoved;
+    // Get all notes having a path that contains the id
+    QString queryStr = QStringLiteral("SELECT * FROM active_notes "
+                                      "WHERE (full_path LIKE '%%1%') "
+                                      "OR (full_path LIKE '%_%1%') "
+                                      "OR (full_path LIKE '%_%1_%') "
+                                      "OR (full_path LIKE '%_%1%')").arg(id);
+
+    queryGetNotes.exec(queryStr);
+    while(queryGetNotes.next()){
+        int noteID = queryGetNotes.value(0).toInt();
+        qint64 epochDateTimeCreation = queryGetNotes.value(1).toLongLong();
+        qint64 epochDateTimeModification = queryGetNotes.value(2).toLongLong();
+        qint64 epochTimeDateDeleted = QDateTime::currentDateTime().toMSecsSinceEpoch();
+        QString content = queryGetNotes.value(4).toString();
+        QString fullTitle = queryGetNotes.value(5).toString();
+        QString fullPath = queryGetNotes.value(6).toString();
+
+        // remove each note from active_notes table
+        queryStr = QStringLiteral("DELETE FROM active_notes "
+                                  "WHERE id=%1")
+                   .arg(noteID);
+
+        queryDeleteNotes.exec(queryStr);
+        success &= (queryDeleteNotes.numRowsAffected() == 1);
+
+        // add removed note to deleted_notes table
+        queryStr = QString("INSERT INTO deleted_notes "
+                           "VALUES (%1, %2, %3, %4, '%5', '%6', '%7');")
+                   .arg(noteID)
+                   .arg(epochDateTimeCreation)
+                   .arg(epochDateTimeModification)
+                   .arg(epochTimeDateDeleted)
+                   .arg(content)
+                   .arg(fullTitle)
+                   .arg(fullPath);
+
+        queryAddTrashNotes.exec(queryStr);
+        success &= (queryAddTrashNotes.numRowsAffected() == 1);
+    }
+
+    // delete directory having its id = id
+    queryStr = QStringLiteral("DELETE FROM folders "
+                              "WHERE id=%1")
+               .arg(id);
+
+    queryDeleteFolders.exec(queryStr);
+    success &= (queryDeleteFolders.numRowsAffected() == 1);
+
+    // delete sub directories where their parentPath contains id
+    queryStr = QStringLiteral("DELETE FROM folders "
+                              "WHERE (parent_path LIKE '%%1%') "
+                              "OR (parent_path LIKE '%_%1%') "
+                              "OR (parent_path LIKE '%_%1_%') "
+                              "OR (parent_path LIKE '%_%1%')").arg(id);
+    queryDeleteFolders.exec(queryStr);
+
+    return success;
 }
 
 bool DBManager::modifyFolder(const FolderData* folder) const
@@ -387,6 +435,14 @@ bool DBManager::modifyFolder(const FolderData* folder) const
     query.exec(queryStr);
 
     return (query.numRowsAffected() == 1);
+}
+
+int DBManager::getFoldersLastRowID() const
+{
+    QSqlQuery query;
+    query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='folders';");
+    query.next();
+    return query.value(0).toInt();
 }
 
 bool DBManager::folderExist(int id) const

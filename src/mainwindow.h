@@ -68,7 +68,8 @@ private:
     QPushButton* m_yellowMinimizeButton;
     QPushButton* m_newNoteButton;
     QPushButton* m_trashButton;
-    QPushButton* m_newFolderButton;
+    QPushButton* m_addRootFolderButton;
+    QPushButton* m_deleteRootFolderButton;
     QPushButton* m_newTagButton;
     QTextEdit* m_textEdit;
     QLineEdit* m_lineEdit;
@@ -96,7 +97,7 @@ private:
     int m_mousePressY;
     int m_textEditLeftPadding;
     int m_noteCounter;
-    int m_trashCounter;
+    int m_folderCounter;
     bool m_canMoveWindow;
     bool m_isTemp;
     bool m_isContentModified;
@@ -143,7 +144,8 @@ private slots:
     void InitData();
     void onNewNoteButtonClicked();
     void onTrashButtonClicked();
-    void onNewFolderButtonClicked();
+    void addNewFolder(QModelIndex index = QModelIndex());
+    void deleteFolder(QModelIndex index = QModelIndex());
     void onNotePressed(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onTextEditTextChanged();

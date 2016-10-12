@@ -34,7 +34,8 @@ MainWindow::MainWindow (QWidget *parent) :
     m_yellowMinimizeButton(Q_NULLPTR),
     m_newNoteButton(Q_NULLPTR),
     m_trashButton(Q_NULLPTR),
-    m_newFolderButton(Q_NULLPTR),
+    m_addRootFolderButton(Q_NULLPTR),
+    m_deleteRootFolderButton(Q_NULLPTR),
     m_newTagButton(Q_NULLPTR),
     m_textEdit(Q_NULLPTR),
     m_lineEdit(Q_NULLPTR),
@@ -51,7 +52,7 @@ MainWindow::MainWindow (QWidget *parent) :
     m_folderModel(new FolderModel(this)),
     m_dbManager(Q_NULLPTR),
     m_noteCounter(0),
-    m_trashCounter(0),
+    m_folderCounter(0),
     m_canMoveWindow(false),
     m_isTemp(false),
     m_isContentModified(false),
@@ -164,7 +165,8 @@ void MainWindow::setupMainWindow ()
     m_splitter = ui->splitter;
     m_folderTreeView = ui->folderTree;
     m_tagListW = ui->tagsList;
-    m_newFolderButton = ui->newFolderButton;
+    m_addRootFolderButton = ui->addRootFolderButton;
+    m_deleteRootFolderButton = ui->delRootFolderButton;
     m_newTagButton = ui->newTagButton;
 
     QPalette pal(palette());
@@ -281,8 +283,12 @@ void MainWindow::setupSignalsSlots()
     connect(m_yellowMinimizeButton, &QPushButton::clicked, this, &MainWindow::onYellowMinimizeButtonClicked);
     // new note button
     connect(m_newNoteButton, &QPushButton::clicked, this, &MainWindow::onNewNoteButtonClicked);
-    // new folder button
-    connect(m_newFolderButton, &QPushButton::clicked, this, &MainWindow::onNewFolderButtonClicked);
+    // add/delete folder button
+    FolderWidgetDelegate* delegate = qobject_cast<FolderWidgetDelegate*>(m_folderTreeView->itemDelegate());
+    connect(delegate, &FolderWidgetDelegate::addSubFolderClicked, this, &MainWindow::addNewFolder);
+    connect(delegate, &FolderWidgetDelegate::deleteSubFolderButtonClicked, this, &MainWindow::deleteFolder);
+    connect(m_addRootFolderButton, &QPushButton::clicked, [&](){addNewFolder();});
+    connect(m_deleteRootFolderButton, &QPushButton::clicked, [&](){deleteFolder();});
     // delete note button
     connect(m_trashButton, &QPushButton::clicked, this, &MainWindow::onTrashButtonClicked);
     connect(m_noteModel, &NoteModel::rowsRemoved, [this](){m_trashButton->setEnabled(true);});
@@ -452,7 +458,8 @@ void MainWindow::setupDatabases ()
     }
 
     m_dbManager = new DBManager(noteDBFilePath, doCreate, this);
-    m_noteCounter = m_dbManager->getLastRowID();
+    m_noteCounter = m_dbManager->getNotesLastRowID();
+    m_folderCounter = m_dbManager->getFoldersLastRowID();
 }
 
 void MainWindow::setupModelView()
@@ -574,7 +581,7 @@ void MainWindow::initFolders ()
     // create new Folder if no folder exists
     if(folderDataList.isEmpty()){
         FolderData* folderData = new FolderData;
-        folderData->setName(QStringLiteral("Notes0"));
+        folderData->setName(QStringLiteral("Folder0"));
         FolderItem* folderItem = new FolderItem(folderData, this);
         m_folderModel->insertFolder(folderItem, 0);
 
@@ -706,24 +713,22 @@ void MainWindow::onTrashButtonClicked()
     m_trashButton->blockSignals(false);
 }
 
-void MainWindow::onNewFolderButtonClicked()
+void MainWindow::addNewFolder(QModelIndex index)
 {
-    // getting the current selected folder (parent)
-    m_folderTreeView->setFocus();
-    QModelIndex index =  m_folderTreeView->selectionModel()->currentIndex();
-
     // getting folder data for the new child folder
     // building the item and insert it to the model
     int row = m_folderModel->rowCount(index);
     QString folderName = QStringLiteral("Folder%1").arg(row);
     QString parentPath = m_folderModel->data(index, (int) FolderItem::FolderDataEnum::FullPath).toString();
 
+    ++m_folderCounter;
     FolderData* folderData = new FolderData;
     folderData->setName(folderName);
     folderData->setParentPath(parentPath);
+    folderData->setId(m_folderCounter);
 
     // save the new folder to the database and set id
-    m_dbManager->addFolder(folderData);
+    QtConcurrent::run(m_dbManager, &DBManager::addFolder, folderData);
 
     // create folderItem and insert it to the model
     FolderItem* folderItem = new FolderItem(folderData, this);
@@ -1210,6 +1215,21 @@ void MainWindow::onRedCloseButtonClicked()
     setMainWindowVisibility(false);
 }
 
+void MainWindow::deleteFolder(QModelIndex index)
+{
+    if(m_folderModel->rowCount() > 0){
+        if(!index.isValid()){
+            m_folderTreeView->setFocus();
+            index =  m_folderTreeView->selectionModel()->currentIndex();
+        }
+
+        m_folderModel->removeFolder(index.row(), m_folderModel->parent(index));
+
+        int id = index.data((int) FolderItem::FolderDataEnum::ID).toInt();
+        QtConcurrent::run(m_dbManager, &DBManager::removeFolder, id);
+    }
+}
+
 /**
  * @brief Called when the app is about the close
  * save the geometry of the app to the settings
@@ -1571,12 +1591,16 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
 
                     }else{
                         clearSearch();
+                        if(m_folderModel->rowCount() == 0)
+                            addNewFolder();
                         createNewNote();
                     }
 
                     m_textEdit->setFocus();
 
                 }else if(m_proxyModel->rowCount() == 0){
+                    if(m_folderModel->rowCount() == 0)
+                        addNewFolder();
                     createNewNote();
                 }
             }

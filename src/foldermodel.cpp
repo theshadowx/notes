@@ -31,9 +31,12 @@ bool FolderModel::setData(const QModelIndex& index, const QVariant& value, int r
     FolderItem* item = getFolderItem(index);
 
     switch (role) {
-    case Qt::EditRole:
-        success = item->setData(FolderItem::FolderDataEnum::Name, value);
+    case Qt::EditRole:{
+        bool changed = value != item->data(FolderItem::FolderDataEnum::Name);
+        success =  changed && item->setData(FolderItem::FolderDataEnum::Name, value);
+
         break;
+    }
     default:
         success = item->setData((FolderItem::FolderDataEnum) role, value);
         break;
@@ -47,13 +50,18 @@ bool FolderModel::setData(const QModelIndex& index, const QVariant& value, int r
 
 QModelIndex FolderModel::index(int row, int column, const QModelIndex& parent) const
 {
-    if (!parent.isValid())
-        return createIndex(row, column, const_cast<FolderItem*>(m_rootFolders[row]));
+    if (!parent.isValid()){
+        if(row >= 0 && row < m_rootFolders.count()){
+            return createIndex(row, column, const_cast<FolderItem*>(m_rootFolders[row]));
+        }else{
+            return QModelIndex();
+        }
+    }
 
     FolderItem *parentFolder = getFolderItem(parent);
-
     FolderItem *childFolder = parentFolder->child(row);
-    if (childFolder)
+
+    if (childFolder != Q_NULLPTR)
         return createIndex(row, column, childFolder);
     else
         return QModelIndex();
@@ -103,11 +111,22 @@ Qt::ItemFlags FolderModel::flags(const QModelIndex& index) const
 bool FolderModel::removeFolder(int row, const QModelIndex& parent)
 {
     bool success = false;
-    FolderItem* parentFolder = getFolderItem(parent);
 
-    beginRemoveRows(parent, row, row);
-    success = parentFolder->removeChild(row);
-    endRemoveRows();
+    FolderItem* parentFolder = getFolderItem(parent);
+    if(parentFolder != Q_NULLPTR){
+        beginRemoveRows(parent, row, row);
+        success = parentFolder->removeChild(row);
+        endRemoveRows();
+
+    }else if(row >=0 && row < m_rootFolders.count()){
+
+        beginRemoveRows(parent, row, row);
+        FolderItem* folder = m_rootFolders.takeAt(row);
+        endRemoveRows();
+
+        delete folder;
+        success = true;
+    }
 
     return success;
 }

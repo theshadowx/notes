@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
 
     instance.listen (name);
 
-    // install Roboto font
+    // install font
+    QFontDatabase::addApplicationFont(":/fonts/arimo/Arimo-Regular.ttf");
     QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Regular.ttf");
     QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Bold.ttf");
 

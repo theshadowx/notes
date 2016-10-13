@@ -16,6 +16,10 @@ public:
                           const QStyleOptionViewItem &option,
                           const QModelIndex &index) const Q_DECL_OVERRIDE;
 
+    void paint(QPainter *painter,
+               const QStyleOptionViewItem &option,
+               const QModelIndex &index) const Q_DECL_OVERRIDE;
+
     bool editorEvent(QEvent *event,
                      QAbstractItemModel *model,
                      const QStyleOptionViewItem &option,
@@ -24,6 +28,9 @@ public:
     void showContextMenu(QAbstractItemModel*model,
                          const QStyleOptionViewItem&option,
                          const QModelIndex&index);
+
+private:
+    QTreeView* m_view;
 
 signals:
     void addSubFolderClicked(QModelIndex index);

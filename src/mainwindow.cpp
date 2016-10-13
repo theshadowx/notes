@@ -1487,17 +1487,11 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
         break;
     }
     case QEvent::WindowDeactivate:{
-        m_redCloseButton->setEnabled(false);
-        m_yellowMinimizeButton->setEnabled(false);
-        m_greenMaximizeButton->setEnabled(false);
-        m_folderTreeView->setEnabled(false);
+        this->setEnabled(false);
         break;
     }
     case QEvent::WindowActivate:{
-        m_redCloseButton->setEnabled(true);
-        m_yellowMinimizeButton->setEnabled(true);
-        m_greenMaximizeButton->setEnabled(true);
-         m_folderTreeView->setEnabled(true);
+        this->setEnabled(true);
         break;
     }
     case QEvent::HoverEnter:{

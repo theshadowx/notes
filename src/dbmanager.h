@@ -27,6 +27,7 @@ signals:
 public slots:
     QList<NoteData*> getAllNotes();
     QList<NoteData*> getAllNotes(const QString& fullPath);
+    QList<NoteData*> getNotesInTrash();
     bool addNote(const NoteData*note) const;
     bool removeNote(const NoteData* note) const;
     bool modifyNote(const NoteData* note) const;

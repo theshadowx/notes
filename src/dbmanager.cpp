@@ -144,6 +144,44 @@ QList<NoteData*> DBManager::getAllNotes(const QString& fullPath)
     return noteList;
 }
 
+QList<NoteData*> DBManager::getNotesInTrash()
+{
+    QList<NoteData *> noteList;
+
+    QSqlQuery query;
+    query.prepare("SELECT * FROM deleted_notes");
+    bool status = query.exec();
+    if(status){
+        while(query.next()){
+            NoteData* note = new NoteData(this);
+            int id =  query.value(0).toInt();
+            qint64 epochDateTimeCreation = query.value(1).toLongLong();
+            QDateTime dateTimeCreation = QDateTime::fromMSecsSinceEpoch(epochDateTimeCreation, QTimeZone::systemTimeZone());
+            qint64 epochDateTimeModification= query.value(2).toLongLong();
+            QDateTime dateTimeModification = QDateTime::fromMSecsSinceEpoch(epochDateTimeModification, QTimeZone::systemTimeZone());
+            qint64 epochDateTimeDeletion= query.value(3).toLongLong();
+            QDateTime dateTimeDeletion = QDateTime::fromMSecsSinceEpoch(epochDateTimeDeletion, QTimeZone::systemTimeZone());
+            QString content = query.value(4).toString();
+            QString fullTitle = query.value(5).toString();
+            QString fullPath = query.value(6).toString();
+
+            note->setId(QStringLiteral("noteID_%1").arg(id));
+            note->setCreationDateTime(dateTimeCreation);
+            note->setLastModificationDateTime(dateTimeModification);
+            note->setDeletionDateTime(dateTimeDeletion);
+            note->setContent(content);
+            note->setFullTitle(fullTitle);
+            note->setFullPath(fullPath);
+
+            noteList.push_back(note);
+        }
+
+        emit notesReceived(noteList);
+    }
+
+    return noteList;
+}
+
 bool DBManager::addNote(const NoteData* note) const
 {
     QSqlQuery query;

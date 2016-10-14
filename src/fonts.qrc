@@ -4,5 +4,9 @@
         <file>fonts/arimo/Arimo-Regular.ttf</file>
         <file>fonts/roboto-hinted/Roboto-Bold.ttf</file>
         <file>fonts/roboto-hinted/Roboto-Regular.ttf</file>
+        <file>fonts/ubuntu-font-family-0.83/UbuntuMono-R.ttf</file>
+        <file>fonts/ubuntu-font-family-0.83/UbuntuMono-B.ttf</file>
+        <file>fonts/ubuntu-font-family-0.83/Ubuntu-R.ttf</file>
+        <file>fonts/ubuntu-font-family-0.83/Ubuntu-B.ttf</file>
     </qresource>
 </RCC>

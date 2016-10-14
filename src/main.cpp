@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
     instance.listen (name);
 
     // install font
+    QFontDatabase::addApplicationFont(":/fonts/ubuntu-font-family-0.83/Ubuntu-B.ttf");
+    QFontDatabase::addApplicationFont(":/fonts/ubuntu-font-family-0.83/Ubuntu-R.ttf");
     QFontDatabase::addApplicationFont(":/fonts/arimo/Arimo-Regular.ttf");
     QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Regular.ttf");
     QFontDatabase::addApplicationFont(":/fonts/roboto-hinted/Roboto-Bold.ttf");

@@ -63,6 +63,20 @@ QLineEdit:focus{
     border: 1px solid rgb(61, 155, 218);
 }
 
+QFontComboBox{padding-left:5px; border: 1px solid rgb(221, 221, 221); border-radius:5px; background-color: transparent; color:rgb(26, 26, 26); font-family:"Ubuntu"; font-size:10pt;}
+QFontComboBox QAbstractItemView {border: none; selection-background-color: rgb(68, 138, 201);}
+QFontComboBox::drop-down {subcontrol-origin: padding; subcontrol-position: right center; width: 16px; height: 16px; border:none; padding: 0px;}
+QFontComboBox::down-arrow {image: url(:/images/arrow-drop-up.svg); width: 14px; height: 14px;}
+
+QFontComboBox QScrollBar {margin-right: 2px; background: transparent;}
+QFontComboBox QScrollBar:hover { background-color: rgb(217, 217, 217);}
+QFontComboBox QScrollBar:handle:vertical:hover { background: rgb(170, 170, 171); }
+QFontComboBox QScrollBar:handle:vertical:pressed { background: rgb(149, 149, 149);}
+QFontComboBox QScrollBar:vertical { border: none; width: 10px; border-radius: 4px;}
+QFontComboBox QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }
+QFontComboBox QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
+QFontComboBox QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
+
 QTextEdit#textEdit {padding-left: 27px; padding-right: 27px; padding-bottom:2px; font-family:"Arimo"; font-size:11pt; color:rgb(51, 51, 51);}
 QTextEdit#textEdit QScrollBar{margin: 0; background: transparent;}
 QTextEdit#textEdit QScrollBar::handle:vertical:hover{ background: rgb(170, 170, 171); }

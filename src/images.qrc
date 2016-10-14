@@ -22,5 +22,6 @@
         <file>images/closeButton.png</file>
         <file>images/notes_system_tray_icon.png</file>
         <file>images/textEdit_background_pattern.png</file>
+        <file>images/arrow-drop-up.svg</file>
     </qresource>
 </RCC>

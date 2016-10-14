@@ -31,6 +31,7 @@ public:
 
 private:
     QTreeView* m_view;
+    QColor m_lineColor;
 
 signals:
     void addSubFolderClicked(QModelIndex index);

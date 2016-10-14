@@ -10,7 +10,8 @@
 #include "foldermodel.h"
 
 FolderWidgetDelegate::FolderWidgetDelegate(QObject* parent)
-    : QStyledItemDelegate(parent)
+    : QStyledItemDelegate(parent),
+      m_lineColor(QColor(221, 221, 221))
 {
     m_view = qobject_cast<QTreeView*>(parent);
 }
@@ -43,7 +44,7 @@ void FolderWidgetDelegate::paint(QPainter* painter,
         QPoint bottomLeft = option.rect.bottomLeft();
         QPoint bottomRight = QPoint(m_view->width(), bottomLeft.y());
 
-        QPen pen(QColor(221, 221, 221));
+        QPen pen(m_lineColor);
         pen.setWidth(1);
         painter->save();
         painter->setPen(pen);

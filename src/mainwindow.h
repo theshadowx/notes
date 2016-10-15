@@ -80,6 +80,7 @@ private:
     QAction* m_quitAction;
     QMenu* m_trayIconMenu;
     QTreeView* m_folderTreeView;
+    QListWidget* m_generalListW;
     QListWidget* m_tagListW;
 
     NoteView* m_noteView;
@@ -102,6 +103,7 @@ private:
     bool m_isTemp;
     bool m_isContentModified;
     bool m_isOperationRunning;
+    bool m_isNoteEditable;
     QString m_currentFolderPath;
 
     void setupMainWindow();
@@ -147,6 +149,7 @@ private slots:
     void deleteFolder(QModelIndex index = QModelIndex());
     void onNotePressed(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void onGeneralListWCurrentRowChanged(int currentRow);
     void onTextEditTextChanged();
     void onLineEditTextChanged(const QString& keyword);
     void onClearButtonClicked();

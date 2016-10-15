@@ -1,67 +1,68 @@
-#frameDecorator{
-    border: none;
-    border-bottom: 1px solid rgb(210,210,210);
-}
+QFrame{background-color: rgb(247, 247, 247);}
 
-#line, #line_2, #line_3, #line_4,#line_5{
-    border: 1px solid rgb(221, 221, 221);
-}
+QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 
-QLabel{
-    font: 10pt "Roboto";
-}
+#frameDecorator{border: none; border-bottom: 1px solid rgb(210,210,210);}
 
-#trashLabel, #allNotesLabel{
-    font-family: "Roboto";
-    font-size: 14px;
-}
+#line, #line_2, #line_3, #line_4,#line_5{border: 1px solid rgb(221, 221, 221);}
 
-#tagLabel, #folderLabel{
-    color: rgb(100, 100, 100);
-    font: 9pt "Roboto";
-}
+#trashLabel, #allNotesLabel{font-family: "Ubuntu"; font-size: 14px; color:rgb(26, 26, 26);}
 
-#editorDateLabel{
-    font: bold 10pt "Roboto";
-}
+#tagLabel, #folderLabel{color: rgb(100, 100, 100); font: 10pt "Ubuntu";}
 
-QToolButton {
-    border: none;
-    padding: 0px;
-}
+#editorDateLabel{ font: bold 10pt "Roboto";}
 
-QFrame{
-    background-color: rgb(247, 247, 247);
-}
-
-#frameFolderTag{
-    border: none;
-    border-right: 1px solid rgb(221, 221, 221);
-}
+#frameFolderTag{border: none; border-right: 1px solid rgb(221, 221, 221);}
 
 #greenMaximizeButton, #redCloseButton, #yellowMinimizeButton,
-#newNoteButton, #trashButton, #newFolderButton, #newTagButton {
-    border: none;
-    padding: 0px;
-}
+#newNoteButton, #trashButton, #newFolderButton, #newTagButton {border: none; padding: 0px;}
 
-QLineEdit{
-    border: 1px solid rgb(205, 205, 205);
-    padding-right: 4px;
-    border-radius: 4px;
-    background: rgb(251, 251, 251);
-    selection-background-color: rgb(61, 155, 218);
-    font: 10pt "Roboto";
-}
+#trashButton{background-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center;}
+#trashButton:pressed{background-image: url(:/images/trashCan_Pressed.png);}
+#trashButton:!pressed:hover{background-image: url(:/images/trashCan_Hovered.png);}
 
-QLineEdit#lineEdit{
-    padding-left: 21px;
-    padding-right: 19px;
-}
+#newNoteButton{background-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center;}
+#newNoteButton:pressed{background-image: url(:/images/newNote_Pressed.png);}
+#newNoteButton:!pressed:hover{background-image: url(:/images/newNote_Hovered.png);}
 
-QLineEdit:focus{
-    border: 1px solid rgb(61, 155, 218);
-}
+#addRootFolderButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
+#addRootFolderButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
+#addRootFolderButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+
+#delRootFolderButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
+#delRootFolderButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
+#delRootFolderButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
+
+#newTagButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
+#newTagButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
+#newTagButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+
+#deleteTagButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
+#deleteTagButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
+#deleteTagButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
+
+#redCloseButton{border-image:url(:/images/red.png)0 0 0 0 stretch stretch;}
+#redCloseButton[hovered=true]{border-image:url(:/images/redHovered.png);}
+#redCloseButton:pressed{border-image:url(:/images/redPressed.png);}
+#redCloseButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
+
+#yellowMinimizeButton{border-image:url(:/images/yellow.png);}
+#yellowMinimizeButton[hovered=true]{border-image:url(:/images/yellowHovered.png);}
+#yellowMinimizeButton:pressed{border-image:url(:/images/yellowPressed.png);}
+#yellowMinimizeButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
+
+#greenMaximizeButton{border-image:url(:/images/green.png);}
+#greenMaximizeButton[hovered=true]{border-image:url(:/images/greenHovered.png);}
+#greenMaximizeButton[hovered=true][fullscreen=true]{border-image:url(:/images/greenInHovered.png);}
+#greenMaximizeButton:pressed{border-image:url(:/images/greenPressed.png);}
+#greenMaximizeButton:pressed[fullscreen=true]{border-image:url(:/images/greenInPressed.png);}
+#greenMaximizeButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
+
+QToolButton {border: none; padding: 0px;}
+
+QLineEdit{border: 1px solid rgb(205, 205, 205); padding-right: 4px; border-radius: 4px; background: rgb(251, 251, 251); selection-background-color: rgb(61, 155, 218); font: 10pt "Ubuntu";}
+QLineEdit#lineEdit{padding-left: 21px; padding-right: 19px;}
+QLineEdit:focus{border: 1px solid rgb(61, 155, 218);}
 
 QFontComboBox{padding-left:5px; border: 1px solid rgb(221, 221, 221); border-radius:5px; background-color: transparent; color:rgb(26, 26, 26); font-family:"Ubuntu"; font-size:10pt;}
 QFontComboBox QAbstractItemView {border: none; selection-background-color: rgb(68, 138, 201);}
@@ -105,50 +106,35 @@ QTreeView QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188,
 QTreeView QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
 QTreeView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
 
-QTreeView {border: none; selection-background-color: rgb(68, 138, 201); font-size: 14px; font-family: "Roboto";outline-color: transparent;}
-QTreeView::item {padding-top:1px; padding-bottom:1px; min-height: 21px;}
+QTreeView {border: none; margin: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font-family: "Ubuntu";font-size: 14px; outline: none;}
+QTreeView::item {padding-top:1px; padding-bottom:1px; min-height: 18px;}
 QTreeView::item:selected {background: rgb(68, 138, 201);}
 QTreeView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 QTreeView::branch:selected:!enabled{background:rgb(207, 207, 207);}
-QTreeView QFrame{background-color: transparent;}
 
-#trashButton{background-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center;}
-#trashButton:pressed{background-image: url(:/images/trashCan_Pressed.png);}
-#trashButton:!pressed:hover{background-image: url(:/images/trashCan_Hovered.png);}
+QListWidget{border: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font-family: "Ubuntu";font-size: 14px; outline-color: transparent;}
+QListWidget::item{border: none; border-bottom:1px solid rgb(221, 221, 221); padding-left:20px; padding-top:1px; padding-bottom:1px; height: 18px;}
+QListWidget::item:selected {padding-left:20px; background: rgb(68, 138, 201);}
+QListWidget::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 
-#newNoteButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center;}
-#newNoteButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#newNoteButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+QMenu{
+font-family: "Ubuntu";
+font-size: 13px;
+color: rgb(26, 26, 26);
+}
 
-#addRootFolderButton{border-image: url(:/images/newNote_Regular.png);background-repeat: no-repeat; background-position: center center;}
-#addRootFolderButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#addRootFolderButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+QMenu::item {
 
-#delRootFolderButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; padding: 0px;}
-#delRootFolderButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
-#delRootFolderButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
+    padding: 3px 25px 3px 25px;
+    margin:1px;
+    margin-top:0px;
+    border: 1px solid transparent;
+}
 
-#newTagButton{border-image: url(:/images/newNote_Regular.png);background-repeat: no-repeat; background-position: center center;}
-#newTagButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#newTagButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+QMenu::item:selected {
+    background-color:rgb(240, 240, 240);
+}
 
-#deleteTagButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; padding: 0px;}
-#deleteTagButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
-#deleteTagButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
-
-#redCloseButton{border-image:url(:/images/red.png);}
-#redCloseButton[hovered=true]{border-image:url(:/images/redHovered.png);}
-#redCloseButton:pressed{border-image:url(:/images/redPressed.png);}
-#redCloseButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
-
-#yellowMinimizeButton{border-image:url(:/images/yellow.png);}
-#yellowMinimizeButton[hovered=true]{border-image:url(:/images/yellowHovered.png);}
-#yellowMinimizeButton:pressed{border-image:url(:/images/yellowPressed.png);}
-#yellowMinimizeButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
-
-#greenMaximizeButton{border-image:url(:/images/green.png);}
-#greenMaximizeButton[hovered=true]{border-image:url(:/images/greenHovered.png);}
-#greenMaximizeButton[hovered=true][fullscreen=true]{border-image:url(:/images/greenInHovered.png);}
-#greenMaximizeButton:pressed{border-image:url(:/images/greenPressed.png);}
-#greenMaximizeButton:pressed[fullscreen=true]{border-image:url(:/images/greenInPressed.png);}
-#greenMaximizeButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
+QMenu::icon{
+    padding-left: 5px;
+}

@@ -45,6 +45,7 @@ MainWindow::MainWindow (QWidget *parent) :
     m_quitAction(new QAction(tr("&Quit"), this)),
     m_trayIconMenu(new QMenu(this)),
     m_folderTreeView(Q_NULLPTR),
+    m_generalListW(Q_NULLPTR),
     m_tagListW(Q_NULLPTR),
     m_noteModel(new NoteModel(this)),
     m_deletedNotesModel(new NoteModel(this)),
@@ -56,7 +57,8 @@ MainWindow::MainWindow (QWidget *parent) :
     m_canMoveWindow(false),
     m_isTemp(false),
     m_isContentModified(false),
-    m_isOperationRunning(false)
+    m_isOperationRunning(false),
+    m_isNoteEditable(true)
 {
     ui->setupUi(this);
     setupMainWindow();
@@ -167,6 +169,7 @@ void MainWindow::setupMainWindow ()
     m_addRootFolderButton = ui->addRootFolderButton;
     m_deleteRootFolderButton = ui->delRootFolderButton;
     m_newTagButton = ui->newTagButton;
+    m_generalListW = ui->generalListW;
 
     QPalette pal(palette());
     pal.setColor(QPalette::Background, QColor(248, 248, 248));
@@ -237,6 +240,8 @@ void MainWindow::setupSplitter()
     int width = this->minimumWidth();
     sizes << 0.25*width << 0.25*width << 0.5*width;
     ui->splitter->setSizes(sizes);
+    ui->splitter->setCollapsible(0,false);
+    ui->splitter->setCollapsible(2,false);
 }
 
 /**
@@ -282,6 +287,8 @@ void MainWindow::setupSignalsSlots()
     connect(m_noteView, &NoteView::pressed, this, &MainWindow::onNotePressed);
     // folder selected
     connect(m_folderTreeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onFolderSelectionChanged);
+    // All Notes/ Trash listWidget
+    connect(m_generalListW, &QListWidget::currentRowChanged, this, &MainWindow::onGeneralListWCurrentRowChanged);
     // noteView viewport pressed
     connect(m_noteView, &NoteView::viewportClicked, this, [this](){
         if(m_isTemp && m_proxyModel->rowCount() > 1){
@@ -632,6 +639,9 @@ void MainWindow::selectFirstNote ()
 
         m_currentSelectedNoteProxy = index;
         showNoteInEditor(index);
+
+        if(m_lineEdit->text().isEmpty())
+            m_noteView->setFocus();
     }
 }
 
@@ -672,16 +682,18 @@ void MainWindow::setButtonsAndFieldsEnabled(bool doEnable)
 */
 void MainWindow::onNewNoteButtonClicked()
 {
-    if(!m_lineEdit->text().isEmpty()){
-        clearSearch();
-        m_selectedNoteBeforeSearchingInSource = QModelIndex();
+    if(m_isNoteEditable){
+        if(!m_lineEdit->text().isEmpty()){
+            clearSearch();
+            m_selectedNoteBeforeSearchingInSource = QModelIndex();
+        }
+
+        // save the data of the previous selected
+        if(m_currentSelectedNoteProxy.isValid())
+            saveNoteToDB(m_currentSelectedNoteProxy);
+
+        createNewNote();
     }
-
-    // save the data of the previous selected
-    if(m_currentSelectedNoteProxy.isValid())
-        saveNoteToDB(m_currentSelectedNoteProxy);
-
-    createNewNote();
 }
 
 /**
@@ -736,12 +748,15 @@ void MainWindow::onNotePressed (const QModelIndex& index)
     if(sender() != Q_NULLPTR){
         QModelIndex indexInProxy = m_proxyModel->index(index.row(), 0);
         selectNote(indexInProxy);
+        m_noteView->setFocus();
     }
 }
 
 void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
 {
     Q_UNUSED(deselected)
+
+     m_currentFolderPath.clear();
 
     // init Note List variables
     clearSearch();
@@ -753,10 +768,16 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
     m_isTemp = false;
     m_isContentModified = false;
 
+    ui->frameRight->setEnabled(true);
+
     m_folderTreeView->setFocus();
 
     if(!selected.indexes().isEmpty()){
         QModelIndex selectedFolderIndex = selected.indexes().at(0);
+
+        // clear the selection in the All Notes/ Trash listWidget
+        m_generalListW->clearSelection();
+        m_generalListW->setCurrentRow(-1);
 
         // update the current Folder Path
         m_currentFolderPath = m_folderModel->data(selectedFolderIndex,
@@ -775,6 +796,52 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
                 m_noteModel->addListNote(noteList);
                 m_noteModel->sort(0,Qt::AscendingOrder);
                 selectFirstNote();
+            }
+        }
+    }
+}
+
+void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
+{
+     m_isNoteEditable = true;
+
+    if(currentRow!=-1){
+        m_folderTreeView->setCurrentIndex(QModelIndex());
+
+        // init Note List variables
+        clearSearch();
+        clearTextAndHeader();
+
+        m_noteModel->clearNotes();
+        m_currentSelectedNoteProxy = QModelIndex();
+        m_selectedNoteBeforeSearchingInSource = QModelIndex();
+        m_isTemp = false;
+        m_isContentModified = false;
+
+        if(currentRow == 0){ // All Notes
+            QList<NoteData*> noteList = m_dbManager->getAllNotes();
+            // add notes to the model
+            if(!noteList.isEmpty()){
+                m_noteView->setSearching(true);
+                m_noteModel->addListNote(noteList);
+                m_noteModel->sort(0,Qt::AscendingOrder);
+                selectFirstNote();
+                m_noteView->setSearching(false);
+
+                ui->frameRight->setEnabled(true);
+            }
+        }else if(currentRow == 1){ // Trash
+
+            m_isNoteEditable = false;
+
+            QList<NoteData*> trashNotes = m_dbManager->getNotesInTrash();
+            // add notes to the model
+            if(!trashNotes.isEmpty()){
+                m_noteModel->addListNote(trashNotes);
+                m_noteModel->sort(0,Qt::AscendingOrder);
+                selectFirstNote();
+
+                ui->frameRight->setDisabled(true);
             }
         }
     }
@@ -930,38 +997,40 @@ void MainWindow::onClearButtonClicked()
  */
 void MainWindow::createNewNote ()
 {
-    if(!m_isOperationRunning){
-        m_isOperationRunning = true;
+    if(m_isNoteEditable){
+        if(!m_isOperationRunning){
+            m_isOperationRunning = true;
 
-        m_noteView->scrollToTop();
+            m_noteView->scrollToTop();
 
-        clearTextAndHeader();
+            clearTextAndHeader();
 
-        if(!m_isTemp){
-            ++m_noteCounter;
-            QString noteID = QString("noteID_%1").arg(m_noteCounter);
-            NoteData* tmpNote = generateNote(noteID);
-            m_isTemp = true;
+            if(!m_isTemp){
+                ++m_noteCounter;
+                QString noteID = QString("noteID_%1").arg(m_noteCounter);
+                NoteData* tmpNote = generateNote(noteID);
+                m_isTemp = true;
 
-            // insert the new note to NoteModel
-            QModelIndex indexSrc = m_noteModel->insertNote(tmpNote, 0);
+                // insert the new note to NoteModel
+                QModelIndex indexSrc = m_noteModel->insertNote(tmpNote, 0);
 
-            // update the editor header date label
-            QString dateTimeFromDB = tmpNote->lastModificationdateTime().toString(Qt::ISODate);
-            QString dateTimeForEditor = getNoteDateEditor(dateTimeFromDB);
-            m_editorDateLabel->setText(dateTimeForEditor);
+                // update the editor header date label
+                QString dateTimeFromDB = tmpNote->lastModificationdateTime().toString(Qt::ISODate);
+                QString dateTimeForEditor = getNoteDateEditor(dateTimeFromDB);
+                m_editorDateLabel->setText(dateTimeForEditor);
 
-            // update the current selected index
-            m_currentSelectedNoteProxy = m_proxyModel->mapFromSource(indexSrc);
+                // update the current selected index
+                m_currentSelectedNoteProxy = m_proxyModel->mapFromSource(indexSrc);
 
-        }else{
-            int row = m_currentSelectedNoteProxy.row();
-            m_noteView->animateAddedRow(QModelIndex(),row, row);
+            }else{
+                int row = m_currentSelectedNoteProxy.row();
+                m_noteView->animateAddedRow(QModelIndex(),row, row);
+            }
+
+            m_textEdit->setFocus();
+            m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
+            m_isOperationRunning = false;
         }
-
-        m_textEdit->setFocus();
-        m_noteView->setCurrentIndex(m_currentSelectedNoteProxy);
-        m_isOperationRunning = false;
     }
 }
 
@@ -996,32 +1065,34 @@ void MainWindow::deleteNote(const QModelIndex &noteIndex)
 
 void MainWindow::deleteSelectedNote ()
 {
-    if(!m_isOperationRunning){
-        m_isOperationRunning = true;
+    if(m_isNoteEditable){
+        if(!m_isOperationRunning){
+            m_isOperationRunning = true;
 
-        if(m_currentSelectedNoteProxy.isValid()){
+            if(m_currentSelectedNoteProxy.isValid()){
 
-            // update the index of the selected note before searching
-            if(!m_lineEdit->text().isEmpty()){
-                QModelIndex currentIndexInSource = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
-                int beforeSearchSelectedRow = m_selectedNoteBeforeSearchingInSource.row();
-                if(currentIndexInSource.row() < beforeSearchSelectedRow){
-                    m_selectedNoteBeforeSearchingInSource = m_noteModel->index(beforeSearchSelectedRow-1);
+                // update the index of the selected note before searching
+                if(!m_lineEdit->text().isEmpty()){
+                    QModelIndex currentIndexInSource = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
+                    int beforeSearchSelectedRow = m_selectedNoteBeforeSearchingInSource.row();
+                    if(currentIndexInSource.row() < beforeSearchSelectedRow){
+                        m_selectedNoteBeforeSearchingInSource = m_noteModel->index(beforeSearchSelectedRow-1);
+                    }
                 }
+
+                // clear text edit and time date label
+                clearTextAndHeader();
+
+                // delete the note
+                deleteNote(m_currentSelectedNoteProxy);
+
+                // update the the current selected note
+                m_currentSelectedNoteProxy = m_noteView->currentIndex();
+                if(m_currentSelectedNoteProxy.isValid())
+                    showNoteInEditor(m_currentSelectedNoteProxy);
             }
-
-            // clear text edit and time date label
-            clearTextAndHeader();
-
-            // delete the note
-            deleteNote(m_currentSelectedNoteProxy);
-
-            // update the the current selected note
-            m_currentSelectedNoteProxy = m_noteView->currentIndex();
-            if(m_currentSelectedNoteProxy.isValid())
-                showNoteInEditor(m_currentSelectedNoteProxy);
+            m_isOperationRunning = false;
         }
-        m_isOperationRunning = false;
     }
 }
 
@@ -1523,33 +1594,35 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
     case QEvent::FocusIn:{
         if(object == m_textEdit){
 
-            m_noteView->setCurrentRowActive(true);
+            if(m_isNoteEditable){
+                m_noteView->setCurrentRowActive(true);
 
-            if(!m_isOperationRunning){
-                // When clicking in a note's content while searching,
-                // reload all the notes and go and select that note
-                if(!m_lineEdit->text().isEmpty()){
-                    m_selectedNoteBeforeSearchingInSource = QModelIndex();
+                if(!m_isOperationRunning){
+                    // When clicking in a note's content while searching,
+                    // reload all the notes and go and select that note
+                    if(!m_lineEdit->text().isEmpty()){
+                        m_selectedNoteBeforeSearchingInSource = QModelIndex();
 
-                    if(m_currentSelectedNoteProxy.isValid()){
-                        QModelIndex indexInSource = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
-                        clearSearch();
-                        m_currentSelectedNoteProxy = m_proxyModel->mapFromSource(indexInSource);
-                        selectNote(m_currentSelectedNoteProxy);
+                        if(m_currentSelectedNoteProxy.isValid()){
+                            QModelIndex indexInSource = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
+                            clearSearch();
+                            m_currentSelectedNoteProxy = m_proxyModel->mapFromSource(indexInSource);
+                            selectNote(m_currentSelectedNoteProxy);
 
-                    }else{
-                        clearSearch();
+                        }else{
+                            clearSearch();
+                            if(m_folderModel->rowCount() == 0)
+                                addNewFolder();
+                            createNewNote();
+                        }
+
+                        m_textEdit->setFocus();
+
+                    }else if(m_proxyModel->rowCount() == 0){
                         if(m_folderModel->rowCount() == 0)
                             addNewFolder();
                         createNewNote();
                     }
-
-                    m_textEdit->setFocus();
-
-                }else if(m_proxyModel->rowCount() == 0){
-                    if(m_folderModel->rowCount() == 0)
-                        addNewFolder();
-                    createNewNote();
                 }
             }
         }

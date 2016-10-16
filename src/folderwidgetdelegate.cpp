@@ -82,20 +82,13 @@ void FolderWidgetDelegate::showContextMenu(QAbstractItemModel* model,
     Q_UNUSED(option)
 
     QMenu optionMenu;
+    optionMenu.addAction(QIcon(QStringLiteral(":/images/newNote_Regular.png")),
+                         tr("Add Subfolder"),
+                         [&](){emit addSubFolderClicked(index);});
 
-    QAction addSubFolder(tr("Add Subfolder"),&optionMenu);
-    addSubFolder.setIcon(QIcon(QStringLiteral(":/images/newNote_Regular.png")));
+    optionMenu.addAction(QIcon(QStringLiteral(":/images/trashCan_Regular.png")),
+                         tr("Delete folder"),
+                         [&](){emit deleteSubFolderButtonClicked(index);});
 
-    QAction deleteSubFolder(tr("Delete folder"),&optionMenu);
-    deleteSubFolder.setIcon(QIcon(QStringLiteral(":/images/trashCan_Regular.png")));
-
-    optionMenu.addAction(&addSubFolder);
-    optionMenu.addAction(&deleteSubFolder);
-    QAction* selectedAction = optionMenu.exec(QCursor::pos());
-
-    if(selectedAction == &addSubFolder){
-        emit addSubFolderClicked(index);
-    }else if(selectedAction == &deleteSubFolder){
-        emit deleteSubFolderButtonClicked(index);
-    }
+    optionMenu.exec(QCursor::pos());
 }

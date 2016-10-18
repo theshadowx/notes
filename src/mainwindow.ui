@@ -297,7 +297,7 @@
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>13</number>
+         <number>9</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -308,45 +308,21 @@
         <property name="spacing">
          <number>0</number>
         </property>
-        <item row="3" column="0" colspan="2">
-         <widget class="QTreeView" name="folderTree">
-          <property name="font">
-           <font>
-            <family>Roboto</family>
-            <pointsize>11</pointsize>
-           </font>
-          </property>
-          <property name="mouseTracking">
-           <bool>true</bool>
-          </property>
+        <item row="7" column="0" colspan="2">
+         <widget class="QListView" name="tagListView">
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
           </property>
-          <property name="tabKeyNavigation">
-           <bool>false</bool>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
           </property>
-          <property name="horizontalScrollMode">
-           <enum>QAbstractItemView::ScrollPerItem</enum>
-          </property>
-          <property name="animated">
-           <bool>true</bool>
-          </property>
-          <attribute name="headerVisible">
-           <bool>false</bool>
-          </attribute>
-          <attribute name="headerDefaultSectionSize">
-           <number>35</number>
-          </attribute>
-          <attribute name="headerMinimumSectionSize">
-           <number>35</number>
-          </attribute>
          </widget>
         </item>
-        <item row="1" column="0">
-         <spacer name="verticalSpacer">
+        <item row="5" column="0">
+         <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -450,6 +426,37 @@
             </spacer>
            </item>
            <item>
+            <widget class="QPushButton" name="clearSelectionButton">
+             <property name="minimumSize">
+              <size>
+               <width>18</width>
+               <height>18</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>18</width>
+               <height>18</height>
+              </size>
+             </property>
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>12</width>
+               <height>12</height>
+              </size>
+             </property>
+             <property name="flat">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="newTagButton">
              <property name="minimumSize">
               <size>
@@ -512,6 +519,52 @@
             </widget>
            </item>
           </layout>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QTreeView" name="folderTree">
+          <property name="font">
+           <font>
+            <family>Roboto</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+          </property>
+          <property name="tabKeyNavigation">
+           <bool>false</bool>
+          </property>
+          <property name="horizontalScrollMode">
+           <enum>QAbstractItemView::ScrollPerItem</enum>
+          </property>
+          <property name="indentation">
+           <number>16</number>
+          </property>
+          <property name="uniformRowHeights">
+           <bool>true</bool>
+          </property>
+          <property name="animated">
+           <bool>true</bool>
+          </property>
+          <property name="expandsOnDoubleClick">
+           <bool>false</bool>
+          </property>
+          <attribute name="headerVisible">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="headerDefaultSectionSize">
+           <number>35</number>
+          </attribute>
+          <attribute name="headerMinimumSectionSize">
+           <number>35</number>
+          </attribute>
          </widget>
         </item>
         <item row="2" column="0" colspan="2">
@@ -667,26 +720,22 @@
           </layout>
          </widget>
         </item>
-        <item row="5" column="0">
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
+        <item row="4" column="0" colspan="2">
+         <widget class="Line" name="line_3">
+          <property name="minimumSize">
            <size>
-            <width>20</width>
-            <height>10</height>
+            <width>0</width>
+            <height>1</height>
            </size>
           </property>
-         </spacer>
-        </item>
-        <item row="7" column="0" colspan="2">
-         <widget class="QListWidget" name="tagsList">
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -701,13 +750,13 @@
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>48</height>
+            <height>50</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
             <width>16777215</width>
-            <height>48</height>
+            <height>50</height>
            </size>
           </property>
           <property name="font">
@@ -717,9 +766,7 @@
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">listWidget::item{
-height:21px;
-}</string>
+           <string notr="true"/>
           </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
@@ -772,22 +819,41 @@ height:21px;
           </item>
          </widget>
         </item>
-        <item row="4" column="0" colspan="2">
-         <widget class="Line" name="line_3">
+        <item row="1" column="0">
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>15</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="8" column="0" colspan="2">
+         <widget class="QFrame" name="frame_3">
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>1</height>
+            <height>35</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
             <width>16777215</width>
-            <height>1</height>
+            <height>35</height>
            </size>
           </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
           </property>
          </widget>
         </item>
@@ -979,7 +1045,13 @@ height:21px;
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>31</height>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>35</height>
            </size>
           </property>
           <property name="frameShape">

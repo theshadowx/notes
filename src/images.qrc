@@ -23,5 +23,6 @@
         <file>images/notes_system_tray_icon.png</file>
         <file>images/textEdit_background_pattern.png</file>
         <file>images/arrow-drop-up.svg</file>
+        <file>images/clearSelection_Regular.png</file>
     </qresource>
 </RCC>

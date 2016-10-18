@@ -28,6 +28,7 @@
 #include "notemodel.h"
 #include "noteview.h"
 #include "foldermodel.h"
+#include "tagmodel.h"
 #include "dbmanager.h"
 
 namespace Ui {
@@ -71,6 +72,8 @@ private:
     QPushButton* m_addRootFolderButton;
     QPushButton* m_deleteRootFolderButton;
     QPushButton* m_newTagButton;
+    QPushButton* m_deleteTagButton;
+    QPushButton* m_clearSelectionButton;
     QTextEdit* m_textEdit;
     QLineEdit* m_lineEdit;
     QLabel* m_editorDateLabel;
@@ -81,13 +84,14 @@ private:
     QMenu* m_trayIconMenu;
     QTreeView* m_folderTreeView;
     QListWidget* m_generalListW;
-    QListWidget* m_tagListW;
+    QListView* m_tagListView;
 
     NoteView* m_noteView;
     NoteModel* m_noteModel;
     NoteModel* m_deletedNotesModel;
     QSortFilterProxyModel* m_proxyModel;
     FolderModel* m_folderModel;
+    TagModel* m_tagModel;
     QModelIndex m_currentSelectedNoteProxy;
     QModelIndex m_selectedNoteBeforeSearchingInSource;
     QQueue<QString> m_searchQueue;
@@ -99,6 +103,7 @@ private:
     int m_textEditLeftPadding;
     int m_noteCounter;
     int m_folderCounter;
+    int m_tagCounter;
     bool m_canMoveWindow;
     bool m_isTemp;
     bool m_isContentModified;
@@ -128,8 +133,10 @@ private:
     void showNoteInEditor(const QModelIndex& noteIndex);
     void sortNotesList(QStringList &stringNotesList);
     void initFolders();
+    void initTags();
     void saveNoteToDB(const QModelIndex& noteIndex);
     void saveFolderToDB(const QModelIndex& folderIndex);
+    void saveTagToDB(const QModelIndex& tagIndex);
     void removeNoteFromDB(const QModelIndex& noteIndex);
     void selectFirstNote();
     void clearTextAndHeader();
@@ -147,6 +154,8 @@ private slots:
     void onTrashButtonClicked();
     void addNewFolder(QModelIndex index = QModelIndex());
     void deleteFolder(QModelIndex index = QModelIndex());
+    void addNewTag();
+    void deleteTag();
     void onNotePressed(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onGeneralListWCurrentRowChanged(int currentRow);

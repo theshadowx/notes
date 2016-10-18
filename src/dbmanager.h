@@ -3,6 +3,7 @@
 
 #include "notedata.h"
 #include "folderdata.h"
+#include "tagdata.h"
 
 #include <QObject>
 #include <QtSql/QSqlDatabase>
@@ -23,6 +24,7 @@ private:
 signals:
     void notesReceived(QList<NoteData*> noteList);
     void foldersReceived(QList<FolderData*> folderList);
+    void tagsReceived(QList<TagData*> tagList);
 
 public slots:
     QList<NoteData*> getAllNotes();
@@ -36,11 +38,16 @@ public slots:
     int getNotesLastRowID() const;
 
     QList<FolderData*> getAllFolders();
-    bool addFolder(FolderData*folder) const;
+    bool addFolder(FolderData* folder) const;
     bool removeFolder(int id) const;
-    bool modifyFolder(const FolderData*folder) const;
+    bool modifyFolder(const FolderData* folder) const;
     int getFoldersLastRowID() const;
 
+    QList<TagData*> getAllTags();
+    bool addTag(const TagData* tag) const;
+    bool removeTag(const int id) const;
+    bool modifyTag(const TagData* tag) const;
+    int getTagsLastRowID() const;
 };
 
 #endif // DBMANAGER_H

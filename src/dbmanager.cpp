@@ -52,6 +52,16 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
 
         QString folder_index = "CREATE UNIQUE INDEX folder_index on folder_notes (id ASC);";
         query.exec(folder_index);
+
+        QString tags  = "CREATE TABLE tags ("
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                        "name TEXT,"
+                        "color TEXT,"
+                        "notes_cnt INTEGER NOT NULL DEFAULT (0));";
+        query.exec(tags);
+
+        QString tag_index = "CREATE UNIQUE INDEX tag_index on tags (id ASC);";
+        query.exec(tag_index);
     }
 
 }
@@ -62,6 +72,18 @@ bool DBManager::noteExist(NoteData* note) const
 
     int id = note->id().split('_')[1].toInt();
     QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM active_notes WHERE id = %1 LIMIT 1 )")
+                       .arg(id);
+    query.exec(queryStr);
+    query.next();
+
+    return query.value(0).toInt() == 1;
+}
+
+
+bool DBManager::folderExist(int id) const
+{
+    QSqlQuery query;
+    QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM folders WHERE id = %1 LIMIT 1 )")
                        .arg(id);
     query.exec(queryStr);
     query.next();
@@ -483,13 +505,93 @@ int DBManager::getFoldersLastRowID() const
     return query.value(0).toInt();
 }
 
-bool DBManager::folderExist(int id) const
+QList<TagData *> DBManager::getAllTags()
+{
+    QList<TagData*> tagList;
+    QSqlQuery query;
+    QString queryStr;
+
+    queryStr = QStringLiteral("SELECT * FROM tags");
+
+    bool status = query.exec(queryStr);
+    if(status){
+        while(query.next()){
+            TagData* tag = new TagData(this);
+            int id =  query.value(0).toInt();
+            QString tagName = query.value(1).toString();
+            QColor tagColor = QColor::fromRgb(query.value(2).toUInt());
+            int noteCnt = query.value(3).toInt();
+
+            tag->setId(id);
+            tag->setName(tagName);
+            tag->setColor(tagColor);
+            tag->setNoteCnt(noteCnt);
+
+            tagList.append(tag);
+        }
+
+        emit tagsReceived(tagList);
+    }
+
+    return tagList;
+}
+
+bool DBManager::addTag(const TagData *tag) const
 {
     QSqlQuery query;
-    QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM folders WHERE id = %1 LIMIT 1 )")
-                       .arg(id);
-    query.exec(queryStr);
-    query.next();
 
-    return query.value(0).toInt() == 1;
+    QString name = tag->name();
+    uint color = QVariant::fromValue(tag->color().rgb()).toUInt();
+    int NoteCnt = tag->noteCnt();
+
+    QString queryStr = QString("INSERT INTO tags (name, color, notes_cnt) "
+                               "VALUES ('%1', '%2', %3);")
+                       .arg(name)
+                       .arg(color)
+                       .arg(NoteCnt);
+
+    query.exec(queryStr);
+    return (query.numRowsAffected() == 1);
 }
+
+bool DBManager::removeTag(const int id) const
+{
+    QSqlQuery query;
+    QString queryStr = QStringLiteral("DELETE FROM tags "
+                              "WHERE id=%1")
+               .arg(id);
+
+    query.exec(queryStr);
+    return (query.numRowsAffected() == 1);
+}
+
+bool DBManager::modifyTag(const TagData* tag) const
+{
+    QSqlQuery query;
+
+    int id = tag->id();
+    QString name = tag->name();
+    uint color =  QVariant::fromValue(tag->color().rgb()).toUInt();
+    int NoteCnt = tag->noteCnt();
+
+    QString queryStr = QStringLiteral("UPDATE tags "
+                                      "SET name='%1', color='%2', notes_cnt=%3 "
+                                      "WHERE id=%4")
+                       .arg(name)
+                       .arg(color)
+                       .arg(NoteCnt)
+                       .arg(id);
+
+    query.exec(queryStr);
+
+    return (query.numRowsAffected() == 1);
+}
+
+int DBManager::getTagsLastRowID() const
+{
+    QSqlQuery query;
+    query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='tags';");
+    query.next();
+    return query.value(0).toInt();
+}
+

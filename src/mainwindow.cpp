@@ -8,6 +8,7 @@
 #include "ui_mainwindow.h"
 #include "notewidgetdelegate.h"
 #include "folderwidgetdelegate.h"
+#include "tagwidgetdelegate.h"
 #include "qxtglobalshortcut.h"
 
 #include <QScrollBar>
@@ -37,6 +38,8 @@ MainWindow::MainWindow (QWidget *parent) :
     m_addRootFolderButton(Q_NULLPTR),
     m_deleteRootFolderButton(Q_NULLPTR),
     m_newTagButton(Q_NULLPTR),
+    m_deleteTagButton(Q_NULLPTR),
+    m_clearSelectionButton(Q_NULLPTR),
     m_textEdit(Q_NULLPTR),
     m_lineEdit(Q_NULLPTR),
     m_editorDateLabel(Q_NULLPTR),
@@ -46,14 +49,16 @@ MainWindow::MainWindow (QWidget *parent) :
     m_trayIconMenu(new QMenu(this)),
     m_folderTreeView(Q_NULLPTR),
     m_generalListW(Q_NULLPTR),
-    m_tagListW(Q_NULLPTR),
+    m_tagListView(Q_NULLPTR),
     m_noteModel(new NoteModel(this)),
     m_deletedNotesModel(new NoteModel(this)),
     m_proxyModel(new QSortFilterProxyModel(this)),
     m_folderModel(new FolderModel(this)),
+    m_tagModel(new TagModel(this)),
     m_dbManager(Q_NULLPTR),
     m_noteCounter(0),
     m_folderCounter(0),
+    m_tagCounter(0),
     m_canMoveWindow(false),
     m_isTemp(false),
     m_isContentModified(false),
@@ -102,6 +107,10 @@ void MainWindow::InitData()
             pd->deleteLater();
             setButtonsAndFieldsEnabled(true);
             initFolders();
+            initTags();
+
+            // select the first folder in the treeview
+            m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
         });
 
         QFuture<void> migration = QtConcurrent::run(this, &MainWindow::checkMigration);
@@ -109,6 +118,10 @@ void MainWindow::InitData()
 
     }else{
         initFolders();
+        initTags();
+
+        // select the first folder in the treeview
+        m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
     }
 }
 
@@ -165,10 +178,12 @@ void MainWindow::setupMainWindow ()
     m_editorDateLabel = ui->editorDateLabel;
     m_splitter = ui->splitter;
     m_folderTreeView = ui->folderTree;
-    m_tagListW = ui->tagsList;
+    m_tagListView = ui->tagListView;
     m_addRootFolderButton = ui->addRootFolderButton;
     m_deleteRootFolderButton = ui->delRootFolderButton;
     m_newTagButton = ui->newTagButton;
+    m_deleteTagButton = ui->deleteTagButton;
+   m_clearSelectionButton = ui->clearSelectionButton;
     m_generalListW = ui->generalListW;
 
     QPalette pal(palette());
@@ -276,6 +291,18 @@ void MainWindow::setupSignalsSlots()
     connect(delegate, &FolderWidgetDelegate::deleteSubFolderButtonClicked, this, &MainWindow::deleteFolder);
     connect(m_addRootFolderButton, &QPushButton::clicked, [&](){addNewFolder();});
     connect(m_deleteRootFolderButton, &QPushButton::clicked, [&](){deleteFolder();});
+    // add/delete tag button
+    connect(m_newTagButton, &QPushButton::clicked, [&](){addNewTag();});
+    connect(m_deleteTagButton, &QPushButton::clicked, [&](){deleteTag();});
+    connect(m_clearSelectionButton, &QPushButton::clicked, [&](){
+        m_tagListView->setCurrentIndex(QModelIndex());
+        m_tagListView->selectionModel()->clear();
+    });
+    connect(m_tagListView->selectionModel(), &QItemSelectionModel::selectionChanged, [&](const QItemSelection &selected, const QItemSelection &deselected){
+
+        qDebug() << m_tagListView->selectionModel()->selectedIndexes();
+        // TODO: show the notes having the selected tags
+    });
     // delete note button
     connect(m_trashButton, &QPushButton::clicked, this, &MainWindow::onTrashButtonClicked);
     connect(m_noteModel, &NoteModel::rowsRemoved, [this](){m_trashButton->setEnabled(true);});
@@ -316,6 +343,10 @@ void MainWindow::setupSignalsSlots()
     // folder data changed
     connect(m_folderModel, &FolderModel::dataChanged,[&](const QModelIndex &topLeft){
         saveFolderToDB(topLeft);
+    });
+    // Tag data changed
+    connect(m_tagModel, &TagModel::dataChanged,[&](const QModelIndex &topLeft){
+        saveTagToDB(topLeft);
     });
     // auto save timer
     connect(m_autoSaveTimer, &QTimer::timeout, [this](){
@@ -449,6 +480,7 @@ void MainWindow::setupDatabases ()
     m_dbManager = new DBManager(noteDBFilePath, doCreate, this);
     m_noteCounter = m_dbManager->getNotesLastRowID();
     m_folderCounter = m_dbManager->getFoldersLastRowID();
+    m_tagCounter = m_dbManager->getTagsLastRowID();
 }
 
 void MainWindow::setupModelView()
@@ -464,6 +496,10 @@ void MainWindow::setupModelView()
 
     m_folderTreeView->setModel(m_folderModel);
     m_folderTreeView->setItemDelegate(new FolderWidgetDelegate(m_folderTreeView));
+
+    m_tagListView->setModel(m_tagModel);
+    m_tagListView->setItemDelegate(new TagWidgetDelegate(m_tagListView));
+
 }
 
 /**
@@ -575,12 +611,15 @@ void MainWindow::initFolders ()
         m_folderModel->insertFolder(folderItem, 0);
 
         m_dbManager->addFolder(folderData);
-
-        m_folderTreeView->setEditTriggers(m_folderTreeView->editTriggers() | QAbstractItemView::CurrentChanged);
     }
 
-    // select the first folder in the treeview
-    m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
+    m_folderTreeView->setCurrentIndex(QModelIndex());
+}
+
+void MainWindow::initTags()
+{
+    QList<TagData*> tagList = m_dbManager->getAllTags();
+    m_tagModel->addTags(tagList);
 }
 
 /**
@@ -613,6 +652,16 @@ void MainWindow::saveFolderToDB(const QModelIndex& folderIndex)
     const FolderData* folderData = m_folderModel->folderData(folderIndex);
     if(folderData != Q_NULLPTR)
         QtConcurrent::run(m_dbManager, &DBManager::modifyFolder, folderData);
+}
+
+void MainWindow::saveTagToDB(const QModelIndex& tagIndex)
+{
+    Q_ASSERT_X(tagIndex.isValid(), "MainWindow::saveFolderToDB", "noteIndex is not valid");
+
+    const TagData* tagData = m_tagModel->tagData(tagIndex);
+
+    if(tagData != Q_NULLPTR)
+        QtConcurrent::run(m_dbManager, &DBManager::modifyTag, tagData);
 }
 
 void MainWindow::removeNoteFromDB(const QModelIndex& noteIndex)
@@ -817,16 +866,16 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
         m_selectedNoteBeforeSearchingInSource = QModelIndex();
         m_isTemp = false;
         m_isContentModified = false;
+        m_noteView->setSearching(true);
 
         if(currentRow == 0){ // All Notes
             QList<NoteData*> noteList = m_dbManager->getAllNotes();
             // add notes to the model
             if(!noteList.isEmpty()){
-                m_noteView->setSearching(true);
+
                 m_noteModel->addListNote(noteList);
                 m_noteModel->sort(0,Qt::AscendingOrder);
                 selectFirstNote();
-                m_noteView->setSearching(false);
 
                 ui->frameRight->setEnabled(true);
             }
@@ -844,6 +893,7 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
                 ui->frameRight->setDisabled(true);
             }
         }
+        m_noteView->setSearching(false);
     }
 }
 
@@ -1255,6 +1305,31 @@ void MainWindow::deleteFolder(QModelIndex index)
 
         int id = index.data((int) FolderItem::FolderDataEnum::ID).toInt();
         QtConcurrent::run(m_dbManager, &DBManager::removeFolder, id);
+    }
+}
+
+void MainWindow::addNewTag()
+{
+    ++m_tagCounter;
+    TagData* tag = new TagData(m_tagModel);
+    tag->setId(m_tagCounter);
+    int cnt = m_tagModel->rowCount();
+    tag->setName(QStringLiteral("Tag%1").arg(cnt));
+    tag->setColor(QColor(26,26,26));
+
+    m_tagModel->addTag(tag);
+    m_dbManager->addTag(tag);
+
+}
+
+void MainWindow::deleteTag()
+{
+    if(m_tagListView->currentIndex().isValid()){
+        QModelIndex index = m_tagListView->currentIndex();
+        TagData* tag = m_tagModel->removeTag(index);
+        m_dbManager->removeTag(tag->id());
+
+        delete tag;
     }
 }
 

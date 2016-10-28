@@ -1,4 +1,7 @@
 #include "notedata.h"
+#include "tagdata.h"
+
+const QString NoteData::TagSeparator = "_";
 
 NoteData::NoteData(QObject *parent)
     : QObject(parent),
@@ -9,12 +12,12 @@ NoteData::NoteData(QObject *parent)
 
 }
 
-QString NoteData::id() const
+int NoteData::id() const
 {
     return m_id;
 }
 
-void NoteData::setId(const QString &id)
+void NoteData::setId(const int& id)
 {
     m_id = id;
 }
@@ -94,9 +97,67 @@ QString NoteData::fullPath() const
     return m_fullPath;
 }
 
-void NoteData::setFullPath(const QString&fullPath)
+void NoteData::setFullPath(const QString& fullPath)
 {
     m_fullPath = fullPath;
+}
+
+QString NoteData::tagIdSerial() const
+{
+    return m_tagIdSerial;
+}
+
+void NoteData::setTagIdSerial(const QString& tagIdSerial)
+{
+    m_tagIdSerial = tagIdSerial;
+}
+
+bool NoteData::addTagId(const int id)
+{
+    QString idStr = QStringLiteral("%1").arg(id);
+
+    if(m_tagIdSerial.isEmpty()){
+        m_tagIdSerial = idStr;
+    }else{
+        QStringList idList = m_tagIdSerial.split(TagSeparator);
+        if(idList.contains(idStr))
+            return false;
+
+        idList.append(idStr);
+        m_tagIdSerial = idList.join(TagSeparator);
+    }
+
+    return true;
+}
+
+bool NoteData::removeTagId(const int id)
+{
+    QString idStr = QStringLiteral("%1").arg(id);
+
+    QStringList idList = m_tagIdSerial.split(TagSeparator);
+    if(!idList.contains(idStr))
+        return false;
+
+    int index = idList.indexOf(idStr);
+    idList.takeAt(index);
+
+    if(!idList.isEmpty()){
+        if(idList.count() > 1){
+            m_tagIdSerial = idList.join(TagSeparator);
+        }else{
+            m_tagIdSerial = idList.at(0);
+        }
+    }else{
+        m_tagIdSerial.clear();
+    }
+
+    return true;
+}
+
+bool NoteData::containsTagId(const int id) const
+{
+    QStringList idList = m_tagIdSerial.split(TagSeparator);
+    return idList.contains(QStringLiteral("%1").arg(id));
 }
 
 QDateTime NoteData::creationDateTime() const
@@ -104,7 +165,7 @@ QDateTime NoteData::creationDateTime() const
     return m_creationDateTime;
 }
 
-void NoteData::setCreationDateTime(const QDateTime&creationDateTime)
+void NoteData::setCreationDateTime(const QDateTime& creationDateTime)
 {
     m_creationDateTime = creationDateTime;
 }

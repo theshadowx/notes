@@ -13,8 +13,8 @@ class NoteData : public QObject
 public:
     explicit NoteData(QObject *parent = Q_NULLPTR);
 
-    QString id() const;
-    void setId(const QString &id);
+    int id() const;
+    void setId(const int &id);
 
     QString fullTitle() const;
     void setFullTitle(const QString &fullTitle);
@@ -41,12 +41,22 @@ public:
     void setDeletionDateTime(const QDateTime& deletionDateTime);
 
     QString fullPath() const;
-    void setFullPath(const QString&fullPath);
+    void setFullPath(const QString& fullPath);
+
+    QString tagIdSerial() const;
+    void setTagIdSerial(const QString& tagIdSerial);
+
+    bool addTagId(const int id);
+    bool removeTagId(const int id);
+    bool containsTagId(const int id) const;
+
+    static const QString TagSeparator;
 
 private:
-    QString m_id;
+    int m_id;
     QString m_fullTitle;
     QString m_fullPath;
+    QString m_tagIdSerial;
     QDateTime m_lastModificationDateTime;
     QDateTime m_creationDateTime;
     QDateTime m_deletionDateTime;

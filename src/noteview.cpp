@@ -12,9 +12,8 @@
 NoteView::NoteView(QWidget *parent)
     : QListView( parent ),
       m_isScrollBarHidden(true),
-      m_isSearching(false),
-      m_isMousePressed(false),
-      m_rowHeight(38)
+      m_isAnimationEnabled(false),
+      m_isMousePressed(false)
 {
     this->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
@@ -46,23 +45,11 @@ void NoteView::animateAddedRow(const QModelIndex& parent, int start, int end)
 }
 
 /**
- * @brief Reimplemented from QWidget::paintEvent()
- */
-void NoteView::paintEvent(QPaintEvent *e)
-{
-    NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
-    if(delegate != Q_NULLPTR)
-        delegate->setCurrentSelectedIndex(currentIndex());
-
-    QListView::paintEvent(e);
-}
-
-/**
  * @brief Reimplemented from QAbstractItemView::rowsInserted().
  */
 void NoteView::rowsInserted(const QModelIndex &parent, int start, int end)
 {
-    if(start == end && !m_isSearching)
+    if(start == end && !m_isAnimationEnabled)
         animateAddedRow(parent, start, end);
 
     QListView::rowsInserted(parent, start, end);
@@ -77,9 +64,8 @@ void NoteView::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int en
         NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
         if(delegate != Q_NULLPTR){
             QModelIndex idx = model()->index(start,0);
-            delegate->setCurrentSelectedIndex(QModelIndex());
 
-            if(!m_isSearching){
+            if(!m_isAnimationEnabled){
                 delegate->setState( NoteWidgetDelegate::Remove, idx);
             }else{
                 delegate->setState( NoteWidgetDelegate::Normal, idx);
@@ -157,8 +143,12 @@ void NoteView::mouseMoveEvent(QMouseEvent*e)
 
 void NoteView::mousePressEvent(QMouseEvent*e)
 {
-    m_isMousePressed = true;
-    QListView::mousePressEvent(e);
+    if(e->button() == Qt::LeftButton){
+        m_isMousePressed = true;
+        QListView::mousePressEvent(e);
+    }else{
+        m_isMousePressed = false;
+    }
 }
 
 void NoteView::mouseReleaseEvent(QMouseEvent*e)
@@ -171,25 +161,11 @@ bool NoteView::viewportEvent(QEvent*e)
 {
     if(model() != Q_NULLPTR){
         switch (e->type()) {
-        case QEvent::Leave:{
-            QPoint pt = mapFromGlobal(QCursor::pos());
-            QModelIndex index = indexAt(QPoint(10, pt.y()));
-            if(index.row() > 0){
-                index = model()->index(index.row()-1, 0);
-                NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
-                if(delegate != Q_NULLPTR){
-                    delegate->setHoveredIndex(QModelIndex());
-                    viewport()->update(visualRect(index));
-                }
-            }
-            break;
-        }
         case QEvent::MouseButtonRelease:{
             QPoint pt = mapFromGlobal(QCursor::pos());
             QModelIndex index = indexAt(QPoint(10, pt.y()));
             if(!index.isValid())
                 emit viewportClicked();
-
             break;
         }
         default:
@@ -200,19 +176,19 @@ bool NoteView::viewportEvent(QEvent*e)
     return QListView::viewportEvent(e);
 }
 
-void NoteView::setCurrentRowActive(bool isActive)
+void NoteView::resizeEvent(QResizeEvent* e)
 {
-    NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
-    if(delegate == Q_NULLPTR)
-        return;
+    if(model() != Q_NULLPTR){
+       QSortFilterProxyModel *proxymodel = qobject_cast<QSortFilterProxyModel*> (model());
+       proxymodel->layoutChanged();
+    }
 
-    delegate->setActive(isActive);
-    viewport()->update(visualRect(currentIndex()));
+    QListView::resizeEvent(e);
 }
 
-void NoteView::setSearching(bool isSearching)
+void NoteView::setAnimationEnabled(bool isAnimationEnabled)
 {
-    m_isSearching = isSearching;
+    m_isAnimationEnabled = isAnimationEnabled;
 }
 
 void NoteView::setupSignalsSlots()
@@ -220,26 +196,28 @@ void NoteView::setupSignalsSlots()
     // remove/add separator
     // current selectected row changed
     connect(selectionModel(), &QItemSelectionModel::currentRowChanged, [this]
-            (const QModelIndex & current, const QModelIndex & previous){
+            (const QModelIndex& current, const QModelIndex& previous){
 
         if(model() != Q_NULLPTR){
-            if(current.row() < previous.row()){
-                if(current.row() > 0){
-                    QModelIndex prevIndex = model()->index(current.row()-1, 0);
-                    viewport()->update(visualRect(prevIndex));
-                }
+            // remove the separator from the row above current row
+            if(current.row() > 0){
+                QModelIndex aboveCurrentIndex = model()->index(current.row()-1, 0);
+                viewport()->update(visualRect(aboveCurrentIndex));
             }
 
-            if(current.row() > 1){
-                QModelIndex prevPrevIndex = model()->index(current.row()-2, 0);
-                viewport()->update(visualRect(prevPrevIndex));
+            // restore the separatore to the row above previous row
+            if(previous.row() > 0){
+                QModelIndex abovePreviousIndex = model()->index(previous.row()-1, 0);
+                viewport()->update(visualRect(abovePreviousIndex));
             }
         }
     });
 
     // row was entered
     connect(this, &NoteView::entered,[this](QModelIndex index){
+
         if(model() != Q_NULLPTR){
+            // restore the separator when moving the mouse down (hovering)
             if(index.row() > 1){
                 QModelIndex prevPrevIndex = model()->index(index.row()-2, 0);
                 viewport()->update(visualRect(prevPrevIndex));
@@ -251,38 +229,15 @@ void NoteView::setupSignalsSlots()
                 QModelIndex prevIndex = model()->index(index.row()-1, 0);
                 viewport()->update(visualRect(prevIndex));
             }
-
-            NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate *>(itemDelegate());
-            if(delegate != Q_NULLPTR)
-                delegate->setHoveredIndex(index);
         }
     });
 
     // viewport was entered
+    // restore the separator to the row above the last row
     connect(this, &NoteView::viewportEntered,[this](){
         if(model() != Q_NULLPTR && model()->rowCount() > 1){
-            NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate *>(itemDelegate());
-            if(delegate != Q_NULLPTR)
-                delegate->setHoveredIndex(QModelIndex());
-
             QModelIndex lastIndex = model()->index(model()->rowCount()-2, 0);
             viewport()->update(visualRect(lastIndex));
-        }
-    });
-
-
-    // remove/add offset right side
-    connect(this->verticalScrollBar(), &QScrollBar::rangeChanged,[this](int min, int max){
-        Q_UNUSED(min)
-
-        NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
-        if(delegate != Q_NULLPTR){
-            if(max > 0){
-                delegate->setRowRightOffset(2);
-            }else{
-                delegate->setRowRightOffset(0);
-            }
-            viewport()->update();
         }
     });
 }

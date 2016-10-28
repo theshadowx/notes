@@ -3,13 +3,14 @@
 
 #include <QStyledItemDelegate>
 #include <QTimeLine>
+#include <QListView>
 
 class NoteWidgetDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
 public:
-    NoteWidgetDelegate(QObject *parent = Q_NULLPTR);
+    explicit NoteWidgetDelegate(QObject* parent = Q_NULLPTR);
 
     enum States{
         Normal,
@@ -22,45 +23,31 @@ public:
     void setState(States NewState , QModelIndex index);
     void setAnimationDuration(const int duration);
 
-    void paint(QPainter *painter, const QStyleOptionViewItem &option,
-               const QModelIndex &index) const Q_DECL_OVERRIDE;
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const Q_DECL_OVERRIDE;
 
-    QSize sizeHint(const QStyleOptionViewItem &option,
-                   const QModelIndex &index) const Q_DECL_OVERRIDE;
+    QSize sizeHint(const QStyleOptionViewItem& option,
+                   const QModelIndex& index) const Q_DECL_OVERRIDE;
 
     QTimeLine::State animationState();
 
-    void setCurrentSelectedIndex(const QModelIndex &currentSelectedIndex);
-    void setHoveredIndex(const QModelIndex &hoveredIndex);
-    void setRowRightOffset(int rowRightOffset);
-    void setActive(bool isActive);
-
 private:
-    void paintBackground(QPainter* painter, const QStyleOptionViewItem &option, const QModelIndex &index)const;
-    void paintLabels(QPainter* painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    void paintSeparator(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    void paintBackground(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)const;
+    void paintLabels(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
+    void paintTags(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
+    void paintSeparator(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
+    int initialHeightOfRow(const QStyleOptionViewItem& option, const QModelIndex& index) const;
     QString parseDateTime(const QDateTime& dateTime) const;
 
-    QFont m_titleFont;
-    QFont m_dateFont;
-    QColor m_titleColor;
-    QColor m_dateColor;
-    QColor m_ActiveColor;
-    QColor m_notActiveColor;
-    QColor m_hoverColor;
-    QColor m_applicationInactiveColor;
-    QColor m_separatorColor;
-    QColor m_defaultColor;
-    int m_rowHeight;
-    int m_maxFrame;
-    int m_rowRightOffset;
     States m_state;
     bool m_isActive;
 
-    QTimeLine *m_timeLine;
+    QTimeLine* m_timeLine;
     QModelIndex m_animatedIndex;
     QModelIndex m_currentSelectedIndex;
     QModelIndex m_hoveredIndex;
+
+    QListView* m_view;
 
 signals:
     void update(const QModelIndex &index);

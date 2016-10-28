@@ -20,14 +20,20 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
-    int noteCnt() const;
-    void setNoteCnt(int noteCnt);
+    QString noteIdSerial() const;
+    void setNoteIdSerial(const QString& noteIdSerial);
+
+    bool removeNoteId(const int id);
+    bool addNoteId(const int id);
+    bool hasNoteId(const int id) const;
+
+    static const QString TagSeparator;
 
 private:
     int m_id;
     QString m_name;
     QColor m_color;
-    int m_noteCnt;
+    QString m_noteIdSerial;
 };
 
 #endif // TAGDATA_H

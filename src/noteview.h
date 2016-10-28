@@ -14,38 +14,36 @@ public:
     explicit NoteView(QWidget* parent = Q_NULLPTR);
     ~NoteView();
 
-    void animateAddedRow(const QModelIndex &parent, int start, int end);
-    void setSearching(bool isSearching);
-    void setCurrentRowActive(bool isActive);
+    void animateAddedRow(const QModelIndex& parent, int start, int end);
+    void setAnimationEnabled(bool isAnimationEnabled);
 
 protected:
-    void paintEvent(QPaintEvent *e) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent* e) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent* e) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent* e) Q_DECL_OVERRIDE;
     bool viewportEvent(QEvent* e) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent *e) Q_DECL_OVERRIDE;
 
 private:
     bool m_isScrollBarHidden;
-    bool m_isSearching;
+    bool m_isAnimationEnabled;
     bool m_isMousePressed;
-    int m_rowHeight;
 
     void setupSignalsSlots();
 
 public slots:
-    void rowsAboutToBeMoved(const QModelIndex &sourceParent, int sourceStart, int sourceEnd,
-                            const QModelIndex &destinationParent, int destinationRow);
+    void rowsAboutToBeMoved(const QModelIndex& sourceParent, int sourceStart, int sourceEnd,
+                            const QModelIndex& destinationParent, int destinationRow);
 
-    void rowsMoved(const QModelIndex &parent, int start, int end,
-                   const QModelIndex &destination, int row);
+    void rowsMoved(const QModelIndex& parent, int start, int end,
+                   const QModelIndex& destination, int row);
 
 private slots:
     void init();
 
 protected slots:
-    void rowsInserted(const QModelIndex &parent, int start, int end) Q_DECL_OVERRIDE;
-    void rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end) Q_DECL_OVERRIDE;
+    void rowsInserted(const QModelIndex& parent, int start, int end) Q_DECL_OVERRIDE;
+    void rowsAboutToBeRemoved(const QModelIndex& parent, int start, int end) Q_DECL_OVERRIDE;
 
 signals:
     void viewportClicked();

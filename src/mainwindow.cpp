@@ -1670,8 +1670,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
         if(object == m_textEdit){
 
             if(m_isNoteEditable){
-                m_noteView->setCurrentRowActive(true);
-
                 if(!m_isOperationRunning){
                     // When clicking in a note's content while searching,
                     // reload all the notes and go and select that note
@@ -1700,13 +1698,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                     }
                 }
             }
-        }
-
-        break;
-    }
-    case QEvent::FocusOut:{
-        if(object == m_textEdit){
-            m_noteView->setCurrentRowActive(false);
         }
 
         break;

@@ -1,8 +1,9 @@
 #include "tagdata.h"
 
+const QString TagData::TagSeparator = QStringLiteral("_");
+
 TagData::TagData(QObject*parent):
      QObject(parent),
-     m_noteCnt(0),
      m_id(-1)
 {
 
@@ -38,12 +39,60 @@ void TagData::setColor(const QColor &color)
     m_color = color;
 }
 
-int TagData::noteCnt() const
+QString TagData::noteIdSerial() const
 {
-    return m_noteCnt;
+    return m_noteIdSerial;
 }
 
-void TagData::setNoteCnt(int noteCnt)
+void TagData::setNoteIdSerial(const QString& noteIdSerial)
 {
-    m_noteCnt = noteCnt;
+    m_noteIdSerial = noteIdSerial;
+}
+
+bool TagData::removeNoteId(const int id)
+{
+    QString idStr = QStringLiteral("%1").arg(id);
+
+    QStringList idList = m_noteIdSerial.split(TagSeparator);
+    if(!idList.contains(idStr))
+        return false;
+
+    int index = idList.indexOf(idStr);
+    idList.takeAt(index);
+
+    if(!idList.isEmpty()){
+        if(idList.count() > 1){
+            m_noteIdSerial = idList.join(TagSeparator);
+        }else{
+            m_noteIdSerial = idList.at(0);
+        }
+    }else{
+        m_noteIdSerial.clear();
+    }
+
+    return true;
+}
+
+bool TagData::addNoteId(const int id)
+{
+     QString idStr = QStringLiteral("%1").arg(id);
+
+    if(!m_noteIdSerial.isEmpty()){
+        QStringList idList = m_noteIdSerial.split(TagSeparator);
+        if(idList.contains(idStr))
+            return false;
+
+        idList.append(idStr);
+        m_noteIdSerial = idList.join(TagSeparator);
+    }else{
+        m_noteIdSerial = idStr;
+    }
+
+    return true;
+}
+
+bool TagData::hasNoteId(const int id) const
+{
+    QStringList noteIdList = m_noteIdSerial.split(TagSeparator);
+    return noteIdList.contains(QStringLiteral("%1").arg(id));
 }

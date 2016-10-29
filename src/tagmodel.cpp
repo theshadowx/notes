@@ -1,4 +1,5 @@
 #include "tagmodel.h"
+#include <QDebug>
 
 TagModel::TagModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -11,6 +12,7 @@ QModelIndex TagModel::addTag(TagData *tag)
     const int rowCnt = rowCount();
     beginInsertRows(QModelIndex(), rowCnt, rowCnt);
     m_tagList << tag;
+    m_idTagMap[tag->id()] = tag;
     endInsertRows();
 
     return createIndex(rowCnt, 0);
@@ -20,18 +22,44 @@ void TagModel::addTags(QList<TagData *> tags)
 {
     int start = rowCount();
     int end = start + tags.count()-1;
+
     beginInsertRows(QModelIndex(), start, end);
+
     m_tagList << tags;
+    foreach (TagData* tag, tags)
+        m_idTagMap[tag->id()] = tag;
+
     endInsertRows();
 }
 
-TagData* TagModel::removeTag(const QModelIndex &index)
+TagData* TagModel::removeTag(const QModelIndex& index)
 {
     Q_ASSERT_X(index.isValid(), "TagModel::removeTag", "index is not valid");
 
     int row = index.row();
+
     beginRemoveRows(QModelIndex(), row, row);
-    TagData* tag = m_tagList.takeAt(row);
+
+    TagData* tag = m_tagList[row];
+    int tagId = tag->id();
+
+    // update map
+    QString noteIdSerial = index.data(TagModel::TagNoteSerial).toString();
+    QStringList noteIdList = noteIdSerial.split(TagData::TagSeparator);
+    foreach (QString noteIdStr, noteIdList) {
+        int noteId = noteIdStr.toInt();
+        if(!m_noteTagMap.contains(noteId) || !m_noteTagMap[noteId].contains(tagId))
+            continue;
+
+        tag->removeNoteId(noteId);
+        m_noteTagMap[noteId].removeOne(tagId);
+
+        if(m_noteTagMap[noteId].isEmpty())
+            m_noteTagMap.remove(noteId);
+    }
+
+    m_tagList.removeOne(tag);
+    m_idTagMap.remove(tagId);
     endRemoveRows();
 
     return tag;
@@ -45,10 +73,85 @@ TagData* TagModel::tagData(const QModelIndex& index)
     return m_tagList.at(index.row());
 }
 
+QModelIndex TagModel::indexFromId(int id)
+{
+    TagData* tag = m_idTagMap[id];
+    int row = m_tagList.indexOf(tag);
+    if(row == -1)
+        return QModelIndex();
+
+    return index(row);
+}
+
+QMap<int, QModelIndex> TagModel::indexesFromIds(QList<int> idList)
+{
+    QMap<int, QModelIndex> indexList;
+
+    foreach (int id, idList) {
+        QModelIndex index = indexFromId(id);
+        if(index.isValid())
+            indexList[id] = index;
+    }
+    return indexList;
+}
+
+void TagModel::removeNoteId(QModelIndex index, int noteId)
+{
+    Q_ASSERT_X(index.isValid(), "TagModel::removeNoteId", "index is not valid");
+
+    TagData* tag = m_tagList[index.row()];
+    int tagId = tag->id();
+
+    if(!m_noteTagMap.contains(tagId) || !m_noteTagMap[tagId].contains(tagId))
+        return;
+
+    tag->removeNoteId(noteId);
+    m_noteTagMap[noteId].removeOne(tagId);
+
+    if(m_noteTagMap[noteId].isEmpty())
+        m_noteTagMap.remove(noteId);
+
+    emit dataChanged(index, index);
+}
+
+void TagModel::addNoteId(QModelIndex index, int noteId)
+{
+    Q_ASSERT_X(index.isValid(), "TagModel::addNoteId", "index is not valid");
+
+
+    TagData* tag = m_tagList[index.row()];
+    int tagId = tag->id();
+
+    if(m_noteTagMap[tagId].contains(tagId))
+        return;
+
+    tag->addNoteId(noteId);
+    m_noteTagMap[noteId].append(tagId);
+
+    emit dataChanged(index, index);
+}
+
+void TagModel::updateNoteInTags(QList<QPersistentModelIndex> tagIndexes, int noteId)
+{
+    // TODO: find an efficient way to update tags
+
+    QList<int> previousTagIds = m_noteTagMap[noteId];
+    QMap<int, QModelIndex> previousTagIndexes = indexesFromIds(previousTagIds);
+    foreach (QModelIndex previousTagIndex, previousTagIndexes) {
+        removeNoteId(previousTagIndex, noteId);
+        emit dataChanged(previousTagIndex, previousTagIndex);
+    }
+
+    foreach (QPersistentModelIndex tagIndex, tagIndexes) {
+        addNoteId(tagIndex, noteId);
+        emit dataChanged(tagIndex, tagIndex);
+    }
+}
+
 QVariant TagModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
-        return false;
+        return QVariant();
 
     TagData* tag = m_tagList[index.row()];
 
@@ -61,8 +164,8 @@ QVariant TagModel::data(const QModelIndex &index, int role) const
         return tag->name();
     case TagColor:
         return tag->color();
-    case TagNoteCnt:
-        return tag->noteCnt();
+    case TagNoteSerial:
+        return tag->noteIdSerial();
     default:
         return QVariant();
     }
@@ -78,10 +181,6 @@ bool TagModel::setData(const QModelIndex& index, const QVariant& value, int role
     bool success = false;
 
     switch (role) {
-    case TagID:
-        success = (value.toInt() != tag->id());
-        tag->setId(value.toInt());
-        break;
     case Qt::EditRole:
     case TagName:
         success = (value.toString() != tag->name());
@@ -91,9 +190,9 @@ bool TagModel::setData(const QModelIndex& index, const QVariant& value, int role
         success = (value.value<QColor>() != tag->color());
         tag->setColor(value.value<QColor>());
         break;
-    case TagNoteCnt:
-        success = (value.toInt() != tag->noteCnt());
-        tag->setNoteCnt(value.toInt());
+    case TagNoteSerial:
+        success = (value.toString() != tag->noteIdSerial());
+        tag->setNoteIdSerial(value.toString());
         break;
     default:
         return false;

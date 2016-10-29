@@ -59,7 +59,7 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
                         "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                         "name TEXT,"
                         "color TEXT,"
-                        "notes_cnt INTEGER NOT NULL DEFAULT (0));";
+                        "notes TEXT);";
         query.exec(tags);
 
         QString tag_index = "CREATE UNIQUE INDEX tag_index on tags (id ASC);";
@@ -536,12 +536,12 @@ QList<TagData *> DBManager::getAllTags()
             int id =  query.value(0).toInt();
             QString tagName = query.value(1).toString();
             QColor tagColor = QColor::fromRgb(query.value(2).toUInt());
-            int noteCnt = query.value(3).toInt();
+            QString notes = query.value(3).toString();
 
             tag->setId(id);
             tag->setName(tagName);
             tag->setColor(tagColor);
-            tag->setNoteCnt(noteCnt);
+            tag->setNoteIdSerial(notes);
 
             tagList.append(tag);
         }
@@ -558,24 +558,71 @@ bool DBManager::addTag(const TagData *tag) const
 
     QString name = tag->name();
     uint color = QVariant::fromValue(tag->color().rgb()).toUInt();
-    int NoteCnt = tag->noteCnt();
+    QString notes = tag->noteIdSerial();
 
-    QString queryStr = QString("INSERT INTO tags (name, color, notes_cnt) "
-                               "VALUES ('%1', '%2', %3);")
+    QString queryStr = QString("INSERT INTO tags (name, color, notes) "
+                               "VALUES ('%1', '%2', '%3');")
                        .arg(name)
                        .arg(color)
-                       .arg(NoteCnt);
+                       .arg(notes);
 
     query.exec(queryStr);
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::removeTag(const int id) const
+bool DBManager::deleteTagInNote(const int noteId, const QString tagIdStr, const QString tableName) const
+{
+    QSqlQuery selectQuery;
+    QSqlQuery updateQuery;
+
+    QString queryStr = QStringLiteral("SELECT tags FROM %1 "
+                              "WHERE id=%2")
+                       .arg(tableName)
+                       .arg(noteId);
+
+    selectQuery.exec(queryStr);
+    if(selectQuery.next()){
+        // delete tag from active table
+        QString notetags = selectQuery.value(0).toString();
+        QStringList tagList = notetags.split(TagData::TagSeparator);
+        tagList.removeOne(tagIdStr);
+        notetags = tagList.join(TagData::TagSeparator);
+
+        queryStr = QStringLiteral("UPDATE %1 "
+                                  "SET tags='%2' "
+                                  "WHERE id=%3")
+                   .arg(tableName)
+                   .arg(notetags)
+                   .arg(noteId);
+
+        updateQuery.exec(queryStr);
+        return (updateQuery.numRowsAffected() == 1);
+    }
+
+    return false;
+}
+
+bool DBManager::removeTag(const TagData* tag) const
 {
     QSqlQuery query;
-    QString queryStr = QStringLiteral("DELETE FROM tags "
+    QString queryStr;
+
+    int tagToRemoveId = tag->id();
+    QString tagToRemoveIdStr = QStringLiteral("%1").arg(tagToRemoveId);
+    QString noteIdSerial = tag->noteIdSerial();
+    QStringList noteIdList = noteIdSerial.split(TagData::TagSeparator);
+    foreach (QString idStr, noteIdList) {
+        int noteId = idStr.toInt();
+
+        bool deletedFromActiveNotes = deleteTagInNote(noteId, tagToRemoveIdStr, "active_notes");
+        if(!deletedFromActiveNotes)
+            deleteTagInNote(noteId, tagToRemoveIdStr, "deleted_notes");
+    }
+
+    // delete tag
+    queryStr = QStringLiteral("DELETE FROM tags "
                               "WHERE id=%1")
-               .arg(id);
+               .arg(tag->id());
 
     query.exec(queryStr);
     return (query.numRowsAffected() == 1);
@@ -588,14 +635,14 @@ bool DBManager::modifyTag(const TagData* tag) const
     int id = tag->id();
     QString name = tag->name();
     uint color =  QVariant::fromValue(tag->color().rgb()).toUInt();
-    int NoteCnt = tag->noteCnt();
+    QString notes = tag->noteIdSerial();
 
     QString queryStr = QStringLiteral("UPDATE tags "
-                                      "SET name='%1', color='%2', notes_cnt=%3 "
-                                      "WHERE id=%4")
+                                      "SET name='%1', color='%2', notes='%3' "
+                                      "WHERE id=%5")
                        .arg(name)
                        .arg(color)
-                       .arg(NoteCnt)
+                       .arg(notes)
                        .arg(id);
 
     query.exec(queryStr);

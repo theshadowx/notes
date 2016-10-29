@@ -24,5 +24,6 @@
         <file>images/textEdit_background_pattern.png</file>
         <file>images/arrow-drop-up.svg</file>
         <file>images/clearSelection_Regular.png</file>
+        <file>images/tag_Regular.png</file>
     </qresource>
 </RCC>

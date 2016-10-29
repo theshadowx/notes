@@ -52,7 +52,7 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
                           "notes_cnt INTEGER NOT NULL DEFAULT (0));";
         query.exec(folders);
 
-        QString folder_index = "CREATE UNIQUE INDEX folder_index on folder_notes (id ASC);";
+        QString folder_index = "CREATE UNIQUE INDEX folder_index on folders (id ASC);";
         query.exec(folder_index);
 
         QString tags  = "CREATE TABLE tags ("
@@ -72,7 +72,7 @@ bool DBManager::noteExist(NoteData* note) const
 {
     QSqlQuery query;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
     QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM active_notes WHERE id = %1 LIMIT 1 )")
                        .arg(id);
     query.exec(queryStr);

@@ -69,6 +69,7 @@ private:
     QPushButton* m_yellowMinimizeButton;
     QPushButton* m_addNoteButton;
     QPushButton* m_deleteNoteButton;
+    QPushButton* m_tagNoteButton;
     QPushButton* m_addRootFolderButton;
     QPushButton* m_deleteRootFolderButton;
     QPushButton* m_newTagButton;
@@ -181,6 +182,7 @@ private slots:
     void setFocusOnCurrentNote();
     void selectNoteDown();
     void selectNoteUp();
+    void showTagNoteMenu();
     void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();

@@ -23,6 +23,7 @@ private:
 
 signals:
     void notesReceived(QList<NoteData*> noteList);
+    void notesInTrashReceived(QList<NoteData*> noteList);
     void foldersReceived(QList<FolderData*> folderList);
     void tagsReceived(QList<TagData*> tagList);
 

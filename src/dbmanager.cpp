@@ -72,7 +72,7 @@ bool DBManager::noteExist(NoteData* note) const
 {
     QSqlQuery query;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
     QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM active_notes WHERE id = %1 LIMIT 1 )")
                        .arg(id);
     query.exec(queryStr);

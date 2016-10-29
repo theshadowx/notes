@@ -350,6 +350,12 @@ void MainWindow::setupSignalsSlots()
         m_noteView->update();
         saveTagToDB(topLeft);
     });
+    connect(m_tagModel, &TagModel::rowsAboutToBeRemoved,[&](const QModelIndex& parent, int first, int last){
+        Q_UNUSED(parent)
+        Q_UNUSED(last)
+        QModelIndex removedTagIndex = m_tagModel->index(first);
+        m_noteModel->removeTagIndex(removedTagIndex);
+    });
     // Note data changed
     connect(m_noteModel, &NoteModel::dataChanged, this, &MainWindow::onNoteDataChanged);
     // auto save timer
@@ -623,6 +629,18 @@ void MainWindow::fillNoteModel(QList<NoteData*> noteList)
         m_noteModel->addListNote(noteList);
         m_noteModel->sort();
 
+        // add tags indexes to each correspondent note
+        foreach(NoteData* note, noteList){
+            QString tagStr = note->tagIdSerial();
+            if(!tagStr.isEmpty()){
+                foreach (QString tagIDStr, tagStr.split(TagData::TagSeparator)) {
+                    int id = tagIDStr.toInt();
+                    QModelIndex index = m_tagModel->indexFromId(id);
+                    m_noteModel->addTagIndex(note->id(), index);
+                }
+            }
+        }
+
         selectFirstNote();
     }
 }
@@ -841,13 +859,7 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
         if(noteCnt > 0){
             // get all notes contained in the selected path
             QList<NoteData*> noteList = m_dbManager->getAllNotes(m_currentFolderPath);
-
-            // add notes to the model
-            if(!noteList.isEmpty()){
-                m_noteModel->addListNote(noteList);
-                m_noteModel->sort();
-                selectFirstNote();
-            }
+            fillNoteModel(noteList);
         }
     }
 }
@@ -1027,6 +1039,11 @@ void MainWindow::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
     QModelIndex indexInProxy = m_proxyNoteModel->mapFromSource(topLeft);
     saveNoteToDB(indexInProxy);
 
+    if(roles.contains(NoteModel::NoteTagIndexList)){
+        int noteId = indexInProxy.data(NoteModel::NoteID).toInt();
+        QList<QPersistentModelIndex> tagIndexes = indexInProxy.data(NoteModel::NoteTagIndexList).value<QList<QPersistentModelIndex>>();
+        m_tagModel->updateNoteInTags(tagIndexes, noteId);
+    }
 }
 
 /**
@@ -1344,9 +1361,8 @@ void MainWindow::deleteTag()
     if(m_tagListView->currentIndex().isValid()){
         QModelIndex index = m_tagListView->currentIndex();
         TagData* tag = m_tagModel->removeTag(index);
-        m_dbManager->removeTag(tag->id());
-
-        delete tag;
+        QtConcurrent::run(m_dbManager, &DBManager::removeTag, tag);
+       // delete tag;
     }
 }
 

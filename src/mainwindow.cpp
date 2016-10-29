@@ -348,9 +348,7 @@ void MainWindow::setupSignalsSlots()
     connect(m_noteModel, &NoteModel::rowsAboutToBeMoved, m_noteView, &NoteView::rowsAboutToBeMoved);
     connect(m_noteModel, &NoteModel::rowsMoved, m_noteView, &NoteView::rowsMoved);
     // folder data changed
-    connect(m_folderModel, &FolderModel::dataChanged,[&](const QModelIndex &topLeft){
-        saveFolderToDB(topLeft);
-    });
+    connect(m_folderModel, &FolderModel::dataChanged,[&](const QModelIndex& topLeft){saveFolderToDB(topLeft);});
     // Tag data changed
     connect(m_tagModel, &TagModel::dataChanged,[&](const QModelIndex &topLeft){
         m_noteView->update();
@@ -612,7 +610,9 @@ void MainWindow::initFolders ()
 
     // create new Folder if no folder exists
     if(folderDataList.isEmpty()){
+        ++m_folderCounter;
         FolderData* folderData = new FolderData;
+        folderData->setId(m_folderCounter);
         folderData->setName(QStringLiteral("Folder0"));
         FolderItem* folderItem = new FolderItem(folderData, this);
         m_folderModel->insertFolder(folderItem, 0);

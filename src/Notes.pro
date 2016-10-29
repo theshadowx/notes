@@ -36,7 +36,11 @@ SOURCES += \
     folderdata.cpp \
     foldermodel.cpp \
     folderitem.cpp \
-    folderwidgetdelegate.cpp
+    folderwidgetdelegate.cpp \
+    tagmodel.cpp \
+    tagdata.cpp \
+    tagwidgetdelegate.cpp \
+    tagnotemodel.cpp
 
 HEADERS  += \
     $$PWD/mainwindow.h \
@@ -49,7 +53,11 @@ HEADERS  += \
     folderdata.h \
     foldermodel.h \
     folderitem.h \
-    folderwidgetdelegate.h
+    folderwidgetdelegate.h \
+    tagmodel.h \
+    tagdata.h \
+    tagwidgetdelegate.h \
+    tagnotemodel.h
 
 FORMS += $$PWD/mainwindow.ui
 RESOURCES += $$PWD/images.qrc \

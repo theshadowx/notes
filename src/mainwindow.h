@@ -28,6 +28,7 @@
 #include "notemodel.h"
 #include "noteview.h"
 #include "foldermodel.h"
+#include "tagmodel.h"
 #include "dbmanager.h"
 
 namespace Ui {
@@ -66,28 +67,32 @@ private:
     QPushButton* m_greenMaximizeButton;
     QPushButton* m_redCloseButton;
     QPushButton* m_yellowMinimizeButton;
-    QPushButton* m_newNoteButton;
-    QPushButton* m_trashButton;
+    QPushButton* m_addNoteButton;
+    QPushButton* m_deleteNoteButton;
+    QPushButton* m_tagNoteButton;
     QPushButton* m_addRootFolderButton;
     QPushButton* m_deleteRootFolderButton;
     QPushButton* m_newTagButton;
+    QPushButton* m_deleteTagButton;
+    QPushButton* m_clearSelectionButton;
     QTextEdit* m_textEdit;
     QLineEdit* m_lineEdit;
     QLabel* m_editorDateLabel;
     QSplitter *m_splitter;
     QSystemTrayIcon* m_trayIcon;
-    QAction* m_restoreAction;
+    QAction* m_trayRestoreAction;
     QAction* m_quitAction;
     QMenu* m_trayIconMenu;
     QTreeView* m_folderTreeView;
     QListWidget* m_generalListW;
-    QListWidget* m_tagListW;
+    QListView* m_tagListView;
 
     NoteView* m_noteView;
     NoteModel* m_noteModel;
     NoteModel* m_deletedNotesModel;
-    QSortFilterProxyModel* m_proxyModel;
+    QSortFilterProxyModel* m_proxyNoteModel;
     FolderModel* m_folderModel;
+    TagModel* m_tagModel;
     QModelIndex m_currentSelectedNoteProxy;
     QModelIndex m_selectedNoteBeforeSearchingInSource;
     QQueue<QString> m_searchQueue;
@@ -99,11 +104,14 @@ private:
     int m_textEditLeftPadding;
     int m_noteCounter;
     int m_folderCounter;
+    int m_tagCounter;
     bool m_canMoveWindow;
     bool m_isTemp;
     bool m_isContentModified;
     bool m_isOperationRunning;
     bool m_isNoteEditable;
+    bool m_isNoteDeletionEnabled;
+    bool m_isAddingNoteEnabled;
     QString m_currentFolderPath;
 
     void setupMainWindow();
@@ -123,35 +131,47 @@ private:
     void restoreStates();
     QString getFirstLine(const QString& str);
     QString getNoteDateEditor (QString dateEdited);
-    NoteData* generateNote(QString noteName);
+    NoteData* generateNote(int id);
     QDateTime getQDateTime(QString date);
     void showNoteInEditor(const QModelIndex& noteIndex);
     void sortNotesList(QStringList &stringNotesList);
     void initFolders();
+    void initTags();
+    void fillNoteModel(QList<NoteData*> noteList);
     void saveNoteToDB(const QModelIndex& noteIndex);
     void saveFolderToDB(const QModelIndex& folderIndex);
+    void saveTagToDB(const QModelIndex& tagIndex);
     void removeNoteFromDB(const QModelIndex& noteIndex);
     void selectFirstNote();
     void clearTextAndHeader();
     void moveNoteToTop();
+    void clearSearchAndText();
     void clearSearch();
-    void findNotesContain(const QString &keyword);
+    void findNotesContaining(const QString &keyword);
     void selectNote(const QModelIndex& noteIndex);
     void checkMigration();
     void migrateNote(QString notePath);
     void migrateTrash(QString trashPath);
+    void setAddingNoteEnabled(bool state);
+    void setNoteDeletionEnabled(bool state);
+    void setNoteEditabled(bool state);
+
 
 private slots:
     void InitData();
-    void onNewNoteButtonClicked();
-    void onTrashButtonClicked();
+    void onAddNoteButtonClicked();
+    void onDeleteNoteButtonClicked();
     void addNewFolder(QModelIndex index = QModelIndex());
     void deleteFolder(QModelIndex index = QModelIndex());
-    void onNotePressed(const QModelIndex &index);
+    void addNewTag();
+    void deleteTag();
+    void onNoteClicked(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onGeneralListWCurrentRowChanged(int currentRow);
     void onTextEditTextChanged();
+    void onTextEditTimeoutTriggered();
     void onLineEditTextChanged(const QString& keyword);
+    void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onClearButtonClicked();
     void onGreenMaximizeButtonClicked();
     void onYellowMinimizeButtonClicked();
@@ -162,6 +182,7 @@ private slots:
     void setFocusOnCurrentNote();
     void selectNoteDown();
     void selectNoteUp();
+    void showTagNoteMenu();
     void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();

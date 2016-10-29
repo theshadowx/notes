@@ -26,7 +26,8 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
                          "deletion_date INTEGER NOT NULL DEFAULT (0),"
                          "content TEXT, "
                          "full_title TEXT,"
-                         "full_path TEXT);";
+                         "full_path TEXT,"
+                         "tags TEXT);";
 
         query.exec(active);
 
@@ -40,7 +41,8 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
                           "deletion_date INTEGER NOT NULL DEFAULT (0),"
                           "content TEXT,"
                           "full_title TEXT,"
-                          "full_path TEXT);";
+                          "full_path TEXT,"
+                          "tags TEXT);";
         query.exec(deleted);
 
         QString folders = "CREATE TABLE folders ("
@@ -52,6 +54,16 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
 
         QString folder_index = "CREATE UNIQUE INDEX folder_index on folder_notes (id ASC);";
         query.exec(folder_index);
+
+        QString tags  = "CREATE TABLE tags ("
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                        "name TEXT,"
+                        "color TEXT,"
+                        "notes TEXT);";
+        query.exec(tags);
+
+        QString tag_index = "CREATE UNIQUE INDEX tag_index on tags (id ASC);";
+        query.exec(tag_index);
     }
 
 }
@@ -60,8 +72,20 @@ bool DBManager::noteExist(NoteData* note) const
 {
     QSqlQuery query;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
     QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM active_notes WHERE id = %1 LIMIT 1 )")
+                       .arg(id);
+    query.exec(queryStr);
+    query.next();
+
+    return query.value(0).toInt() == 1;
+}
+
+
+bool DBManager::folderExist(int id) const
+{
+    QSqlQuery query;
+    QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM folders WHERE id = %1 LIMIT 1 )")
                        .arg(id);
     query.exec(queryStr);
     query.next();
@@ -74,8 +98,9 @@ QList<NoteData *> DBManager::getAllNotes()
     QList<NoteData *> noteList;
 
     QSqlQuery query;
-    query.prepare("SELECT * FROM active_notes");
-    bool status = query.exec();
+    QString queryStr = QStringLiteral("SELECT * FROM active_notes");
+
+    bool status = query.exec(queryStr);
     if(status){
         while(query.next()){
             NoteData* note = new NoteData(this);
@@ -87,13 +112,15 @@ QList<NoteData *> DBManager::getAllNotes()
             QString content = query.value(4).toString();
             QString fullTitle = query.value(5).toString();
             QString fullPath = query.value(6).toString();
+            QString tags = query.value(7).toString();
 
-            note->setId(QStringLiteral("noteID_%1").arg(id));
+            note->setId(id);
             note->setCreationDateTime(dateTimeCreation);
             note->setLastModificationDateTime(dateTimeModification);
             note->setContent(content);
             note->setFullTitle(fullTitle);
             note->setFullPath(fullPath);
+            note->setTagIdSerial(tags);
 
             noteList.push_back(note);
         }
@@ -127,13 +154,15 @@ QList<NoteData*> DBManager::getAllNotes(const QString& fullPath)
             QString content = query.value(4).toString();
             QString fullTitle = query.value(5).toString();
             QString fullPath = query.value(6).toString();
+            QString tags = query.value(7).toString();
 
-            note->setId(QStringLiteral("noteID_%1").arg(id));
+            note->setId(id);
             note->setCreationDateTime(dateTimeCreation);
             note->setLastModificationDateTime(dateTimeModification);
             note->setContent(content);
             note->setFullTitle(fullTitle);
             note->setFullPath(fullPath);
+            note->setTagIdSerial(tags);
 
             noteList.push_back(note);
         }
@@ -164,19 +193,21 @@ QList<NoteData*> DBManager::getNotesInTrash()
             QString content = query.value(4).toString();
             QString fullTitle = query.value(5).toString();
             QString fullPath = query.value(6).toString();
+            QString tags = query.value(7).toString();
 
-            note->setId(QStringLiteral("noteID_%1").arg(id));
+            note->setId(id);
             note->setCreationDateTime(dateTimeCreation);
             note->setLastModificationDateTime(dateTimeModification);
             note->setDeletionDateTime(dateTimeDeletion);
             note->setContent(content);
             note->setFullTitle(fullTitle);
             note->setFullPath(fullPath);
+            note->setTagIdSerial(tags);
 
             noteList.push_back(note);
         }
 
-        emit notesReceived(noteList);
+        emit notesInTrashReceived(noteList);
     }
 
     return noteList;
@@ -196,13 +227,15 @@ bool DBManager::addNote(const NoteData* note) const
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
     QString fullPath = note->fullPath();
+    QString tags = note->tagIdSerial();
 
-    QString queryStr = QString("INSERT INTO active_notes (creation_date, modification_date, deletion_date, content, full_title, full_path) "
-                               "VALUES (%1, %1, -1, '%2', '%3', '%4');")
+    QString queryStr = QString("INSERT INTO active_notes (creation_date, modification_date, deletion_date, content, full_title, full_path, tags) "
+                               "VALUES (%1, %1, -1, '%2', '%3', '%4', '%5');")
                        .arg(epochTimeDateCreated)
                        .arg(content)
                        .arg(fullTitle)
-                       .arg(fullPath);
+                       .arg(fullPath)
+                       .arg(tags);
 
     query.exec(queryStr);
     return (query.numRowsAffected() == 1);
@@ -214,7 +247,7 @@ bool DBManager::removeNote(const NoteData* note) const
     QSqlQuery query;
     QString emptyStr;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
 
     QString queryStr = QStringLiteral("DELETE FROM active_notes "
                                       "WHERE id=%1")
@@ -232,16 +265,18 @@ bool DBManager::removeNote(const NoteData* note) const
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
     QString fullPath = note->fullPath();
+    QString tags = note->tagIdSerial();
 
     queryStr = QString("INSERT INTO deleted_notes "
-                       "VALUES (%1, %2, %3, %4, '%5', '%6', '%7');")
+                       "VALUES (%1, %2, %3, %4, '%5', '%6', '%7', '%8');")
                .arg(id)
                .arg(epochTimeDateCreated)
                .arg(epochTimeDateModified)
                .arg(epochTimeDateDeleted)
                .arg(content)
                .arg(fullTitle)
-               .arg(fullPath);
+               .arg(fullPath)
+               .arg(tags);
 
     query.exec(queryStr);
     bool addedToTrashDB = (query.numRowsAffected() == 1);
@@ -254,7 +289,7 @@ bool DBManager::modifyNote(const NoteData* note) const
     QSqlQuery query;
     QString emptyStr;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
     qint64 epochTimeDateModified = note->lastModificationdateTime().toMSecsSinceEpoch();
     QString content = note->content()
                       .replace("'","''")
@@ -263,15 +298,18 @@ bool DBManager::modifyNote(const NoteData* note) const
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
     QString fullPath = note->fullPath();
+    QString tags = note->tagIdSerial();
 
     QString queryStr = QStringLiteral("UPDATE active_notes "
-                                      "SET modification_date=%1, content='%2', full_title='%3', full_path='%4' "
-                                      "WHERE id=%5")
+                                      "SET modification_date=%1, content='%2', full_title='%3', full_path='%4', tags='%5' "
+                                      "WHERE id=%6")
                        .arg(epochTimeDateModified)
                        .arg(content)
                        .arg(fullTitle)
                        .arg(fullPath)
+                       .arg(tags)
                        .arg(id);
+
     query.exec(queryStr);
     return (query.numRowsAffected() == 1);
 }
@@ -281,7 +319,7 @@ bool DBManager::migrateNote(const NoteData* note) const
     QSqlQuery query;
     QString emptyStr;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
     qint64 epochTimeDateCreated = note->creationDateTime().toMSecsSinceEpoch();
     qint64 epochTimeDateModified = note->lastModificationdateTime().toMSecsSinceEpoch();
     QString content = note->content()
@@ -308,7 +346,7 @@ bool DBManager::migrateTrash(const NoteData* note) const
     QSqlQuery query;
     QString emptyStr;
 
-    int id = note->id().split('_')[1].toInt();
+    int id = note->id();
     qint64 epochTimeDateCreated = note->creationDateTime().toMSecsSinceEpoch();
     qint64 epochTimeDateModified = note->lastModificationdateTime().toMSecsSinceEpoch();
     qint64 epochTimeDateDeleted = note->deletionDateTime().toMSecsSinceEpoch();
@@ -320,13 +358,13 @@ bool DBManager::migrateTrash(const NoteData* note) const
                         .replace(QChar('\x0'), emptyStr);
 
     QString queryStr = QString("INSERT INTO deleted_notes "
-                       "VALUES (%1, %2, %3, %4, '%5', '%6');")
-               .arg(id)
-               .arg(epochTimeDateCreated)
-               .arg(epochTimeDateModified)
-               .arg(epochTimeDateDeleted)
-               .arg(content)
-               .arg(fullTitle);
+                               "VALUES (%1, %2, %3, %4, '%5', '%6');")
+                       .arg(id)
+                       .arg(epochTimeDateCreated)
+                       .arg(epochTimeDateModified)
+                       .arg(epochTimeDateDeleted)
+                       .arg(content)
+                       .arg(fullTitle);
 
     query.exec(queryStr);
     return (query.numRowsAffected() == 1);
@@ -483,13 +521,140 @@ int DBManager::getFoldersLastRowID() const
     return query.value(0).toInt();
 }
 
-bool DBManager::folderExist(int id) const
+QList<TagData *> DBManager::getAllTags()
+{
+    QList<TagData*> tagList;
+    QSqlQuery query;
+    QString queryStr;
+
+    queryStr = QStringLiteral("SELECT * FROM tags");
+
+    bool status = query.exec(queryStr);
+    if(status){
+        while(query.next()){
+            TagData* tag = new TagData(this);
+            int id =  query.value(0).toInt();
+            QString tagName = query.value(1).toString();
+            QColor tagColor = QColor::fromRgb(query.value(2).toUInt());
+            QString notes = query.value(3).toString();
+
+            tag->setId(id);
+            tag->setName(tagName);
+            tag->setColor(tagColor);
+            tag->setNoteIdSerial(notes);
+
+            tagList.append(tag);
+        }
+
+        emit tagsReceived(tagList);
+    }
+
+    return tagList;
+}
+
+bool DBManager::addTag(const TagData *tag) const
 {
     QSqlQuery query;
-    QString queryStr = QStringLiteral("SELECT EXISTS(SELECT 1 FROM folders WHERE id = %1 LIMIT 1 )")
-                       .arg(id);
-    query.exec(queryStr);
-    query.next();
 
-    return query.value(0).toInt() == 1;
+    QString name = tag->name();
+    uint color = QVariant::fromValue(tag->color().rgb()).toUInt();
+    QString notes = tag->noteIdSerial();
+
+    QString queryStr = QString("INSERT INTO tags (name, color, notes) "
+                               "VALUES ('%1', '%2', '%3');")
+                       .arg(name)
+                       .arg(color)
+                       .arg(notes);
+
+    query.exec(queryStr);
+    return (query.numRowsAffected() == 1);
 }
+
+bool DBManager::deleteTagInNote(const int noteId, const QString tagIdStr, const QString tableName) const
+{
+    QSqlQuery selectQuery;
+    QSqlQuery updateQuery;
+
+    QString queryStr = QStringLiteral("SELECT tags FROM %1 "
+                              "WHERE id=%2")
+                       .arg(tableName)
+                       .arg(noteId);
+
+    selectQuery.exec(queryStr);
+    if(selectQuery.next()){
+        // delete tag from active table
+        QString notetags = selectQuery.value(0).toString();
+        QStringList tagList = notetags.split(TagData::TagSeparator);
+        tagList.removeOne(tagIdStr);
+        notetags = tagList.join(TagData::TagSeparator);
+
+        queryStr = QStringLiteral("UPDATE %1 "
+                                  "SET tags='%2' "
+                                  "WHERE id=%3")
+                   .arg(tableName)
+                   .arg(notetags)
+                   .arg(noteId);
+
+        updateQuery.exec(queryStr);
+        return (updateQuery.numRowsAffected() == 1);
+    }
+
+    return false;
+}
+
+bool DBManager::removeTag(const TagData* tag) const
+{
+    QSqlQuery query;
+    QString queryStr;
+
+    int tagToRemoveId = tag->id();
+    QString tagToRemoveIdStr = QStringLiteral("%1").arg(tagToRemoveId);
+    QString noteIdSerial = tag->noteIdSerial();
+    QStringList noteIdList = noteIdSerial.split(TagData::TagSeparator);
+    foreach (QString idStr, noteIdList) {
+        int noteId = idStr.toInt();
+
+        bool deletedFromActiveNotes = deleteTagInNote(noteId, tagToRemoveIdStr, "active_notes");
+        if(!deletedFromActiveNotes)
+            deleteTagInNote(noteId, tagToRemoveIdStr, "deleted_notes");
+    }
+
+    // delete tag
+    queryStr = QStringLiteral("DELETE FROM tags "
+                              "WHERE id=%1")
+               .arg(tag->id());
+
+    query.exec(queryStr);
+    return (query.numRowsAffected() == 1);
+}
+
+bool DBManager::modifyTag(const TagData* tag) const
+{
+    QSqlQuery query;
+
+    int id = tag->id();
+    QString name = tag->name();
+    uint color =  QVariant::fromValue(tag->color().rgb()).toUInt();
+    QString notes = tag->noteIdSerial();
+
+    QString queryStr = QStringLiteral("UPDATE tags "
+                                      "SET name='%1', color='%2', notes='%3' "
+                                      "WHERE id=%5")
+                       .arg(name)
+                       .arg(color)
+                       .arg(notes)
+                       .arg(id);
+
+    query.exec(queryStr);
+
+    return (query.numRowsAffected() == 1);
+}
+
+int DBManager::getTagsLastRowID() const
+{
+    QSqlQuery query;
+    query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='tags';");
+    query.next();
+    return query.value(0).toInt();
+}
+

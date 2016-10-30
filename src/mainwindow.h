@@ -147,6 +147,7 @@ private:
     void moveNoteToTop();
     void clearSearchAndText();
     void clearSearch();
+    void clearTagSelection();
     void findNotesContaining(const QString &keyword);
     void selectNote(const QModelIndex& noteIndex);
     void checkMigration();
@@ -171,6 +172,7 @@ private slots:
     void onTextEditTextChanged();
     void onTextEditTimeoutTriggered();
     void onLineEditTextChanged(const QString& keyword);
+    void onTagSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onClearButtonClicked();
     void onGreenMaximizeButtonClicked();

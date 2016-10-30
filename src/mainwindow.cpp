@@ -308,11 +308,7 @@ void MainWindow::setupSignalsSlots()
         m_tagListView->setCurrentIndex(QModelIndex());
         m_tagListView->selectionModel()->clear();
     });
-    connect(m_tagListView->selectionModel(), &QItemSelectionModel::selectionChanged, [&](const QItemSelection &selected, const QItemSelection &deselected){
-
-        qDebug() << m_tagListView->selectionModel()->selectedIndexes();
-        // TODO: show the notes having the selected tags
-    });
+    connect(m_tagListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onTagSelectionChanged);
     // text edit text changed
     connect(m_textEdit, &QTextEdit::textChanged, this, &MainWindow::onTextEditTextChanged);
     // line edit text changed
@@ -721,6 +717,8 @@ void MainWindow::selectFirstNote ()
 
         if(m_lineEdit->text().isEmpty())
             m_noteView->setFocus();
+    }else{
+        m_currentSelectedNoteProxy = QModelIndex();
     }
 }
 
@@ -762,10 +760,14 @@ void MainWindow::setButtonsAndFieldsEnabled(bool doEnable)
 void MainWindow::onAddNoteButtonClicked()
 {
     if(m_isAddingNoteEnabled){
+        m_noteView->setAnimationEnabled(false);
         if(!m_lineEdit->text().isEmpty()){
             clearSearchAndText();
             m_selectedNoteBeforeSearchingInSource = QModelIndex();
+        }else if(m_tagListView->selectionModel()->selectedIndexes().count() > 0){
+            clearTagSelection();
         }
+        m_noteView->setAnimationEnabled(true);
 
         // save the data of the previous selected
         if(m_currentSelectedNoteProxy.isValid())
@@ -829,8 +831,11 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
 
     m_currentFolderPath.clear();
 
-    // init Note List variables
+    // initialize
+    m_noteView->setAnimationEnabled(false);
     clearSearchAndText();
+    clearTagSelection();
+    m_noteView->setAnimationEnabled(true);
 
     m_noteModel->clearNotes();
     m_currentSelectedNoteProxy = QModelIndex();
@@ -877,15 +882,18 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
     if(currentRow!=-1){
         m_folderTreeView->setCurrentIndex(QModelIndex());
 
-        // init Note List variables
+        // initialize
+        m_noteView->setAnimationEnabled(false);
         clearSearchAndText();
+        clearTagSelection();
+        m_noteView->setAnimationEnabled(true);
 
         m_noteModel->clearNotes();
         m_currentSelectedNoteProxy = QModelIndex();
         m_selectedNoteBeforeSearchingInSource = QModelIndex();
         m_isTemp = false;
         m_isContentModified = false;
-        m_noteView->setAnimationEnabled(true);
+        m_noteView->setAnimationEnabled(false);
 
         setAddingNoteEnabled(false);
         setNoteDeletionEnabled(true);
@@ -913,7 +921,7 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
             fillNoteModel(trashNotes);
         }
 
-        m_noteView->setAnimationEnabled(false);
+        m_noteView->setAnimationEnabled(true);
     }
 }
 
@@ -985,8 +993,16 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
     m_textEdit->clearFocus();
     m_searchQueue.enqueue(keyword);
 
+    m_noteView->setAnimationEnabled(false);
+    clearTagSelection();
+    m_noteView->setAnimationEnabled(true);
+
     if(!m_isOperationRunning){
         m_isOperationRunning = true;
+
+        // disable the animation
+        m_noteView->setAnimationEnabled(false);
+
         if(m_isTemp){
             m_isTemp = false;
             // prevent the line edit from emitting signal
@@ -1015,26 +1031,60 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
             saveNoteToDB(m_currentSelectedNoteProxy);
         }
 
-        // disable the animation
-        m_noteView->setAnimationEnabled(true);
-
         while(!m_searchQueue.isEmpty()){
             qApp->processEvents();
             QString str = m_searchQueue.dequeue();
             if(str.isEmpty()){
-                m_noteView->setFocusPolicy(Qt::StrongFocus);
                 clearSearchAndText();
                 QModelIndex indexInProxy = m_proxyNoteModel->mapFromSource(m_selectedNoteBeforeSearchingInSource);
                 selectNote(indexInProxy);
                 m_selectedNoteBeforeSearchingInSource = QModelIndex();
             }else{
-                m_noteView->setFocusPolicy(Qt::NoFocus);
                 findNotesContaining(str);
             }
         }
 
+        m_noteView->setAnimationEnabled(true);
+
         m_isOperationRunning = false;
     }
+}
+
+void MainWindow::onTagSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+{
+    if(m_isTemp){
+        m_isTemp = false;
+        m_currentSelectedNoteProxy = QModelIndex();
+        QModelIndex index = m_noteModel->index(0);
+        m_noteModel->removeNote(index);
+    }
+
+    m_noteView->setAnimationEnabled(false);
+    clearSearchAndText();
+    m_noteView->setAnimationEnabled(true);
+
+    m_noteView->setAnimationEnabled(false);
+    m_proxyNoteModel->setFilterRole(NoteModel::NoteTagSerial);
+
+    QString regexp = m_proxyNoteModel->filterRegExp().pattern();
+
+    QModelIndexList indexes = deselected.indexes();
+    foreach (QModelIndex index, indexes) {
+        int idToRemove = index.data(TagModel::TagID).toInt();
+        QString regExpToBeRemoved = QStringLiteral("(?=.*(%1_|_%1_|_%1))").arg(idToRemove);
+        regexp.replace(regExpToBeRemoved,"");
+    }
+
+    if(selected.indexes().count() > 0){
+        int idToAdd = selected.indexes().at(0).data(TagModel::TagID).toInt();
+        QString regExpToBeAdded = QStringLiteral("(?=.*(%1_|_%1_|_%1))").arg(idToAdd);
+        regexp.append(regExpToBeAdded);
+    }
+
+    m_proxyNoteModel->setFilterRegExp(regexp);
+
+    selectFirstNote();
+    m_noteView->setAnimationEnabled(true);
 }
 
 void MainWindow::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
@@ -1451,7 +1501,7 @@ void MainWindow::deleteTag()
         QModelIndex index = m_tagListView->currentIndex();
         TagData* tag = m_tagModel->removeTag(index);
         QtConcurrent::run(m_dbManager, &DBManager::removeTag, tag);
-       // delete tag;
+        // delete tag;
     }
 }
 
@@ -1559,8 +1609,6 @@ void MainWindow::clearSearchAndText()
 
     m_clearButton->hide();
     m_lineEdit->setFocus();
-
-    m_noteView->setAnimationEnabled(false);
 }
 
 void MainWindow::clearSearch()
@@ -1573,12 +1621,23 @@ void MainWindow::clearSearch()
 
     m_clearButton->hide();
     m_lineEdit->setFocus();
+}
 
-    m_noteView->setAnimationEnabled(false);
+void MainWindow::clearTagSelection()
+{
+    m_tagListView->selectionModel()->blockSignals(true);
+
+    m_tagListView->clearSelection();
+    m_tagListView->setCurrentIndex(QModelIndex());
+    m_tagListView->update();
+    m_proxyNoteModel->setFilterFixedString("");
+
+    m_tagListView->selectionModel()->blockSignals(false);
 }
 
 void MainWindow::findNotesContaining(const QString& keyword)
 {
+    m_proxyNoteModel->setFilterRole(NoteModel::NoteContent);
     m_proxyNoteModel->setFilterFixedString(keyword);
     m_clearButton->show();
     clearTextAndHeader();
@@ -1823,27 +1882,44 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
 
             if(m_isNoteEditable){
                 if(!m_isOperationRunning){
+
+                    m_textEdit->setReadOnly(false);
+
                     // When clicking in a note's content while searching,
                     // reload all the notes and go and select that note
-                    if(!m_lineEdit->text().isEmpty()){
+
+                    bool isNoteListFilteredByTag = m_tagListView->selectionModel()->selectedRows().count() > 0;
+                    bool isNoteListFilteredByKeyword = !m_lineEdit->text().isEmpty();
+
+                    if(isNoteListFilteredByTag || isNoteListFilteredByKeyword){
                         m_selectedNoteBeforeSearchingInSource = QModelIndex();
 
                         if(m_currentSelectedNoteProxy.isValid()){
                             QModelIndex indexInSource = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
-                            clearSearch();
+
+                            m_noteView->setAnimationEnabled(false);
+                            if(isNoteListFilteredByTag) clearTagSelection();
+                            if(isNoteListFilteredByKeyword) clearSearch();
+                            m_noteView->setAnimationEnabled(true);
+
                             m_currentSelectedNoteProxy = m_proxyNoteModel->mapFromSource(indexInSource);
                             selectNote(m_currentSelectedNoteProxy);
                             m_textEdit->setFocus();
-                        }else if(m_isAddingNoteEnabled){
-                            clearSearch();
-                            if(m_folderModel->rowCount() == 0)
-                                addNewFolder();
-                            createNewNote();
-                            m_textEdit->setFocus();
                         }else{
-                            clearSearch();
+
+                            if(isNoteListFilteredByTag) clearTagSelection();
+                            if(isNoteListFilteredByKeyword) clearSearch();
+
+                            if(m_isAddingNoteEnabled){
+                                if(m_folderModel->rowCount() == 0)
+                                    addNewFolder();
+                                createNewNote();
+                            }
+
                             selectFirstNote();
+                            m_textEdit->setFocus();
                         }
+
                     }else if(m_proxyNoteModel->rowCount() == 0 && m_isAddingNoteEnabled){
                         if(m_folderModel->rowCount() == 0)
                             addNewFolder();
@@ -1855,6 +1931,11 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
 
         break;
     }
+    case QEvent::FocusOut:
+        if(object == m_textEdit)
+            m_textEdit->setReadOnly(true);
+
+        break;
     default:
         break;
     }

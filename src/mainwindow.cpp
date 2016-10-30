@@ -721,6 +721,8 @@ void MainWindow::selectFirstNote ()
 
         if(m_lineEdit->text().isEmpty())
             m_noteView->setFocus();
+    }else{
+        m_currentSelectedNoteProxy = QModelIndex();
     }
 }
 
@@ -762,10 +764,12 @@ void MainWindow::setButtonsAndFieldsEnabled(bool doEnable)
 void MainWindow::onAddNoteButtonClicked()
 {
     if(m_isAddingNoteEnabled){
+        m_noteView->setAnimationEnabled(false);
         if(!m_lineEdit->text().isEmpty()){
             clearSearchAndText();
             m_selectedNoteBeforeSearchingInSource = QModelIndex();
         }
+        m_noteView->setAnimationEnabled(true);
 
         // save the data of the previous selected
         if(m_currentSelectedNoteProxy.isValid())
@@ -829,8 +833,10 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
 
     m_currentFolderPath.clear();
 
-    // init Note List variables
+    // initialize
+    m_noteView->setAnimationEnabled(false);
     clearSearchAndText();
+    m_noteView->setAnimationEnabled(true);
 
     m_noteModel->clearNotes();
     m_currentSelectedNoteProxy = QModelIndex();
@@ -877,8 +883,10 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
     if(currentRow!=-1){
         m_folderTreeView->setCurrentIndex(QModelIndex());
 
-        // init Note List variables
+        // initialize
+        m_noteView->setAnimationEnabled(false);
         clearSearchAndText();
+        m_noteView->setAnimationEnabled(true);
 
         m_noteModel->clearNotes();
         m_currentSelectedNoteProxy = QModelIndex();
@@ -913,7 +921,7 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
             fillNoteModel(trashNotes);
         }
 
-        m_noteView->setAnimationEnabled(false);
+        m_noteView->setAnimationEnabled(true);
     }
 }
 
@@ -987,6 +995,10 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
 
     if(!m_isOperationRunning){
         m_isOperationRunning = true;
+
+        // disable the animation
+        m_noteView->setAnimationEnabled(false);
+
         if(m_isTemp){
             m_isTemp = false;
             // prevent the line edit from emitting signal
@@ -1015,23 +1027,20 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
             saveNoteToDB(m_currentSelectedNoteProxy);
         }
 
-        // disable the animation
-        m_noteView->setAnimationEnabled(true);
-
         while(!m_searchQueue.isEmpty()){
             qApp->processEvents();
             QString str = m_searchQueue.dequeue();
             if(str.isEmpty()){
-                m_noteView->setFocusPolicy(Qt::StrongFocus);
                 clearSearchAndText();
                 QModelIndex indexInProxy = m_proxyNoteModel->mapFromSource(m_selectedNoteBeforeSearchingInSource);
                 selectNote(indexInProxy);
                 m_selectedNoteBeforeSearchingInSource = QModelIndex();
             }else{
-                m_noteView->setFocusPolicy(Qt::NoFocus);
                 findNotesContaining(str);
             }
         }
+
+        m_noteView->setAnimationEnabled(true);
 
         m_isOperationRunning = false;
     }
@@ -1451,7 +1460,7 @@ void MainWindow::deleteTag()
         QModelIndex index = m_tagListView->currentIndex();
         TagData* tag = m_tagModel->removeTag(index);
         QtConcurrent::run(m_dbManager, &DBManager::removeTag, tag);
-       // delete tag;
+        // delete tag;
     }
 }
 
@@ -1559,8 +1568,6 @@ void MainWindow::clearSearchAndText()
 
     m_clearButton->hide();
     m_lineEdit->setFocus();
-
-    m_noteView->setAnimationEnabled(false);
 }
 
 void MainWindow::clearSearch()
@@ -1573,12 +1580,11 @@ void MainWindow::clearSearch()
 
     m_clearButton->hide();
     m_lineEdit->setFocus();
-
-    m_noteView->setAnimationEnabled(false);
 }
 
 void MainWindow::findNotesContaining(const QString& keyword)
 {
+    m_proxyNoteModel->setFilterRole(NoteModel::NoteContent);
     m_proxyNoteModel->setFilterFixedString(keyword);
     m_clearButton->show();
     clearTextAndHeader();
@@ -1823,6 +1829,9 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
 
             if(m_isNoteEditable){
                 if(!m_isOperationRunning){
+
+                    m_textEdit->setReadOnly(false);
+
                     // When clicking in a note's content while searching,
                     // reload all the notes and go and select that note
                     if(!m_lineEdit->text().isEmpty()){
@@ -1839,7 +1848,6 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                             if(m_folderModel->rowCount() == 0)
                                 addNewFolder();
                             createNewNote();
-                            m_textEdit->setFocus();
                         }else{
                             clearSearch();
                             selectFirstNote();
@@ -1855,6 +1863,11 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
 
         break;
     }
+    case QEvent::FocusOut:
+        if(object == m_textEdit)
+            m_textEdit->setReadOnly(true);
+
+        break;
     default:
         break;
     }

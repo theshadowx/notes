@@ -12,7 +12,7 @@
 NoteView::NoteView(QWidget *parent)
     : QListView( parent ),
       m_isScrollBarHidden(true),
-      m_isAnimationEnabled(false),
+      m_isAnimationEnabled(true),
       m_isMousePressed(false)
 {
     this->setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -49,7 +49,7 @@ void NoteView::animateAddedRow(const QModelIndex& parent, int start, int end)
  */
 void NoteView::rowsInserted(const QModelIndex &parent, int start, int end)
 {
-    if(start == end && !m_isAnimationEnabled)
+    if(m_isAnimationEnabled && start == end)
         animateAddedRow(parent, start, end);
 
     QListView::rowsInserted(parent, start, end);
@@ -65,7 +65,7 @@ void NoteView::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int en
         if(delegate != Q_NULLPTR){
             QModelIndex idx = model()->index(start,0);
 
-            if(!m_isAnimationEnabled){
+            if(m_isAnimationEnabled){
                 delegate->setState( NoteWidgetDelegate::Remove, idx);
             }else{
                 delegate->setState( NoteWidgetDelegate::Normal, idx);

@@ -52,7 +52,7 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
                           "notes_cnt INTEGER NOT NULL DEFAULT (0));";
         query.exec(folders);
 
-        QString folder_index = "CREATE UNIQUE INDEX folder_index on folder_notes (id ASC);";
+        QString folder_index = "CREATE UNIQUE INDEX folder_index on folders (id ASC);";
         query.exec(folder_index);
 
         QString tags  = "CREATE TABLE tags ("

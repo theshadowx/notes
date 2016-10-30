@@ -10,20 +10,22 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 
 #tagLabel, #folderLabel{color: rgb(100, 100, 100); font: 10pt "Ubuntu";}
 
-#editorDateLabel{ font: bold 10pt "Roboto";}
+#editorDateLabel{ font: 500 10pt "Roboto";}
+#labelNotes{font: 500 10pt "Roboto";}
+#noteCntLabel{padding-top: 4px; font:500 7pt "Roboto";}
 
 #frameFolderTag{border: none; border-right: 1px solid rgb(221, 221, 221);}
 
 #greenMaximizeButton, #redCloseButton, #yellowMinimizeButton,
 #newNoteButton, #trashButton, #newFolderButton, #newTagButton {border: none; padding: 0px;}
 
-#trashButton{background-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center;}
-#trashButton:pressed{background-image: url(:/images/trashCan_Pressed.png);}
-#trashButton:!pressed:hover{background-image: url(:/images/trashCan_Hovered.png);}
+#deleteNoteButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
+#deleteNoteButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
+#deleteNoteButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
 
-#newNoteButton{background-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center;}
-#newNoteButton:pressed{background-image: url(:/images/newNote_Pressed.png);}
-#newNoteButton:!pressed:hover{background-image: url(:/images/newNote_Hovered.png);}
+#addNoteButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
+#addNoteButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
+#addNoteButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
 
 #addRootFolderButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
 #addRootFolderButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
@@ -42,6 +44,7 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 #deleteTagButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
 
 #clearSelectionButton{border-image: url(:/images/clearSelection_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px;}
+#tagNoteButton{border-image: url(:/images/tag_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px;}
 
 #redCloseButton{border-image:url(:/images/red.png)0 0 0 0 stretch stretch;}
 #redCloseButton[hovered=true]{border-image:url(:/images/redHovered.png);}
@@ -60,9 +63,9 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 #greenMaximizeButton:pressed[fullscreen=true]{border-image:url(:/images/greenInPressed.png);}
 #greenMaximizeButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
 
-#tagListView {border: none; margin: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font-family: "Ubuntu"; font-size: 12px; outline: none;}
-#tagListView::item {border: none; padding-top:1px; padding-bottom:1px; padding-left:20px; min-height: 18px;}
-#tagListView::item:selected {background: rgb(68, 138, 201);}
+#tagListView {border: none; margin: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font-family: "Ubuntu"; font-size: 13px; outline: none;}
+#tagListView::item {border: none; padding-top:2px; padding-bottom:4px; padding-left:20px; height: 16px; color:rgb(46, 43, 43);}
+#tagListView::item:selected {background: rgb(68, 138, 201); color:rgb(250, 250, 250);}
 #tagListView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 
 QToolButton {border: none; padding: 0px;}
@@ -85,7 +88,7 @@ QFontComboBox QScrollBar::handle:vertical { border-radius: 4px; background: rgb(
 QFontComboBox QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
 QFontComboBox QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
 
-QTextEdit#textEdit {padding-left: 27px; padding-right: 27px; padding-bottom:2px; font-family:"Arimo"; font-size:11pt; color:rgb(51, 51, 51);}
+QTextEdit#textEdit {padding-left: 27px; padding-right: 27px; padding-bottom:2px; font: 11pt "Arimo"; color: rgb(51, 51, 51);}
 QTextEdit#textEdit QScrollBar{margin: 0; background: transparent;}
 QTextEdit#textEdit QScrollBar::handle:vertical:hover{ background: rgb(170, 170, 171); }
 QTextEdit#textEdit QScrollBar::handle:vertical:pressed{ background: rgb(149, 149, 149); }
@@ -124,7 +127,22 @@ QListWidget::item{border: none; border-bottom:1px solid rgb(221, 221, 221); padd
 QListWidget::item:selected {padding-left:20px; background: rgb(68, 138, 201);}
 QListWidget::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 
-QMenu{font-family: "Ubuntu"; font-size: 13px; color: rgb(26, 26, 26);}
-QMenu::item {padding: 3px 25px 3px 25px; margin:1px; margin-top:0px; border: 1px solid transparent;}
-QMenu::item:selected {background-color:rgb(240, 240, 240);}
-QMenu::icon{padding-left: 5px;}
+/*QMenu{font-family: "Ubuntu"; font-size: 13px; color: rgb(26, 26, 26); menu-scrollable: 1; }*/
+/*QMenu::item {padding: 3px 25px 3px 25px; margin:1px; margin-top:0px; border: 1px solid transparent;}*/
+/*QMenu::item:selected {background-color:rgb(240, 240, 240);}*/
+/*QMenu::icon{padding-left: 5px;}*/
+
+
+/**************************************************************************************************/
+
+QMenu#tagMenu{margin: 10px 10px 0px 10px; font: 13px "Ubuntu"; color: rgb(26, 26, 26); menu-scrollable: 1; background-color: rgb(247,247,247);}
+
+#tagNoteView{margin-bottom: 5px; border: 0px;border-bottom: 1px solid rgb(200, 200, 200); color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font: 14px "Ubuntu"; outline-color: transparent;}
+#tagNoteView::item{border: none; padding-left:2px; padding-top:1px; padding-bottom:1px; height: 20px;}
+#tagNoteView::item:!selected:hover{background-color:rgb(220, 220, 220);}
+#tagNoteView::item:selected {background-color: rgb(68, 138, 201);}
+#tagNoteView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
+
+#createTagButton, #cancelButton, #validateButton{margin-bottom:5px; padding-left: 4px; height:18px; border:1px solid rgb(221, 221, 221); color:rgb(26, 26, 26); outline:none; height:23px; font: 14px "Ubuntu"; text-align:left;}
+#createTagButton:pressed, #cancelButton:pressed, #validateButton:pressed{background-color: transparent;}
+#createTagButton:!pressed:hover, #cancelButton:!pressed:hover, #validateButton:!pressed:hover{background-color:rgb(220, 220, 220);}

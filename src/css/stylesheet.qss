@@ -123,17 +123,19 @@ QListWidget::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 
 /**************************************************************************************************/
 
-QMenu#tagMenu{margin: 10px 10px 0px 10px; font: 13px "Ubuntu"; color: rgb(26, 26, 26); menu-scrollable: 1; background-color: rgb(247,247,247);}
+QMenu#tagNoteMenu{margin: 5px 5px 0px 5px; width:200px; font: 13px "Ubuntu"; color: rgb(26, 26, 26); menu-scrollable: 1; background-color: rgb(247,247,247);}
+QMenu#tagNoteMenu::separator {margin-right:10px; height: 1px; background: rgb(221, 221, 221);}
 
-#tagNoteView{margin-bottom: 5px; border: 0px;border-bottom: 1px solid rgb(200, 200, 200); color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font: 14px "Ubuntu"; outline-color: transparent;}
+#tagNoteView{margin:0px; padding-bottom:5px; border: 0px;/*border-bottom: 1px solid rgb(200, 200, 200);*/ color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font: 14px "Ubuntu"; outline-color: transparent;}
 #tagNoteView::item{border: none; padding-left:2px; padding-top:1px; padding-bottom:1px; height: 20px;}
 #tagNoteView::item:!selected:hover{background-color:rgb(220, 220, 220);}
 #tagNoteView::item:selected {background-color: rgb(68, 138, 201);}
 #tagNoteView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 
-#createTagButton, #cancelButton, #validateButton{margin-bottom:5px; padding-left: 4px; height:18px; border:1px solid rgb(221, 221, 221); color:rgb(26, 26, 26); outline:none; height:23px; font: 14px "Ubuntu"; text-align:left;}
-#createTagButton:pressed, #cancelButton:pressed, #validateButton:pressed{background-color: transparent;}
-#createTagButton:!pressed:hover, #cancelButton:!pressed:hover, #validateButton:!pressed:hover{background-color:rgb(220, 220, 220);}
+#createTagButton, #validateButton{border:0px; padding-left: 24px; height:18px; color:rgb(26, 26, 26); outline:none; height:20px; font: 14px "Ubuntu"; text-align:left;}
+#createTagButton:pressed, #validateButton:pressed{background-color: transparent;}
+#createTagButton:!pressed:hover, #validateButton:!pressed:hover{background-color:rgb(220, 220, 220);}
+#validateButton:!enabled{background-color:rgb(235, 235, 235); color: rgb(100,100,100);}
 /*******************************/
 QMenu#tagViewContextMenu{margin: 5px 5px 5px 5px; width: 200px; menu-scrollable: 1; background-color: rgb(247,247,247);}
 QMenu#tagViewContextMenu::separator {margin-right:10px; height: 1px; background: rgb(221, 221, 221);}

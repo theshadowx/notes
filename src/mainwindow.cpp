@@ -1353,47 +1353,66 @@ void MainWindow::showTagNoteMenu()
             && m_currentSelectedNoteProxy.isValid()){
 
         QMenu menu;
-        menu.setObjectName("tagMenu");
+        menu.setObjectName(QStringLiteral("tagNoteMenu"));
+        menu.show();
+
+        int contentWidth = menu.contentsRect().width() - 2*5;
 
         TagNoteModel tagNoteModel;
         tagNoteModel.setTagModel(m_tagModel);
         QModelIndex indexSrc = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
         QList<QPersistentModelIndex> tagIndexes = indexSrc.data(NoteModel::NoteTagIndexList).value<QList<QPersistentModelIndex>>();
-        foreach (QPersistentModelIndex index, tagIndexes)
-            tagNoteModel.setData(index, Qt::Checked, Qt::CheckStateRole);
+        foreach (QPersistentModelIndex index, tagIndexes){
+            QModelIndex indexInTagModel = tagNoteModel.index(index.row());
+            tagNoteModel.setData(indexInTagModel, Qt::Checked, Qt::CheckStateRole);
+        }
 
         QWidgetAction tagviewWidgetAction(&menu);
         QListView listView;
-        listView.setObjectName("tagNoteView");
+        listView.setObjectName(QStringLiteral("tagNoteView"));
         listView.setModel(&tagNoteModel);
-        int listViewMaxHeight = 24*7+4;
-        int listViewHeight = (24*tagNoteModel.rowCount()) + 4;
-        listViewHeight = tagNoteModel.rowCount() < 8 ? listViewHeight : listViewMaxHeight;
+        listView.setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        listView.show();
+
+        int bottomMargin = 6;
+        int maxRowsInVisibleRegion = 7;
+        int rowHeight = listView.sizeHintForIndex(tagNoteModel.index(0)).height();
+        int listViewMaxHeight =  (rowHeight * maxRowsInVisibleRegion) + bottomMargin;
+        int listViewHeight = (rowHeight * tagNoteModel.rowCount()) + bottomMargin;
+        listViewHeight = tagNoteModel.rowCount() <= maxRowsInVisibleRegion ? listViewHeight : listViewMaxHeight;
         listView.setFixedHeight(listViewHeight);
+        listView.setFixedWidth(contentWidth);
         listView.setFrameShape(QFrame::NoFrame);
         listView.setSelectionMode(QAbstractItemView::NoSelection);
         tagviewWidgetAction.setDefaultWidget(&listView);
         menu.addAction(&tagviewWidgetAction);
 
+        if(m_tagModel->rowCount() > 0)
+            menu.addSeparator();
+
         QWidgetAction addtagNoteWidgetAction(&menu);
         QPushButton addTagPb;
         addTagPb.setObjectName(QStringLiteral("createTagButton"));
-        addTagPb.setText("Create new tag");
+        addTagPb.setText(tr("Create new tag"));
         addTagPb.setFlat(true);
+        addTagPb.setFixedWidth(contentWidth);
         addtagNoteWidgetAction.setDefaultWidget(&addTagPb);
         menu.addAction(&addtagNoteWidgetAction);
 
         QWidgetAction validateWidgetAction(&menu);
         QPushButton validatePb;
+        validatePb.setEnabled(m_tagModel->rowCount() > 0);
         validatePb.setObjectName(QStringLiteral("validateButton"));
-        validatePb.setText("Validate");
+        validatePb.setText(tr("Validate"));
         validatePb.setFlat(true);
+        validatePb.setFixedWidth(contentWidth);
         validateWidgetAction.setDefaultWidget(&validatePb);
         menu.addAction(&validateWidgetAction);
 
         // check / uncheck when the item is clicked
         connect(&listView, &QListView::pressed, [&](const QModelIndex& index){
             bool isChecked = index.data(Qt::CheckStateRole).toInt() == Qt::Checked;
+
             if(isChecked){
                 tagNoteModel.setData(index, Qt::Unchecked, Qt::CheckStateRole);
             }else{
@@ -1401,26 +1420,39 @@ void MainWindow::showTagNoteMenu()
             }
         });
 
+        connect(&tagNoteModel, &TagNoteModel::dataChanged, [&](const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles){
+            Q_UNUSED(bottomRight)
+            if(roles.contains(Qt::CheckStateRole)){
+                QPersistentModelIndex indexInTagModel = m_tagModel->index(topLeft.row());
+                bool isChecked = topLeft.data(Qt::CheckStateRole).toInt() == Qt::Checked;
+                if(isChecked){
+                    tagIndexes.append(indexInTagModel);
+                }else{
+                    tagIndexes.removeOne(indexInTagModel);
+                }
+            }
+        });
+
         connect(&addTagPb, &QPushButton::clicked, [&](){
             menu.hide();
-            // TODO: show dialog to add tag
+            if(m_currentSelectedNoteProxy.isValid()){
+                QPersistentModelIndex tagToAddIndex = addNewTag();
+                qApp->processEvents();
+
+                tagIndexes.append(tagToAddIndex);
+                m_noteModel->setData(indexSrc, QVariant::fromValue(tagIndexes), NoteModel::NoteTagIndexList);
+
+                QPoint p = m_tagView->visualRect(tagToAddIndex).bottomLeft();
+                p = m_tagView->mapTo(ui->scrollAreaWidgetContents, p);
+                ui->scrollAreaFolderTag->ensureVisible(p.x(), p.y());
+
+                m_tagView->edit(tagToAddIndex);
+            }
         });
 
         // update the tags for the selected note
         connect(&validatePb, &QPushButton::clicked, [&](){
-            QList<QPersistentModelIndex> indexes;
-            // store the checked tags to the notes
-            for(int i=0; i<tagNoteModel.rowCount(); i++){
-                QModelIndex index = tagNoteModel.index(i);
-                bool isChecked = index.data(Qt::CheckStateRole).toBool();
-                if(isChecked){
-                    int tagId = index.data(TagModel::TagID).toInt();
-                    QPersistentModelIndex tagModelIndex = m_tagModel->indexFromId(tagId);
-                    indexes << tagModelIndex;
-                }
-            }
-
-            m_noteModel->setData(indexSrc, QVariant::fromValue(indexes), NoteModel::NoteTagIndexList);
+            m_noteModel->setData(indexSrc, QVariant::fromValue(tagIndexes), NoteModel::NoteTagIndexList);
             menu.hide();
         });
 

@@ -12,13 +12,15 @@ QVariant TagNoteModel::data(const QModelIndex& index, int role) const
     if (!index.isValid() || m_tagModel == Q_NULLPTR)
         return QVariant();
 
+    QModelIndex indexInTagModel = m_tagModel->index(index.row());
+
     switch (role) {
     case Qt::CheckStateRole:{
         int id = index.data(TagModel::TagID).toInt();
         return m_checkedTags.contains(id)? Qt::Checked : Qt::Unchecked;
     }
     default:
-        return m_tagModel->data(index, role);
+        return indexInTagModel.data(role);
     }
 }
 
@@ -28,17 +30,22 @@ bool TagNoteModel::setData(const QModelIndex& index, const QVariant& value, int 
         return false;
 
     bool success = false;
+    QModelIndex indexInTagModel = m_tagModel->index(index.row());
 
     switch (role) {
     case Qt::CheckStateRole:{
-        int id = index.data(TagModel::TagID).toInt();
-        if(value.toBool()) m_checkedTags.insert(id);
-        else m_checkedTags.remove(id);
+        int id = indexInTagModel.data(TagModel::TagID).toInt();
+        if(value.toBool()){
+            m_checkedTags.insert(id);
+        }else{
+            m_checkedTags.remove(id);
+        }
+
         success = true;
         break;
     }
     default:
-        success = m_tagModel->setData(index, value, role);
+        m_tagModel->setData(indexInTagModel, value, role);
         break;
     }
 

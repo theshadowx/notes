@@ -878,11 +878,13 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
         int noteCnt =  m_folderModel->data(selectedFolderIndex,
                                            (int) FolderItem::FolderDataEnum::NoteCount).toInt();
 
+        m_noteView->setAnimationEnabled(false);
         if(noteCnt > 0){
             // get all notes contained in the selected path
             QList<NoteData*> noteList = m_dbManager->getAllNotes(m_currentFolderPath);
             fillNoteModel(noteList);
         }
+        m_noteView->setAnimationEnabled(true);
     }
 }
 
@@ -1064,6 +1066,8 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
 
 void MainWindow::onFolderModelRowsInserted(const QModelIndex& parent, int first, int last)
 {
+    Q_UNUSED(parent)
+    Q_UNUSED(first)
     Q_UNUSED(last)
 
     m_folderView->adjustSize();

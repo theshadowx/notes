@@ -410,7 +410,7 @@ bool DBManager::addFolder(FolderData* folder) const
 {
     QSqlQuery query;
 
-    QString name = folder->name();
+    QString name = folder->name().replace("'","''");
     QString parentPath = folder->parentPath();
     int NoteCnt = folder->noteCnt();
 
@@ -497,7 +497,7 @@ bool DBManager::modifyFolder(const FolderData* folder) const
     QSqlQuery query;
 
     int id = folder->id();
-    QString name = folder->name();
+    QString name = folder->name().replace("'","''");
     QString parentPath = folder->parentPath();
     int NoteCnt = folder->noteCnt();
 
@@ -556,7 +556,7 @@ bool DBManager::addTag(const TagData *tag) const
 {
     QSqlQuery query;
 
-    QString name = tag->name();
+    QString name = tag->name().replace("'","''");
     uint color = QVariant::fromValue(tag->color().rgb()).toUInt();
     QString notes = tag->noteIdSerial();
 
@@ -633,7 +633,7 @@ bool DBManager::modifyTag(const TagData* tag) const
     QSqlQuery query;
 
     int id = tag->id();
-    QString name = tag->name();
+    QString name = tag->name().replace("'","''");
     uint color =  QVariant::fromValue(tag->color().rgb()).toUInt();
     QString notes = tag->noteIdSerial();
 

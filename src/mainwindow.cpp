@@ -339,9 +339,7 @@ void MainWindow::setupSignalsSlots()
     // Quit Action
     connect(m_quitAction, &QAction::triggered, this, &MainWindow::QuitApplication);
     // Application state changed
-    connect(qApp, &QApplication::applicationStateChanged, this,[this](){
-        m_noteView->update(m_noteView->currentIndex());
-    });
+    connect(qApp, &QApplication::applicationStateChanged, this,[this](){m_noteView->update(m_noteView->currentIndex());});
 }
 
 /**
@@ -762,6 +760,11 @@ void MainWindow::onAddFolderButtonClicked()
     m_folderView->edit(index);
 }
 
+void MainWindow::onDeleteFolderButtonClicked()
+{
+    deleteFolder();
+}
+
 void MainWindow::onAddTagButtonClicked()
 {
     QModelIndex index = addNewTag();
@@ -1163,6 +1166,13 @@ void MainWindow::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
         QList<QPersistentModelIndex> tagIndexes = topLeft.data(NoteModel::NoteTagIndexList).value<QList<QPersistentModelIndex>>();
         m_tagModel->updateNoteInTags(tagIndexes, noteId);
     }
+}
+
+void MainWindow::onTrayRestoreActionTriggered()
+{
+    setMainWindowVisibility(isHidden()
+                            || windowState() == Qt::WindowMinimized
+                            || (qApp->applicationState() == Qt::ApplicationInactive));
 }
 
 /**

@@ -70,6 +70,7 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 #tagListView::item:!selected:hover{background-color:rgb(207, 207, 207);}
 #tagListView::item:selected:hover{background-color:rgb(107, 124, 140);}
 
+#scrollAreaWidgetContents{background-color: transparent;}
 
 QToolButton {border: none; padding: 0px;}
 

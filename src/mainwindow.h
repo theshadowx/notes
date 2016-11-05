@@ -188,6 +188,7 @@ private slots:
     void onTagModelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
     void onClearTagSelectionButtonClicked();
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
+    void onTrayRestoreActionTriggered();
     void onClearSearchButtonClicked();
     void updateNoteCountLabel();
     void onGreenMaximizeButtonClicked();

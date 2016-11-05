@@ -126,8 +126,10 @@ void MainWindow::InitData()
         initTags();
 
         // select the first folder in the treeview
-        m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
+        m_folderView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
     }
+
+    ui->scrollAreaFolderTag->ensureVisible(0,0);
 }
 
 void MainWindow::setMainWindowVisibility(bool state)
@@ -1434,6 +1436,11 @@ void MainWindow::showFolderViewContextMenu(const QPoint& pos)
         menu.hide();
         QModelIndex index = addNewFolder();
         qApp->processEvents();
+
+        QPoint p = m_folderView->visualRect(index).bottomLeft();
+        p = m_folderView->mapTo(ui->scrollAreaWidgetContents, p);
+        if(!ui->scrollAreaFolderTag->visibleRegion().contains(p))
+            ui->scrollAreaFolderTag->ensureVisible(p.x(), p.y());
 
         m_folderView->edit(index);
     });

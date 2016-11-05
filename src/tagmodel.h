@@ -21,13 +21,14 @@ public:
     QModelIndex addTag(TagData* tag);
     void addTags(QList<TagData *> tags);
     TagData* removeTag(const QModelIndex& index);
+    QList<TagData*> removeTags(const QList<QPersistentModelIndex> modelList);
     TagData* tagData(const QModelIndex& index);
 
     QModelIndex indexFromId(int id);
     QMap<int, QModelIndex> indexesFromIds(QList<int> idList);
 
-    void removeNoteId(QModelIndex index, int noteId);
-    void addNoteId(QModelIndex index, int noteId);
+    bool removeNoteId(QModelIndex index, int noteId);
+    bool addNoteId(QModelIndex index, int noteId);
     void updateNoteInTags(QList<QPersistentModelIndex> tagIndexes, int noteId);
 
     virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
@@ -39,7 +40,7 @@ public:
 private:
     QList<TagData*> m_tagList;
     QMap<int, TagData*> m_idTagMap;
-    QMap<int,QList<int>> m_noteTagMap;
+    QMap<int,QList<int>> m_noteTagMap; // Note id  --> List tag id
 
 };
 

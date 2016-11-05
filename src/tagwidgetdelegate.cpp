@@ -41,39 +41,9 @@ QWidget* TagWidgetDelegate::createEditor(QWidget* parent,
     QWidget* editor = QStyledItemDelegate::createEditor(parent, option, index);
 
     QLineEdit* e = qobject_cast<QLineEdit*>(editor);
-    QRegExp rx("[a-zA-Z0-9\-]{1,30}");
+    QRegExp rx("^(?!\\s*$).{1,30}");
     QValidator *validator = new QRegExpValidator(rx, editor);
     e->setValidator(validator);
 
     return e;
-}
-
-
-bool TagWidgetDelegate::editorEvent(QEvent* event,
-                                    QAbstractItemModel* model,
-                                    const QStyleOptionViewItem& option,
-                                    const QModelIndex& index)
-{
-    switch (event->type()) {
-    case QEvent::MouseButtonRelease:{
-        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
-        if(mouseEvent->button() == Qt::RightButton){
-
-            QColor color = index.data(TagModel::TagColor).value<QColor>();
-            QColorDialog d(color);
-            int ret = d.exec();
-            if(ret > 0){
-                color = d.selectedColor();
-                QVariant v = color;
-                model->setData(index, v, TagModel::TagColor);
-            }
-
-        }
-        break;
-    }
-    default:
-        break;
-    }
-
-    return QStyledItemDelegate::editorEvent(event, model, option, index);
 }

@@ -38,7 +38,7 @@ public:
     QList<QPersistentModelIndex> tagIndexes(const int noteId) const;
     bool addTagIndex(const int noteId, const QModelIndex tagIndex);
     bool removeTagIndex(const int noteId, const QModelIndex tagIndex);
-    void removeTagIndex(QModelIndex tagIndex);
+    bool removeTagIndex(QModelIndex tagIndex);
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
     bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) Q_DECL_OVERRIDE;

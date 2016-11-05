@@ -30,8 +30,10 @@ void NoteView::animateAddedRow(const QModelIndex& parent, int start, int end)
     Q_UNUSED(end)
 
     QModelIndex idx = model()->index(start,0);
-    // Note: this line add flikering, seen when the animation runs slow
+
+    selectionModel()->blockSignals(true);
     selectionModel()->select(idx, QItemSelectionModel::ClearAndSelect);
+    selectionModel()->blockSignals(false);
 
     NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
     if(delegate != Q_NULLPTR){

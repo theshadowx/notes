@@ -65,6 +65,17 @@ TagData* TagModel::removeTag(const QModelIndex& index)
     return tag;
 }
 
+QList<TagData*> TagModel::removeTags(const QList<QPersistentModelIndex> modelList)
+{
+    QList<TagData*> tagsDeleted;
+    foreach (QPersistentModelIndex index, modelList) {
+        TagData* tag = removeTag(index);
+        tagsDeleted << tag;
+    }
+
+    return tagsDeleted;
+}
+
 TagData* TagModel::tagData(const QModelIndex& index)
 {
     Q_ASSERT_X(index.isValid(), "TagModel::getTagData", "index is not valid");
@@ -95,7 +106,7 @@ QMap<int, QModelIndex> TagModel::indexesFromIds(QList<int> idList)
     return indexList;
 }
 
-void TagModel::removeNoteId(QModelIndex index, int noteId)
+bool TagModel::removeNoteId(QModelIndex index, int noteId)
 {
     Q_ASSERT_X(index.isValid(), "TagModel::removeNoteId", "index is not valid");
 
@@ -103,7 +114,7 @@ void TagModel::removeNoteId(QModelIndex index, int noteId)
     int tagId = tag->id();
 
     if(!m_noteTagMap.contains(tagId) || !m_noteTagMap[tagId].contains(tagId))
-        return;
+        return false;
 
     tag->removeNoteId(noteId);
     m_noteTagMap[noteId].removeOne(tagId);
@@ -112,9 +123,11 @@ void TagModel::removeNoteId(QModelIndex index, int noteId)
         m_noteTagMap.remove(noteId);
 
     emit dataChanged(index, index);
+
+    return true;
 }
 
-void TagModel::addNoteId(QModelIndex index, int noteId)
+bool TagModel::addNoteId(QModelIndex index, int noteId)
 {
     Q_ASSERT_X(index.isValid(), "TagModel::addNoteId", "index is not valid");
 
@@ -123,28 +136,33 @@ void TagModel::addNoteId(QModelIndex index, int noteId)
     int tagId = tag->id();
 
     if(m_noteTagMap[tagId].contains(tagId))
-        return;
+        return false;
 
     tag->addNoteId(noteId);
     m_noteTagMap[noteId].append(tagId);
 
     emit dataChanged(index, index);
+
+    return true;
 }
 
 void TagModel::updateNoteInTags(QList<QPersistentModelIndex> tagIndexes, int noteId)
 {
-    // TODO: find an efficient way to update tags
+    QList<int> storedTagIds = m_noteTagMap[noteId];
+    QMap<int, QModelIndex> storedTagIndexes = indexesFromIds(storedTagIds);
 
-    QList<int> previousTagIds = m_noteTagMap[noteId];
-    QMap<int, QModelIndex> previousTagIndexes = indexesFromIds(previousTagIds);
-    foreach (QModelIndex previousTagIndex, previousTagIndexes) {
-        removeNoteId(previousTagIndex, noteId);
-        emit dataChanged(previousTagIndex, previousTagIndex);
+    foreach (QModelIndex storedTagIndex, storedTagIndexes) {
+        if(tagIndexes.contains(storedTagIndex))
+            continue;
+
+        removeNoteId(storedTagIndex, noteId);
     }
 
     foreach (QPersistentModelIndex tagIndex, tagIndexes) {
+        if(storedTagIndexes.values().contains(tagIndex))
+            continue;
+
         addNoteId(tagIndex, noteId);
-        emit dataChanged(tagIndex, tagIndex);
     }
 }
 

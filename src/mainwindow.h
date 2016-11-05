@@ -23,7 +23,7 @@
 #include <QMenu>
 #include <QTreeView>
 #include <QListWidget>
-#include <qaction.h>
+#include <QAction>
 #include "notedata.h"
 #include "notemodel.h"
 #include "noteview.h"
@@ -83,7 +83,7 @@ private:
     QAction* m_trayRestoreAction;
     QAction* m_quitAction;
     QMenu* m_trayIconMenu;
-    QTreeView* m_folderTreeView;
+    QTreeView* m_folderView;
     QListWidget* m_generalListW;
     QListView* m_tagListView;
 
@@ -162,7 +162,9 @@ private slots:
     void InitData();
     void onAddNoteButtonClicked();
     void onDeleteNoteButtonClicked();
-    void addNewFolder(QModelIndex index = QModelIndex());
+    void onAddFolderButtonClicked();
+    void onDeleteFolderButtonClicked();
+    QModelIndex addNewFolder(QModelIndex index = QModelIndex());
     void deleteFolder(QModelIndex index = QModelIndex());
     void addNewTag();
     void deleteTag();
@@ -172,6 +174,7 @@ private slots:
     void onTextEditTextChanged();
     void onTextEditTimeoutTriggered();
     void onLineEditTextChanged(const QString& keyword);
+    void onFolderModelRowsInserted(const QModelIndex &parent, int first, int last);
     void onTagSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onClearButtonClicked();
@@ -185,6 +188,7 @@ private slots:
     void selectNoteDown();
     void selectNoteUp();
     void showTagNoteMenu();
+    void showFolderViewContextMenu(const QPoint &pos);
     void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();

@@ -23,7 +23,7 @@ QWidget* FolderWidgetDelegate::createEditor(QWidget *parent,
     QWidget* editor = QStyledItemDelegate::createEditor(parent, option, index);
 
     QLineEdit* e = qobject_cast<QLineEdit*>(editor);
-    QRegExp rx("[a-zA-Z0-9]{1,12}");
+    QRegExp rx("^(?!\\s*$).{1,30}");
     QValidator *validator = new QRegExpValidator(rx, editor);
     e->setValidator(validator);
 
@@ -51,44 +51,4 @@ void FolderWidgetDelegate::paint(QPainter* painter,
         painter->drawLine(bottomLeft, bottomRight);
         painter->restore();
     }
-}
-
-bool FolderWidgetDelegate::editorEvent(QEvent* event,
-                                       QAbstractItemModel* model,
-                                       const QStyleOptionViewItem& option,
-                                       const QModelIndex& index)
-{
-
-    switch (event->type()) {
-    case QEvent::MouseButtonRelease:{
-        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
-        if(mouseEvent->button() == Qt::RightButton){
-            showContextMenu(model, option, index);
-        }
-        break;
-    }
-    default:
-        break;
-    }
-
-    return QStyledItemDelegate::editorEvent(event, model, option, index);
-}
-
-void FolderWidgetDelegate::showContextMenu(QAbstractItemModel* model,
-                                           const QStyleOptionViewItem& option,
-                                           const QModelIndex& index)
-{
-    Q_UNUSED(model)
-    Q_UNUSED(option)
-
-    QMenu optionMenu;
-    optionMenu.addAction(QIcon(QStringLiteral(":/images/newNote_Regular.png")),
-                         tr("Add Subfolder"),
-                         [&](){emit addSubFolderClicked(index);});
-
-    optionMenu.addAction(QIcon(QStringLiteral(":/images/trashCan_Regular.png")),
-                         tr("Delete folder"),
-                         [&](){emit deleteSubFolderButtonClicked(index);});
-
-    optionMenu.exec(QCursor::pos());
 }

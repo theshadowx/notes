@@ -50,7 +50,7 @@ MainWindow::MainWindow (QWidget *parent) :
     m_trayRestoreAction(new QAction(tr("&Hide Notes"), this)),
     m_quitAction(new QAction(tr("&Quit"), this)),
     m_trayIconMenu(new QMenu(this)),
-    m_folderTreeView(Q_NULLPTR),
+    m_folderView(Q_NULLPTR),
     m_generalListW(Q_NULLPTR),
     m_tagListView(Q_NULLPTR),
     m_noteModel(new NoteModel(this)),
@@ -115,7 +115,7 @@ void MainWindow::InitData()
             initTags();
 
             // select the first folder in the treeview
-            m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
+            m_folderView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
         });
 
         QFuture<void> migration = QtConcurrent::run(this, &MainWindow::checkMigration);
@@ -126,8 +126,10 @@ void MainWindow::InitData()
         initTags();
 
         // select the first folder in the treeview
-        m_folderTreeView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
+        m_folderView->selectionModel()->setCurrentIndex(m_folderModel->index(0,0), QItemSelectionModel::Select);
     }
+
+    ui->scrollAreaFolderTag->ensureVisible(0,0);
 }
 
 void MainWindow::setMainWindowVisibility(bool state)
@@ -183,7 +185,7 @@ void MainWindow::setupMainWindow ()
     m_textEdit = ui->textEdit;
     m_editorDateLabel = ui->editorDateLabel;
     m_splitter = ui->splitter;
-    m_folderTreeView = ui->folderTree;
+    m_folderView = ui->folderTree;
     m_tagListView = ui->tagListView;
     m_addRootFolderButton = ui->addRootFolderButton;
     m_deleteRootFolderButton = ui->delRootFolderButton;
@@ -196,7 +198,6 @@ void MainWindow::setupMainWindow ()
     pal.setColor(QPalette::Background, QColor(248, 248, 248));
     this->setAutoFillBackground(true);
     this->setPalette(pal);
-
 }
 
 void MainWindow::setupTrayIcon()
@@ -296,11 +297,8 @@ void MainWindow::setupSignalsSlots()
     // tag note button
     connect(m_tagNoteButton, &QPushButton::clicked, this, &MainWindow::showTagNoteMenu);
     // add/delete folder button
-    FolderWidgetDelegate* delegate = qobject_cast<FolderWidgetDelegate*>(m_folderTreeView->itemDelegate());
-    connect(delegate, &FolderWidgetDelegate::addSubFolderClicked, this, &MainWindow::addNewFolder);
-    connect(delegate, &FolderWidgetDelegate::deleteSubFolderButtonClicked, this, &MainWindow::deleteFolder);
-    connect(m_addRootFolderButton, &QPushButton::clicked, [&](){addNewFolder();});
-    connect(m_deleteRootFolderButton, &QPushButton::clicked, [&](){deleteFolder();});
+    connect(m_addRootFolderButton, &QPushButton::clicked, this, &MainWindow::onAddFolderButtonClicked);
+    connect(m_deleteRootFolderButton, &QPushButton::clicked, this, &MainWindow::onDeleteFolderButtonClicked);
     // add/delete tag button
     connect(m_newTagButton, &QPushButton::clicked, [&](){addNewTag();});
     connect(m_deleteTagButton, &QPushButton::clicked, [&](){deleteTag();});
@@ -315,8 +313,6 @@ void MainWindow::setupSignalsSlots()
     connect(m_lineEdit, &QLineEdit::textChanged, this, &MainWindow::onLineEditTextChanged);
     // note pressed
     connect(m_noteView, &NoteView::clicked, this, &MainWindow::onNoteClicked);
-    // folder selected
-    connect(m_folderTreeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onFolderSelectionChanged);
     // All Notes/ Trash listWidget
     connect(m_generalListW, &QListWidget::currentRowChanged, this, &MainWindow::onGeneralListWCurrentRowChanged);
     // noteView viewport pressed
@@ -330,6 +326,9 @@ void MainWindow::setupSignalsSlots()
             deleteNote(indexInProxy);
         }
     });
+    // folderView / folder selected / context menu
+    connect(m_folderView, &NoteView::customContextMenuRequested, this, &MainWindow::showFolderViewContextMenu);
+    connect(m_folderView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onFolderSelectionChanged);
     // Update note count label
     connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsInserted,[&](){
         ui->noteCntLabel->setText(QStringLiteral("%1").arg(m_proxyNoteModel->rowCount()));
@@ -343,8 +342,10 @@ void MainWindow::setupSignalsSlots()
     // note model rows moved
     connect(m_noteModel, &NoteModel::rowsAboutToBeMoved, m_noteView, &NoteView::rowsAboutToBeMoved);
     connect(m_noteModel, &NoteModel::rowsMoved, m_noteView, &NoteView::rowsMoved);
-    // folder data changed
+    // folder Model data changed / rows inserted / rows removed
     connect(m_folderModel, &FolderModel::dataChanged,[&](const QModelIndex& topLeft){saveFolderToDB(topLeft);});
+    connect(m_folderModel, &FolderModel::rowsInserted, this, &MainWindow::onFolderModelRowsInserted);
+    connect(m_folderModel, &FolderModel::rowsRemoved, m_folderView, &QTreeView::adjustSize);
     // Tag data changed
     connect(m_tagModel, &TagModel::dataChanged,[&](const QModelIndex &topLeft){
         m_noteView->update();
@@ -495,8 +496,9 @@ void MainWindow::setupModelView()
     m_noteView->setItemDelegate(new NoteWidgetDelegate(m_noteView));
     m_noteView->setModel(m_proxyNoteModel);
 
-    m_folderTreeView->setModel(m_folderModel);
-    m_folderTreeView->setItemDelegate(new FolderWidgetDelegate(m_folderTreeView));
+    m_folderView->setModel(m_folderModel);
+    m_folderView->setItemDelegate(new FolderWidgetDelegate(m_folderView));
+    m_folderView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_tagListView->setModel(m_tagModel);
     m_tagListView->setItemDelegate(new TagWidgetDelegate(m_tagListView));
@@ -616,7 +618,7 @@ void MainWindow::initFolders ()
         m_dbManager->addFolder(folderData);
     }
 
-    m_folderTreeView->setCurrentIndex(QModelIndex());
+    m_folderView->setCurrentIndex(QModelIndex());
 }
 
 void MainWindow::initTags()
@@ -777,6 +779,12 @@ void MainWindow::onAddNoteButtonClicked()
     }
 }
 
+void MainWindow::onAddFolderButtonClicked()
+{
+    QModelIndex index = addNewFolder();
+    m_folderView->edit(index);
+}
+
 /**
 * @brief
 * Delete selected note when clicking the 'delete note' button
@@ -788,7 +796,7 @@ void MainWindow::onDeleteNoteButtonClicked()
     m_deleteNoteButton->blockSignals(false);
 }
 
-void MainWindow::addNewFolder(QModelIndex index)
+QModelIndex MainWindow::addNewFolder(QModelIndex index)
 {
     // getting folder data for the new child folder
     // building the item and insert it to the model
@@ -809,11 +817,13 @@ void MainWindow::addNewFolder(QModelIndex index)
     FolderItem* folderItem = new FolderItem(folderData, this);
     m_folderModel->insertFolder(folderItem, row, index);
 
-    m_folderTreeView->expand(index);
+    m_folderView->expand(index);
 
     // Set the current index to the newly crealted folder
     QModelIndex newFolderIndex = m_folderModel->index(row,0,index);
-    m_folderTreeView->selectionModel()->setCurrentIndex(newFolderIndex, QItemSelectionModel::ClearAndSelect);
+    m_folderView->selectionModel()->setCurrentIndex(newFolderIndex, QItemSelectionModel::ClearAndSelect);
+
+    return newFolderIndex;
 }
 
 void MainWindow::onNoteClicked (const QModelIndex& index)
@@ -843,7 +853,7 @@ void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const 
     m_isTemp = false;
     m_isContentModified = false;
 
-    m_folderTreeView->setFocus();
+    m_folderView->setFocus();
 
     if(!selected.indexes().isEmpty()){
 
@@ -880,7 +890,7 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
     m_isNoteEditable = true;
 
     if(currentRow!=-1){
-        m_folderTreeView->setCurrentIndex(QModelIndex());
+        m_folderView->setCurrentIndex(QModelIndex());
 
         // initialize
         m_noteView->setAnimationEnabled(false);
@@ -893,6 +903,7 @@ void MainWindow::onGeneralListWCurrentRowChanged(int currentRow)
         m_selectedNoteBeforeSearchingInSource = QModelIndex();
         m_isTemp = false;
         m_isContentModified = false;
+
         m_noteView->setAnimationEnabled(false);
 
         setAddingNoteEnabled(false);
@@ -943,7 +954,7 @@ void MainWindow::onTextEditTextChanged ()
 
         // update the number of note contained in the folder
         int noteCnt = m_noteModel->rowCount();
-        QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
+        QModelIndex folderIndex = m_folderView->selectionModel()->currentIndex();
         m_folderModel->setData(folderIndex, QVariant::fromValue(noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
     }
 
@@ -1048,6 +1059,13 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
 
         m_isOperationRunning = false;
     }
+}
+
+void MainWindow::onFolderModelRowsInserted(const QModelIndex& parent, int first, int last)
+{
+    Q_UNUSED(last)
+
+    m_folderView->adjustSize();
 }
 
 void MainWindow::onTagSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
@@ -1193,7 +1211,7 @@ void MainWindow::deleteNote(const QModelIndex &noteIndex)
 
         // decrement the number of note stored in the current folder and saving to database
         int noteCnt = m_noteModel->rowCount();
-        QModelIndex folderIndex = m_folderTreeView->selectionModel()->currentIndex();
+        QModelIndex folderIndex = m_folderView->selectionModel()->currentIndex();
         m_folderModel->setData(folderIndex, QVariant::fromValue(noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
     }
 
@@ -1356,6 +1374,80 @@ void MainWindow::showTagNoteMenu()
         menu.exec(gPos);
     }
 }
+void MainWindow::showFolderViewContextMenu(const QPoint& pos)
+{
+    QMenu menu;
+    menu.setObjectName(QStringLiteral("folderViewContextMenu"));
+    menu.show();
+    qApp->processEvents();
+
+    int contentWidth = menu.contentsRect().width() - 2*5;
+
+    QWidgetAction addSubFolderWidgetAction(&menu);
+    QPushButton addSubFolderPb;
+    addSubFolderPb.setEnabled(m_tagModel->rowCount() > 0);
+    addSubFolderPb.setObjectName(QStringLiteral("addSubFolderMenuButton"));
+    addSubFolderPb.setText(tr("Add subfolder"));
+    addSubFolderPb.setFlat(true);
+    addSubFolderPb.setFixedWidth(contentWidth);
+    addSubFolderWidgetAction.setDefaultWidget(&addSubFolderPb);
+    menu.addAction(&addSubFolderWidgetAction);
+
+    QWidgetAction deleteFolderWidgetAction(&menu);
+    QPushButton deleteFolderPb;
+    deleteFolderPb.setEnabled(m_tagModel->rowCount() > 0);
+    deleteFolderPb.setObjectName(QStringLiteral("deleteFolderMenuButton"));
+    deleteFolderPb.setText(tr("Delete folder"));
+    deleteFolderPb.setFlat(true);
+    deleteFolderPb.setFixedWidth(contentWidth);
+    deleteFolderWidgetAction.setDefaultWidget(&deleteFolderPb);
+    menu.addAction(&deleteFolderWidgetAction);
+
+    menu.addSeparator();
+
+    QWidgetAction addFolderWidgetAction(&menu);
+    QPushButton addFolderPb;
+    addFolderPb.setObjectName(QStringLiteral("addFolderMenuButton"));
+    addFolderPb.setText(tr("Add folder"));
+    addFolderPb.setFlat(true);
+    addFolderPb.setFixedWidth(contentWidth);
+    addFolderWidgetAction.setDefaultWidget(&addFolderPb);
+    menu.addAction(&addFolderWidgetAction);
+
+    connect(&addSubFolderPb, &QPushButton::clicked, [&](){
+        QModelIndex index = m_folderView->indexAt(pos);
+        menu.hide();
+
+        if(index.isValid()){
+            QModelIndex subFolderIndex = addNewFolder(index);
+            m_folderView->edit(subFolderIndex);
+        }
+    });
+
+    connect(&deleteFolderPb, &QPushButton::clicked, [&](){
+        QModelIndex index = m_folderView->indexAt(pos);
+        menu.hide();
+
+        if(index.isValid())
+            deleteFolder(index);
+    });
+
+    connect(&addFolderPb, &QPushButton::clicked, [&](){
+        menu.hide();
+        QModelIndex index = addNewFolder();
+        qApp->processEvents();
+
+        QPoint p = m_folderView->visualRect(index).bottomLeft();
+        p = m_folderView->mapTo(ui->scrollAreaWidgetContents, p);
+        if(!ui->scrollAreaFolderTag->visibleRegion().contains(p))
+            ui->scrollAreaFolderTag->ensureVisible(p.x(), p.y());
+
+        m_folderView->edit(index);
+    });
+
+    QPoint gPos = m_folderView->mapToGlobal(pos);
+    menu.exec(gPos);
+}
 
 /**
 * @brief
@@ -1470,13 +1562,13 @@ void MainWindow::deleteFolder(QModelIndex index)
 {
     if(m_folderModel->rowCount() > 0){
         if(!index.isValid()){
-            m_folderTreeView->setFocus();
-            index =  m_folderTreeView->selectionModel()->currentIndex();
+            m_folderView->setFocus();
+            index =  m_folderView->selectionModel()->currentIndex();
         }
 
+        int id = index.data((int) FolderItem::FolderDataEnum::ID).toInt();
         m_folderModel->removeFolder(index.row(), m_folderModel->parent(index));
 
-        int id = index.data((int) FolderItem::FolderDataEnum::ID).toInt();
         QtConcurrent::run(m_dbManager, &DBManager::removeFolder, id);
     }
 }
@@ -1556,7 +1648,6 @@ void MainWindow::mouseMoveEvent (QMouseEvent* event)
         int dx = event->globalX() - m_mousePressX;
         int dy = event->globalY() - m_mousePressY;
         move (dx, dy);
-
     }
 }
 

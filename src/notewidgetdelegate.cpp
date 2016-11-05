@@ -23,8 +23,7 @@ const QColor HOVER_COLOR = qRgb(207, 207, 207);
 const QColor APPLICATION_INACTIVE_COLOR = qRgb(207, 207, 207);
 const QColor SEPARATOR_COLOR = qRgb(221, 221, 221);
 const QColor DEFAULT_COLOR = QColor(Qt::transparent);
-const int MAX_FRAME = 600 ;
-const int SCROLLBAR_OFFSET = 2;
+const int MAX_FRAME = 300;
 const int TAG_HEIGHT = 16;
 const int BETWEEN_TAG_SPACE_Y = 2;
 const int BETWEEN_TAG_SPACE_X = 2;
@@ -88,8 +87,6 @@ void NoteWidgetDelegate::setAnimationDuration(const int duration)
 void NoteWidgetDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     QStyleOptionViewItem opt = option;
-    int newWidth = m_view->verticalScrollBar()->isVisible() ? opt.rect.width() - SCROLLBAR_OFFSET : opt.rect.width();
-    opt.rect.setWidth(newWidth);
 
     switch(m_state){
     case MoveIn:
@@ -261,7 +258,7 @@ void NoteWidgetDelegate::paintLabels(QPainter* painter, const QStyleOptionViewIt
     }
 
     // draw title & date
-    // TODO: find a way to remove the space between the end of the text and textRect right border
+    // TODO: find a way to remove the space between the end of the text and textRect right border when text elided
     title = fmTitle.elidedText(title, Qt::ElideRight, titleRectWidth, Qt::TextSingleLine);
     drawStr(titleRectPosX, titleRectPosY, titleRectWidth, titleRectHeight, TITLE_COLOR, TITLE_FONT, title, textAlignment);
     drawStr(dateRectPosX, dateRectPosY, dateRectWidth, dateRectHeight, DATE_COLOR, DATE_FONT, date, textAlignment);

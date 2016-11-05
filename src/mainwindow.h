@@ -23,7 +23,7 @@
 #include <QMenu>
 #include <QTreeView>
 #include <QListWidget>
-#include <qaction.h>
+#include <QAction>
 #include "notedata.h"
 #include "notemodel.h"
 #include "noteview.h"
@@ -74,7 +74,7 @@ private:
     QPushButton* m_deleteRootFolderButton;
     QPushButton* m_newTagButton;
     QPushButton* m_deleteTagButton;
-    QPushButton* m_clearSelectionButton;
+    QPushButton* m_clearTagSelectionButton;
     QTextEdit* m_textEdit;
     QLineEdit* m_lineEdit;
     QLabel* m_editorDateLabel;
@@ -83,9 +83,9 @@ private:
     QAction* m_trayRestoreAction;
     QAction* m_quitAction;
     QMenu* m_trayIconMenu;
-    QTreeView* m_folderTreeView;
+    QTreeView* m_folderView;
     QListWidget* m_generalListW;
-    QListView* m_tagListView;
+    QListView* m_tagView;
 
     NoteView* m_noteView;
     NoteModel* m_noteModel;
@@ -147,6 +147,7 @@ private:
     void moveNoteToTop();
     void clearSearchAndText();
     void clearSearch();
+    void clearTagSelection();
     void findNotesContaining(const QString &keyword);
     void selectNote(const QModelIndex& noteIndex);
     void checkMigration();
@@ -161,16 +162,29 @@ private slots:
     void InitData();
     void onAddNoteButtonClicked();
     void onDeleteNoteButtonClicked();
-    void addNewFolder(QModelIndex index = QModelIndex());
+    void onAddFolderButtonClicked();
+    void onDeleteFolderButtonClicked();
+    void onAddTagButtonClicked();
+    void onDeleteTagButtonClicked();
+    QModelIndex addNewFolder(QModelIndex index = QModelIndex());
     void deleteFolder(QModelIndex index = QModelIndex());
-    void addNewTag();
+    QModelIndex addNewTag();
     void deleteTag();
+    void deleteTag(const QModelIndex index);
+    void deleteTags(const QList<QPersistentModelIndex> indexList);
     void onNoteClicked(const QModelIndex &index);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onGeneralListWCurrentRowChanged(int currentRow);
     void onTextEditTextChanged();
     void onTextEditTimeoutTriggered();
     void onLineEditTextChanged(const QString& keyword);
+    void onFolderModelRowsInserted(const QModelIndex &parent, int first, int last);
+    void onTagSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void onTagModelRowsAboutToBeRemoved(const QModelIndex& parent, int first, int last);
+    void onTagModelRowsInserted(const QModelIndex &parent, int first, int last);
+    void onTagModelRowsRemoved(const QModelIndex &parent, int first, int last);
+    void onTagModelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
+    void onClearTagSelectionButtonClicked();
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onClearButtonClicked();
     void onGreenMaximizeButtonClicked();
@@ -183,6 +197,8 @@ private slots:
     void selectNoteDown();
     void selectNoteUp();
     void showTagNoteMenu();
+    void showTagViewContextMenu(const QPoint &pos);
+    void showFolderViewContextMenu(const QPoint &pos);
     void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();

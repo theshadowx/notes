@@ -67,6 +67,9 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 #tagListView::item {border: none; padding-top:2px; padding-bottom:4px; padding-left:20px; height: 16px; color:rgb(46, 43, 43);}
 #tagListView::item:selected {background: rgb(68, 138, 201); color:rgb(250, 250, 250);}
 #tagListView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
+#tagListView::item:!selected:hover{background-color:rgb(207, 207, 207);}
+#tagListView::item:selected:hover{background-color:rgb(107, 124, 140);}
+
 
 QToolButton {border: none; padding: 0px;}
 
@@ -98,23 +101,14 @@ QTextEdit#textEdit QScrollBar:hover{ background-color: rgb(217, 217, 217);}
 QTextEdit#textEdit QScrollBar::add-line:vertical{ width:0px; height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
 QTextEdit#textEdit QScrollBar::sub-line:vertical{ width:0px; height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
 
-QListView QScrollBar {margin-right: 2px; background: transparent;}
-QListView QScrollBar:hover { background-color: rgb(217, 217, 217);}
-QListView QScrollBar:handle:vertical:hover { background: rgb(170, 170, 171); }
-QListView QScrollBar:handle:vertical:pressed { background: rgb(149, 149, 149);}
-QListView QScrollBar:vertical { border: none; width: 10px; border-radius: 4px;}
-QListView QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }
-QListView QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
-QListView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
-
-QTreeView QScrollBar {margin-right: 2px; background: transparent;}
-QTreeView QScrollBar:hover { background-color: rgb(217, 217, 217);}
-QTreeView QScrollBar:handle:vertical:hover { background: rgb(170, 170, 171); }
-QTreeView QScrollBar:handle:vertical:pressed { background: rgb(149, 149, 149);}
-QTreeView QScrollBar:vertical { border: none; width: 10px; border-radius: 4px;}
-QTreeView QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }
-QTreeView QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
-QTreeView QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
+QScrollBar {margin-left: 2px; margin-right: 2px; background: transparent;}
+QScrollBar:hover { background-color: rgb(217, 217, 217);}
+QScrollBar:handle:vertical:hover { background: rgb(170, 170, 171); }
+QScrollBar:handle:vertical:pressed { background: rgb(149, 149, 149);}
+QScrollBar:vertical { border: none; width: 12px; border-radius: 4px;}
+QScrollBar::handle:vertical { border-radius: 4px; background: rgb(188, 188, 188); min-height: 20px; }
+QScrollBar::add-line:vertical { height: 0px; subcontrol-position: bottom; subcontrol-origin: margin; }
+QScrollBar::sub-line:vertical { height: 0px; subcontrol-position: top; subcontrol-origin: margin; }
 
 QTreeView {border:none; margin: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font-family: "Ubuntu";font-size: 14px; outline: none;}
 QTreeView::item {padding-top:1px; padding-bottom:1px; height: 22px;}
@@ -126,12 +120,6 @@ QListWidget{border: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(
 QListWidget::item{border: none; border-bottom:1px solid rgb(221, 221, 221); padding-left:16px; padding-top:1px; padding-bottom:1px; height: 22px;}
 QListWidget::item:selected {padding-left:20px; background: rgb(68, 138, 201);}
 QListWidget::item:selected:!enabled{background-color:rgb(207, 207, 207);}
-
-/*QMenu{font-family: "Ubuntu"; font-size: 13px; color: rgb(26, 26, 26); menu-scrollable: 1; }*/
-/*QMenu::item {padding: 3px 25px 3px 25px; margin:1px; margin-top:0px; border: 1px solid transparent;}*/
-/*QMenu::item:selected {background-color:rgb(240, 240, 240);}*/
-/*QMenu::icon{padding-left: 5px;}*/
-
 
 /**************************************************************************************************/
 
@@ -146,3 +134,32 @@ QMenu#tagMenu{margin: 10px 10px 0px 10px; font: 13px "Ubuntu"; color: rgb(26, 26
 #createTagButton, #cancelButton, #validateButton{margin-bottom:5px; padding-left: 4px; height:18px; border:1px solid rgb(221, 221, 221); color:rgb(26, 26, 26); outline:none; height:23px; font: 14px "Ubuntu"; text-align:left;}
 #createTagButton:pressed, #cancelButton:pressed, #validateButton:pressed{background-color: transparent;}
 #createTagButton:!pressed:hover, #cancelButton:!pressed:hover, #validateButton:!pressed:hover{background-color:rgb(220, 220, 220);}
+/*******************************/
+QMenu#tagViewContextMenu{margin: 5px 5px 5px 5px; width: 200px; menu-scrollable: 1; background-color: rgb(247,247,247);}
+QMenu#tagViewContextMenu::separator {margin-right:10px; height: 1px; background: rgb(221, 221, 221);}
+
+#clearTagSelectionMenuButton, #changeColorTagMenuButton, #DeleteTagMenuButton,
+#createTagMenuButton{border:0px; padding-left: 5px; height:18px; color:rgb(26, 26, 26); outline:none; height:22px; font: 10pt "Ubuntu"; text-align:left center;}
+
+#createTagMenuButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+#DeleteTagMenuButton{qproperty-icon: url(":/images/trashCan_Regular.png"); qproperty-iconSize: 12px 12px;}
+#changeColorTagMenuButton{qproperty-icon: url(":/images/painter_palette.png"); qproperty-iconSize: 12px 12px;}
+#clearTagSelectionMenuButton{qproperty-icon: url(":/images/clearSelection_Regular.png"); qproperty-iconSize: 12px 12px;}
+
+#clearTagSelectionMenuButton:pressed, #changeColorTagMenuButton:pressed, #DeleteTagMenuButton:pressed,#createTagMenuButton:pressed{background-color: transparent;}
+#clearTagSelectionMenuButton:!pressed:hover, #changeColorTagMenuButton:!pressed:hover, #DeleteTagMenuButton:!pressed:hover, #createTagMenuButton:!pressed:hover{background-color:rgb(220, 220, 220);}
+#clearTagSelectionMenuButton:!enabled{background-color:rgb(235, 235, 235); color: rgb(100,100,100);}
+
+/*******************************/
+QMenu#folderViewContextMenu{margin: 5px 5px 5px 5px; width: 200px; menu-scrollable: 1; background-color: rgb(247,247,247);}
+QMenu#folderViewContextMenu::separator {margin-right:10px; height: 1px; background: rgb(221, 221, 221);}
+
+#addSubFolderMenuButton, #deleteFolderMenuButton, #addFolderMenuButton
+{border:0px; padding-left: 5px; height:18px; color:rgb(26, 26, 26); outline:none; height:22px; font: 10pt "Ubuntu"; text-align:left center;}
+
+#addFolderMenuButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+#deleteFolderMenuButton{qproperty-icon: url(":/images/trashCan_Regular.png"); qproperty-iconSize: 12px 12px;}
+#addSubFolderMenuButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+
+#addSubFolderMenuButton:pressed, #deleteFolderMenuButton:pressed, #addFolderMenuButton:pressed{background-color: transparent;}
+#addSubFolderMenuButton:!pressed:hover, #deleteFolderMenuButton:!pressed:hover, #addFolderMenuButton:!pressed:hover{background-color:rgb(220, 220, 220);}

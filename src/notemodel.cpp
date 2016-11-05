@@ -132,28 +132,32 @@ bool NoteModel::removeTagIndex(const int noteId, const QModelIndex tagIndex)
     int tagId = tagIndex.data(TagModel::TagID).toInt();
     NoteData* note = m_noteIdMap[noteId];
     note->removeTagId(tagId);
-
     m_noteTagMap[noteId].removeOne(tagIndex);
     if(m_noteTagMap[noteId].count() == 0)
         m_noteTagMap.remove(noteId);
 
     int row = m_noteList.indexOf(note);
     QModelIndex noteIndex = index(row);
+
     emit dataChanged(noteIndex, noteIndex);
 
     return true;
 }
 
-void NoteModel::removeTagIndex(QModelIndex tagIndex)
+bool NoteModel::removeTagIndex(QModelIndex tagIndex)
 {
     Q_ASSERT_X(tagIndex.isValid(), "NoteModel::removeTagIndex", "tagIndex is not valid");
 
     QString noteIds = tagIndex.data(TagModel::TagNoteSerial).toString();
+    if(noteIds.isEmpty())
+        return false;
+
     QStringList noteIdList = noteIds.split(TagData::TagSeparator);
     foreach (QString idStr, noteIdList) {
         int id = idStr.toInt();
         removeTagIndex(id, tagIndex);
     }
+    return true;
 }
 
 QVariant NoteModel::data(const QModelIndex &index, int role) const

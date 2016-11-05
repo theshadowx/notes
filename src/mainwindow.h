@@ -24,6 +24,7 @@
 #include <QTreeView>
 #include <QListWidget>
 #include <QAction>
+#include <QMutexLocker>
 #include "notedata.h"
 #include "notemodel.h"
 #include "noteview.h"
@@ -62,8 +63,7 @@ private:
 
     QTimer* m_autoSaveTimer;
     QSettings* m_settingsDatabase;
-    QVBoxLayout* m_noteWidgetsContainer;
-    QToolButton* m_clearButton;
+    QToolButton* m_clearSearchButton;
     QPushButton* m_greenMaximizeButton;
     QPushButton* m_redCloseButton;
     QPushButton* m_yellowMinimizeButton;
@@ -86,6 +86,7 @@ private:
     QTreeView* m_folderView;
     QListWidget* m_generalListW;
     QListView* m_tagView;
+    QMutex m_mutex;
 
     NoteView* m_noteView;
     NoteModel* m_noteModel;
@@ -173,6 +174,7 @@ private slots:
     void deleteTag(const QModelIndex index);
     void deleteTags(const QList<QPersistentModelIndex> indexList);
     void onNoteClicked(const QModelIndex &index);
+    void onNoteModelRowsRemoved(const QModelIndex &parent, int first, int last);
     void onFolderSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onGeneralListWCurrentRowChanged(int currentRow);
     void onTextEditTextChanged();
@@ -186,10 +188,12 @@ private slots:
     void onTagModelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
     void onClearTagSelectionButtonClicked();
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
-    void onClearButtonClicked();
+    void onClearSearchButtonClicked();
+    void updateNoteCountLabel();
     void onGreenMaximizeButtonClicked();
     void onYellowMinimizeButtonClicked();
     void onRedCloseButtonClicked();
+    void onNoteViewViewportClicked();
     void createNewNote();
     void deleteNote(const QModelIndex& noteIndex);
     void deleteSelectedNote();

@@ -31,8 +31,7 @@ MainWindow::MainWindow (QWidget *parent) :
     ui (new Ui::MainWindow),
     m_autoSaveTimer(new QTimer(this)),
     m_settingsDatabase(Q_NULLPTR),
-    m_noteWidgetsContainer(Q_NULLPTR),
-    m_clearButton(Q_NULLPTR),
+    m_clearSearchButton(Q_NULLPTR),
     m_greenMaximizeButton(Q_NULLPTR),
     m_redCloseButton(Q_NULLPTR),
     m_yellowMinimizeButton(Q_NULLPTR),
@@ -284,18 +283,13 @@ void MainWindow::setupTitleBarButtons ()
  */
 void MainWindow::setupSignalsSlots()
 {
-    // green button
+    // green button / red button / yellow button
     connect(m_greenMaximizeButton, &QPushButton::clicked, this, &MainWindow::onGreenMaximizeButtonClicked);
-    // red button
     connect(m_redCloseButton, &QPushButton::clicked, this, &MainWindow::onRedCloseButtonClicked);
-    // yellow button
     connect(m_yellowMinimizeButton, &QPushButton::clicked, this, &MainWindow::onYellowMinimizeButtonClicked);
-    // new note button
+    // add note button / delete note button / tag note button
     connect(m_addNoteButton, &QPushButton::clicked, this, &MainWindow::onAddNoteButtonClicked);
-    // delete note button
     connect(m_deleteNoteButton, &QPushButton::clicked, this, &MainWindow::onDeleteNoteButtonClicked);
-    connect(m_noteModel, &NoteModel::rowsRemoved, [this](){m_deleteNoteButton->setEnabled(true);});
-    // tag note button
     connect(m_tagNoteButton, &QPushButton::clicked, this, &MainWindow::showTagNoteMenu);
     // add/delete folder button
     connect(m_addRootFolderButton, &QPushButton::clicked, this, &MainWindow::onAddFolderButtonClicked);
@@ -304,25 +298,14 @@ void MainWindow::setupSignalsSlots()
     connect(m_newTagButton, &QPushButton::clicked, this, &MainWindow::onAddTagButtonClicked);
     connect(m_deleteTagButton, &QPushButton::clicked, this, &MainWindow::onDeleteTagButtonClicked);
     connect(m_clearTagSelectionButton, &QPushButton::clicked, this, &MainWindow::onClearTagSelectionButtonClicked);
-    // text edit text changed
+    // text edit text changed / lineEdit text changed
     connect(m_textEdit, &QTextEdit::textChanged, this, &MainWindow::onTextEditTextChanged);
-    // line edit text changed
     connect(m_lineEdit, &QLineEdit::textChanged, this, &MainWindow::onLineEditTextChanged);
-    // note pressed
-    connect(m_noteView, &NoteView::clicked, this, &MainWindow::onNoteClicked);
-    // All Notes/ Trash listWidget
+    // general List Widget / All Notes/ Trash
     connect(m_generalListW, &QListWidget::currentRowChanged, this, &MainWindow::onGeneralListWCurrentRowChanged);
-    // noteView viewport pressed
-    connect(m_noteView, &NoteView::viewportClicked, this, [this](){
-        if(m_isTemp && m_proxyNoteModel->rowCount() > 1){
-            QModelIndex indexInProxy = m_proxyNoteModel->index(1, 0);
-            selectNote(indexInProxy);
-        }else if(m_isTemp && m_proxyNoteModel->rowCount() == 1){
-            QModelIndex indexInProxy = m_proxyNoteModel->index(0, 0);
-            m_editorDateLabel->clear();
-            deleteNote(indexInProxy);
-        }
-    });
+    // noteView / viewport clicked / note clicked
+    connect(m_noteView, &NoteView::viewportClicked, this, &MainWindow::onNoteViewViewportClicked);
+    connect(m_noteView, &NoteView::clicked, this, &MainWindow::onNoteClicked);
     // folderView / folder selected / context menu
     connect(m_folderView, &NoteView::customContextMenuRequested, this, &MainWindow::showFolderViewContextMenu);
     connect(m_folderView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onFolderSelectionChanged);
@@ -330,17 +313,13 @@ void MainWindow::setupSignalsSlots()
     connect(m_tagView, &QListView::customContextMenuRequested,this, &MainWindow::showTagViewContextMenu);
     connect(m_tagView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onTagSelectionChanged);
     // Update note count label
-    connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsInserted,[&](){
-        ui->noteCntLabel->setText(QStringLiteral("%1").arg(m_proxyNoteModel->rowCount()));
-    });
-    connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsRemoved,[&](){
-        ui->noteCntLabel->setText(QStringLiteral("%1").arg(m_proxyNoteModel->rowCount()));
-    });
-    connect(m_proxyNoteModel, &QSortFilterProxyModel::modelReset,[&](){
-        ui->noteCntLabel->setText(QStringLiteral("%1").arg(m_proxyNoteModel->rowCount()));
-    });
-    // note model rows moved
+    connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsInserted, this, &MainWindow::updateNoteCountLabel);
+    connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsRemoved, this, &MainWindow::updateNoteCountLabel);
+    connect(m_proxyNoteModel, &QSortFilterProxyModel::modelReset, this, &MainWindow::updateNoteCountLabel);
+    // note model / data changed / rows about to be removed / rows removed / rows moved
+    connect(m_noteModel, &NoteModel::dataChanged, this, &MainWindow::onNoteDataChanged);
     connect(m_noteModel, &NoteModel::rowsAboutToBeMoved, m_noteView, &NoteView::rowsAboutToBeMoved);
+    connect(m_noteModel, &NoteModel::rowsRemoved, this, &MainWindow::onNoteModelRowsRemoved);
     connect(m_noteModel, &NoteModel::rowsMoved, m_noteView, &NoteView::rowsMoved);
     // folder Model data changed / rows inserted / rows removed
     connect(m_folderModel, &FolderModel::dataChanged,[&](const QModelIndex& topLeft){saveFolderToDB(topLeft);});
@@ -351,17 +330,12 @@ void MainWindow::setupSignalsSlots()
     connect(m_tagModel, &TagModel::rowsAboutToBeRemoved, this, &MainWindow::onTagModelRowsAboutToBeRemoved);
     connect(m_tagModel, &TagModel::rowsRemoved, this, &MainWindow::onTagModelRowsRemoved);
     connect(m_tagModel, &TagModel::rowsInserted, this, &MainWindow::onTagModelRowsInserted);
-    connect(m_noteModel, &NoteModel::dataChanged, this, &MainWindow::onNoteDataChanged);
     // auto save timer
     connect(m_autoSaveTimer, &QTimer::timeout, this, &MainWindow::onTextEditTimeoutTriggered);
     // clear button
-    connect(m_clearButton, &QToolButton::clicked, this, &MainWindow::onClearButtonClicked);
+    connect(m_clearSearchButton, &QToolButton::clicked, this, &MainWindow::onClearSearchButtonClicked);
     // Restore Notes Action
-    connect(m_trayRestoreAction, &QAction::triggered, this, [this](){
-        setMainWindowVisibility(isHidden()
-                                || windowState() == Qt::WindowMinimized
-                                || (qApp->applicationState() == Qt::ApplicationInactive));
-    });
+    connect(m_trayRestoreAction, &QAction::triggered, this, &MainWindow::onTrayRestoreActionTriggered);
     // Quit Action
     connect(m_quitAction, &QAction::triggered, this, &MainWindow::QuitApplication);
     // Application state changed
@@ -377,13 +351,13 @@ void MainWindow::setupSignalsSlots()
 void MainWindow::setupLineEdit ()
 {
     // clear button
-    m_clearButton = new QToolButton(m_lineEdit);
+    m_clearSearchButton = new QToolButton(m_lineEdit);
     QPixmap pixmap(":images/closeButton.png");
-    m_clearButton->setIcon(QIcon(pixmap));
+    m_clearSearchButton->setIcon(QIcon(pixmap));
     QSize clearSize(15, 15);
-    m_clearButton->setIconSize(clearSize);
-    m_clearButton->setCursor(Qt::ArrowCursor);
-    m_clearButton->hide();
+    m_clearSearchButton->setIconSize(clearSize);
+    m_clearSearchButton->setCursor(Qt::ArrowCursor);
+    m_clearSearchButton->hide();
 
     // search button
     QToolButton *searchButton = new QToolButton(m_lineEdit);
@@ -396,7 +370,7 @@ void MainWindow::setupLineEdit ()
     // layout
     QBoxLayout* layout = new QBoxLayout(QBoxLayout::RightToLeft, m_lineEdit);
     layout->setContentsMargins(0,0,3,0);
-    layout->addWidget(m_clearButton);
+    layout->addWidget(m_clearSearchButton);
     layout->addStretch();
     layout->addWidget(searchButton);
     m_lineEdit->setLayout(layout);
@@ -650,18 +624,27 @@ void MainWindow::fillNoteModel(QList<NoteData*> noteList)
 void MainWindow::saveNoteToDB(const QModelIndex &noteIndex)
 {
     Q_ASSERT_X(noteIndex.isValid(), "MainWindow::saveNoteToDB", "noteIndex is not valid");
-    Q_ASSERT_X(noteIndex.model() == m_proxyNoteModel, "MainWindow::saveNoteToDB", "noteIndex must be from ProxyModel");
 
     if(!m_isTemp && m_isContentModified){
         m_isContentModified = false;
-        QModelIndex indexInSrc = m_proxyNoteModel->mapToSource(noteIndex);
+
+        QModelIndex indexInSrc = noteIndex;
+        if(noteIndex.model() == m_proxyNoteModel)
+            indexInSrc = m_proxyNoteModel->mapToSource(noteIndex);
+
         NoteData* note = m_noteModel->getNote(indexInSrc);
         if(note != Q_NULLPTR){
             bool doExist = m_dbManager->noteExist(note);
             if(doExist){
-                QtConcurrent::run(m_dbManager, &DBManager::modifyNote, note);
+                QtConcurrent::run([=](){
+                    QMutexLocker locker(&m_mutex);
+                    m_dbManager->modifyNote(note);
+                });
             }else{
-                QtConcurrent::run(m_dbManager, &DBManager::addNote, note);
+                QtConcurrent::run([=](){
+                    QMutexLocker locker(&m_mutex);
+                    m_dbManager->addNote(note);
+                });
             }
         }
     }
@@ -839,6 +822,15 @@ void MainWindow::onNoteClicked (const QModelIndex& index)
         selectNote(indexInProxy);
         m_noteView->setFocus();
     }
+}
+
+void MainWindow::onNoteModelRowsRemoved(const QModelIndex& parent, int first, int last)
+{
+    Q_UNUSED(parent)
+    Q_UNUSED(first)
+    Q_UNUSED(last)
+
+    m_deleteNoteButton->setEnabled(true);
 }
 
 void MainWindow::onFolderSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
@@ -1164,12 +1156,11 @@ void MainWindow::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
     Q_UNUSED(bottomRight)
 
     m_isContentModified = true;
-    QModelIndex indexInProxy = m_proxyNoteModel->mapFromSource(topLeft);
-    saveNoteToDB(indexInProxy);
+    saveNoteToDB(topLeft);
 
     if(roles.contains(NoteModel::NoteTagIndexList)){
-        int noteId = indexInProxy.data(NoteModel::NoteID).toInt();
-        QList<QPersistentModelIndex> tagIndexes = indexInProxy.data(NoteModel::NoteTagIndexList).value<QList<QPersistentModelIndex>>();
+        int noteId = topLeft.data(NoteModel::NoteID).toInt();
+        QList<QPersistentModelIndex> tagIndexes = topLeft.data(NoteModel::NoteTagIndexList).value<QList<QPersistentModelIndex>>();
         m_tagModel->updateNoteInTags(tagIndexes, noteId);
     }
 }
@@ -1178,7 +1169,7 @@ void MainWindow::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
  * @brief MainWindow::onClearButtonClicked clears the search and
  * select the note that was selected before searching if it is still valid.
  */
-void MainWindow::onClearButtonClicked()
+void MainWindow::onClearSearchButtonClicked()
 {
     if(!m_isOperationRunning){
 
@@ -1198,6 +1189,12 @@ void MainWindow::onClearButtonClicked()
         m_selectedNoteBeforeSearchingInSource = QModelIndex();
 
     }
+}
+
+void MainWindow::updateNoteCountLabel()
+{
+    int cnt = m_proxyNoteModel->rowCount();
+    ui->noteCntLabel->setText(QStringLiteral("%1").arg(cnt));
 }
 
 /**
@@ -1738,6 +1735,18 @@ void MainWindow::onRedCloseButtonClicked()
     setMainWindowVisibility(false);
 }
 
+void MainWindow::onNoteViewViewportClicked()
+{
+    if(m_isTemp && m_proxyNoteModel->rowCount() > 1){
+        QModelIndex indexInProxy = m_proxyNoteModel->index(1, 0);
+        selectNote(indexInProxy);
+    }else if(m_isTemp && m_proxyNoteModel->rowCount() == 1){
+        QModelIndex indexInProxy = m_proxyNoteModel->index(0, 0);
+        m_editorDateLabel->clear();
+        deleteNote(indexInProxy);
+    }
+}
+
 void MainWindow::deleteFolder(QModelIndex index)
 {
     if(m_folderModel->rowCount() > 0){
@@ -1915,7 +1924,7 @@ void MainWindow::clearSearchAndText()
 
     m_proxyNoteModel->setFilterFixedString(QStringLiteral(""));
 
-    m_clearButton->hide();
+    m_clearSearchButton->hide();
     m_lineEdit->setFocus();
 }
 
@@ -1927,7 +1936,7 @@ void MainWindow::clearSearch()
 
     m_proxyNoteModel->setFilterFixedString(QStringLiteral(""));
 
-    m_clearButton->hide();
+    m_clearSearchButton->hide();
     m_lineEdit->setFocus();
 }
 
@@ -1947,7 +1956,7 @@ void MainWindow::findNotesContaining(const QString& keyword)
 {
     m_proxyNoteModel->setFilterRole(NoteModel::NoteContent);
     m_proxyNoteModel->setFilterFixedString(keyword);
-    m_clearButton->show();
+    m_clearSearchButton->show();
     clearTextAndHeader();
 
     if(m_proxyNoteModel->rowCount() > 0){
@@ -2092,7 +2101,7 @@ void MainWindow::setNoteDeletionEnabled(bool state)
 
 void MainWindow::setNoteEditabled(bool state)
 {
-    ui->frameRight->setEnabled(state);
+    m_textEdit->setReadOnly(!state);
     m_tagNoteButton->setEnabled(state);
     m_isNoteEditable = state;
 }
@@ -2168,18 +2177,18 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
         break;
     }
     case QEvent::HoverLeave:{
-        bool isNoButtonClicked = qApp->mouseButtons() == Qt::NoButton;
-        if(isNoButtonClicked){
-            if(object == m_textEdit->verticalScrollBar()){
+        if(object == m_textEdit->verticalScrollBar()){
+            bool isNoButtonClicked = qApp->mouseButtons() == Qt::NoButton;
+            if(isNoButtonClicked){
                 m_textEdit->setFocusPolicy(Qt::StrongFocus);
             }
         }
         break;
     }
     case QEvent::MouseButtonRelease:{
-        bool isMouseOnScrollBar = qApp->widgetAt(QCursor::pos()) != m_textEdit->verticalScrollBar();
-        if(isMouseOnScrollBar){
-            if(object == m_textEdit->verticalScrollBar()){
+        if(object == m_textEdit->verticalScrollBar()){
+            bool isMouseOnScrollBar = qApp->widgetAt(QCursor::pos()) != m_textEdit->verticalScrollBar();
+            if(isMouseOnScrollBar){
                 m_textEdit->setFocusPolicy(Qt::StrongFocus);
             }
         }
@@ -2189,14 +2198,15 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
         if(object == m_textEdit){
 
             if(m_isNoteEditable){
-                if(!m_isOperationRunning){
 
-                    m_textEdit->setReadOnly(false);
+                m_textEdit->setReadOnly(false);
+
+                if(!m_isOperationRunning){
 
                     // When clicking in a note's content while searching,
                     // reload all the notes and go and select that note
 
-                    bool isNoteListFilteredByTag = m_tagListView->selectionModel()->selectedRows().count() > 0;
+                    bool isNoteListFilteredByTag = m_tagView->selectionModel()->selectedRows().count() > 0;
                     bool isNoteListFilteredByKeyword = !m_lineEdit->text().isEmpty();
 
                     if(isNoteListFilteredByTag || isNoteListFilteredByKeyword){

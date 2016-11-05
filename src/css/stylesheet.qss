@@ -67,6 +67,9 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 #tagListView::item {border: none; padding-top:2px; padding-bottom:4px; padding-left:20px; height: 16px; color:rgb(46, 43, 43);}
 #tagListView::item:selected {background: rgb(68, 138, 201); color:rgb(250, 250, 250);}
 #tagListView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
+#tagListView::item:!selected:hover{background-color:rgb(207, 207, 207);}
+#tagListView::item:selected:hover{background-color:rgb(107, 124, 140);}
+
 
 QToolButton {border: none; padding: 0px;}
 
@@ -131,6 +134,22 @@ QMenu#tagMenu{margin: 10px 10px 0px 10px; font: 13px "Ubuntu"; color: rgb(26, 26
 #createTagButton, #cancelButton, #validateButton{margin-bottom:5px; padding-left: 4px; height:18px; border:1px solid rgb(221, 221, 221); color:rgb(26, 26, 26); outline:none; height:23px; font: 14px "Ubuntu"; text-align:left;}
 #createTagButton:pressed, #cancelButton:pressed, #validateButton:pressed{background-color: transparent;}
 #createTagButton:!pressed:hover, #cancelButton:!pressed:hover, #validateButton:!pressed:hover{background-color:rgb(220, 220, 220);}
+/*******************************/
+QMenu#tagViewContextMenu{margin: 5px 5px 5px 5px; width: 200px; menu-scrollable: 1; background-color: rgb(247,247,247);}
+QMenu#tagViewContextMenu::separator {margin-right:10px; height: 1px; background: rgb(221, 221, 221);}
+
+#clearTagSelectionMenuButton, #changeColorTagMenuButton, #DeleteTagMenuButton,
+#createTagMenuButton{border:0px; padding-left: 5px; height:18px; color:rgb(26, 26, 26); outline:none; height:22px; font: 10pt "Ubuntu"; text-align:left center;}
+
+#createTagMenuButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+#DeleteTagMenuButton{qproperty-icon: url(":/images/trashCan_Regular.png"); qproperty-iconSize: 12px 12px;}
+#changeColorTagMenuButton{qproperty-icon: url(":/images/painter_palette.png"); qproperty-iconSize: 12px 12px;}
+#clearTagSelectionMenuButton{qproperty-icon: url(":/images/clearSelection_Regular.png"); qproperty-iconSize: 12px 12px;}
+
+#clearTagSelectionMenuButton:pressed, #changeColorTagMenuButton:pressed, #DeleteTagMenuButton:pressed,#createTagMenuButton:pressed{background-color: transparent;}
+#clearTagSelectionMenuButton:!pressed:hover, #changeColorTagMenuButton:!pressed:hover, #DeleteTagMenuButton:!pressed:hover, #createTagMenuButton:!pressed:hover{background-color:rgb(220, 220, 220);}
+#clearTagSelectionMenuButton:!enabled{background-color:rgb(235, 235, 235); color: rgb(100,100,100);}
+
 /*******************************/
 QMenu#folderViewContextMenu{margin: 5px 5px 5px 5px; width: 200px; menu-scrollable: 1; background-color: rgb(247,247,247);}
 QMenu#folderViewContextMenu::separator {margin-right:10px; height: 1px; background: rgb(221, 221, 221);}

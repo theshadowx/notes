@@ -5,12 +5,12 @@
 #include <QPushButton>
 #include <QTreeView>
 
-class FolderWidgetDelegate : public QStyledItemDelegate
+class FolderItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
 public:
-    explicit FolderWidgetDelegate(QObject* parent = Q_NULLPTR);
+    explicit FolderItemDelegate(QObject* parent = Q_NULLPTR);
 
     QWidget* createEditor(QWidget *parent,
                           const QStyleOptionViewItem &option,

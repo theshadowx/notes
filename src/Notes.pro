@@ -25,39 +25,39 @@ include ($$PWD/../3rdParty/qxt/qxt.pri)
 include ($$PWD/../3rdParty/QSimpleUpdater/QSimpleUpdater.pri)
 
 SOURCES += \
-    $$PWD/main.cpp\
-    $$PWD/mainwindow.cpp \
-    $$PWD/notedata.cpp \
-    $$PWD/notewidgetdelegate.cpp \
-    $$PWD/notemodel.cpp \
-    $$PWD/noteview.cpp \
-    $$PWD/singleinstance.cpp \
+    main.cpp\
+    mainwindow.cpp \
+    notedata.cpp \
+    noteitemdelegate.cpp \
+    notemodel.cpp \
+    noteview.cpp \
+    singleinstance.cpp \
     dbmanager.cpp \
     folderdata.cpp \
     foldermodel.cpp \
     folderitem.cpp \
-    folderwidgetdelegate.cpp \
     tagmodel.cpp \
     tagdata.cpp \
-    tagwidgetdelegate.cpp \
-    tagnotemodel.cpp
+    tagnotemodel.cpp \
+    tagitemdelegate.cpp \
+    folderitemdelegate.cpp
 
 HEADERS  += \
-    $$PWD/mainwindow.h \
-    $$PWD/notedata.h \
-    $$PWD/notewidgetdelegate.h \
-    $$PWD/notemodel.h \
-    $$PWD/noteview.h \
-    $$PWD/singleinstance.h \
+    mainwindow.h \
+    notedata.h \
+    noteitemdelegate.h \
+    notemodel.h \
+    noteview.h \
+    singleinstance.h \
     dbmanager.h \
     folderdata.h \
     foldermodel.h \
     folderitem.h \
-    folderwidgetdelegate.h \
     tagmodel.h \
     tagdata.h \
-    tagwidgetdelegate.h \
-    tagnotemodel.h
+    tagnotemodel.h \
+    tagitemdelegate.h \
+    folderitemdelegate.h
 
 FORMS += $$PWD/mainwindow.ui
 RESOURCES += $$PWD/images.qrc \

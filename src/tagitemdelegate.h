@@ -1,13 +1,13 @@
-#ifndef TAGWIDGETDELEGATE_H
-#define TAGWIDGETDELEGATE_H
+#ifndef TAGITEMDELEGATE_H
+#define TAGITEMDELEGATE_H
 
 #include <QStyledItemDelegate>
 
-class TagWidgetDelegate : public QStyledItemDelegate
+class TagItemDelegate : public QStyledItemDelegate
 {
 
 public:
-    explicit TagWidgetDelegate(QObject* parent = Q_NULLPTR);
+    explicit TagItemDelegate(QObject* parent = Q_NULLPTR);
 
     void paint(QPainter* painter,
                const QStyleOptionViewItem& option,
@@ -18,4 +18,4 @@ public:
                           const QModelIndex& index) const Q_DECL_OVERRIDE;
 };
 
-#endif // TAGWIDGETDELEGATE_H
+#endif // TAGITEMDELEGATE_H

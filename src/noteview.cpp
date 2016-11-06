@@ -1,5 +1,5 @@
 #include "noteview.h"
-#include "notewidgetdelegate.h"
+#include "noteitemdelegate.h"
 #include <QDebug>
 #include <QPainter>
 #include <QApplication>
@@ -35,9 +35,9 @@ void NoteView::animateAddedRow(const QModelIndex& parent, int start, int end)
     selectionModel()->select(idx, QItemSelectionModel::ClearAndSelect);
     selectionModel()->blockSignals(false);
 
-    NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
+    NoteItemDelegate* delegate = static_cast<NoteItemDelegate*>(itemDelegate());
     if(delegate != Q_NULLPTR){
-        delegate->setState( NoteWidgetDelegate::Insert, idx);
+        delegate->setState( NoteItemDelegate::Insert, idx);
 
         // TODO find a way to finish this function till the animation stops
         while(delegate->animationState() == QTimeLine::Running){
@@ -63,14 +63,14 @@ void NoteView::rowsInserted(const QModelIndex &parent, int start, int end)
 void NoteView::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end)
 {
     if(start == end){
-        NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
+        NoteItemDelegate* delegate = static_cast<NoteItemDelegate*>(itemDelegate());
         if(delegate != Q_NULLPTR){
             QModelIndex idx = model()->index(start,0);
 
             if(m_isAnimationEnabled){
-                delegate->setState( NoteWidgetDelegate::Remove, idx);
+                delegate->setState( NoteItemDelegate::Remove, idx);
             }else{
-                delegate->setState( NoteWidgetDelegate::Normal, idx);
+                delegate->setState( NoteItemDelegate::Normal, idx);
             }
 
             // TODO find a way to finish this function till the animation stops
@@ -93,9 +93,9 @@ void NoteView::rowsAboutToBeMoved(const QModelIndex &sourceParent, int sourceSta
 
     if(model() != Q_NULLPTR){
         QModelIndex idx = model()->index(sourceStart,0);
-        NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
+        NoteItemDelegate* delegate = static_cast<NoteItemDelegate*>(itemDelegate());
         if(delegate != Q_NULLPTR){
-            delegate->setState( NoteWidgetDelegate::MoveOut, idx);
+            delegate->setState( NoteItemDelegate::MoveOut, idx);
 
             // TODO find a way to finish this function till the animation stops
             while(delegate->animationState() == QTimeLine::Running){
@@ -116,11 +116,11 @@ void NoteView::rowsMoved(const QModelIndex &parent, int start, int end,
     QModelIndex idx = model()->index(row,0);
     setCurrentIndex(idx);
 
-    NoteWidgetDelegate* delegate = static_cast<NoteWidgetDelegate*>(itemDelegate());
+    NoteItemDelegate* delegate = static_cast<NoteItemDelegate*>(itemDelegate());
     if(delegate == Q_NULLPTR)
         return;
 
-    delegate->setState( NoteWidgetDelegate::MoveIn, idx );
+    delegate->setState( NoteItemDelegate::MoveIn, idx );
 
     // TODO find a way to finish this function till the animation stops
     while(delegate->animationState() == QTimeLine::Running){

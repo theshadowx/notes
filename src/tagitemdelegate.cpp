@@ -1,4 +1,4 @@
-#include "tagwidgetdelegate.h"
+#include "tagitemdelegate.h"
 #include "tagmodel.h"
 #include <QPainter>
 #include <QColorDialog>
@@ -7,13 +7,13 @@
 #include <QDebug>
 #include <QApplication>
 
-TagWidgetDelegate::TagWidgetDelegate(QObject* parent)
+TagItemDelegate::TagItemDelegate(QObject* parent)
     : QStyledItemDelegate(parent)
 {
 
 }
 
-void TagWidgetDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void TagItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     QStyledItemDelegate::paint(painter, option, index);
 
@@ -34,7 +34,7 @@ void TagWidgetDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     painter->restore();
 }
 
-QWidget* TagWidgetDelegate::createEditor(QWidget* parent,
+QWidget* TagItemDelegate::createEditor(QWidget* parent,
                                             const QStyleOptionViewItem& option,
                                             const QModelIndex& index) const {
 

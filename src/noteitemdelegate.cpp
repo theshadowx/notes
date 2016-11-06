@@ -1,4 +1,4 @@
-#include "notewidgetdelegate.h"
+#include "noteitemdelegate.h"
 #include "noteview.h"
 #include <QPainter>
 #include <QEvent>
@@ -31,7 +31,7 @@ const int SIDE_OFFSET = 10;
 const int BASIC_HEIGHT = 44;
 const QLocale LOCAL = QLocale("en_US");
 
-NoteWidgetDelegate::NoteWidgetDelegate(QObject *parent)
+NoteItemDelegate::NoteItemDelegate(QObject *parent)
     : QStyledItemDelegate(parent),
       m_state(Normal),
       m_isActive(false),
@@ -52,7 +52,7 @@ NoteWidgetDelegate::NoteWidgetDelegate(QObject *parent)
     });
 }
 
-void NoteWidgetDelegate::setState(States NewState, QModelIndex index)
+void NoteItemDelegate::setState(States NewState, QModelIndex index)
 {
     m_animatedIndex = index;
 
@@ -79,12 +79,12 @@ void NoteWidgetDelegate::setState(States NewState, QModelIndex index)
     m_state = NewState;
 }
 
-void NoteWidgetDelegate::setAnimationDuration(const int duration)
+void NoteItemDelegate::setAnimationDuration(const int duration)
 {
     m_timeLine->setDuration(duration);
 }
 
-void NoteWidgetDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void NoteItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     QStyleOptionViewItem opt = option;
 
@@ -108,7 +108,7 @@ void NoteWidgetDelegate::paint(QPainter* painter, const QStyleOptionViewItem& op
     paintTags(painter, opt, index);
 }
 
-QSize NoteWidgetDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
+QSize NoteItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     int initHeight = initialHeightOfRow(option, index);
     int initWidth = m_view->viewport()->width();
@@ -133,12 +133,12 @@ QSize NoteWidgetDelegate::sizeHint(const QStyleOptionViewItem& option, const QMo
     return result;
 }
 
-QTimeLine::State NoteWidgetDelegate::animationState()
+QTimeLine::State NoteItemDelegate::animationState()
 {
     return m_timeLine->state();
 }
 
-void NoteWidgetDelegate::paintBackground(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void NoteItemDelegate::paintBackground(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     QModelIndex selectedIndex = m_view->selectionModel()->currentIndex();
     QModelIndex hoveredIndex = m_view->indexAt(m_view->mapFromGlobal(QCursor::pos()));
@@ -165,7 +165,7 @@ void NoteWidgetDelegate::paintBackground(QPainter* painter, const QStyleOptionVi
     painter->restore();
 }
 
-void NoteWidgetDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     painter->save();
     const int topOffsetY = 5;   // space on top of title
@@ -265,7 +265,7 @@ void NoteWidgetDelegate::paintLabels(QPainter* painter, const QStyleOptionViewIt
     painter->restore();
 }
 
-void NoteWidgetDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void NoteItemDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     int nLine = 0;
     int rowWidth = option.rect.width();
@@ -313,7 +313,7 @@ void NoteWidgetDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem
     painter->restore();
 }
 
-void NoteWidgetDelegate::paintSeparator(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void NoteItemDelegate::paintSeparator(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     painter->save();
     Q_UNUSED(index)
@@ -328,7 +328,7 @@ void NoteWidgetDelegate::paintSeparator(QPainter* painter, const QStyleOptionVie
     painter->restore();
 }
 
-int NoteWidgetDelegate::initialHeightOfRow(const QStyleOptionViewItem& option, const QModelIndex& index) const
+int NoteItemDelegate::initialHeightOfRow(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     int height = BASIC_HEIGHT;
     int nLine = 0;
@@ -364,7 +364,7 @@ int NoteWidgetDelegate::initialHeightOfRow(const QStyleOptionViewItem& option, c
     return height;
 }
 
-QString NoteWidgetDelegate::parseDateTime(const QDateTime& dateTime) const
+QString NoteItemDelegate::parseDateTime(const QDateTime& dateTime) const
 {
     auto currDateTime = QDateTime::currentDateTime();
 

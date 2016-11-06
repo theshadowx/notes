@@ -1,16 +1,16 @@
-#ifndef NOTEWIDGETDELEGATE_H
-#define NOTEWIDGETDELEGATE_H
+#ifndef NOTEITEMDELEGATE_H
+#define NOTEITEMDELEGATE_H
 
 #include <QStyledItemDelegate>
 #include <QTimeLine>
 #include <QListView>
 
-class NoteWidgetDelegate : public QStyledItemDelegate
+class NoteItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
 public:
-    explicit NoteWidgetDelegate(QObject* parent = Q_NULLPTR);
+    explicit NoteItemDelegate(QObject* parent = Q_NULLPTR);
 
     enum States{
         Normal,
@@ -53,4 +53,4 @@ signals:
     void update(const QModelIndex &index);
 };
 
-#endif // NOTEWIDGETDELEGATE_H
+#endif // NOTEITEMDELEGATE_H

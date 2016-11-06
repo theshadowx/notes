@@ -1,4 +1,4 @@
-#include "folderwidgetdelegate.h"
+#include "folderitemdelegate.h"
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QApplication>
@@ -9,14 +9,14 @@
 #include <QDebug>
 #include "foldermodel.h"
 
-FolderWidgetDelegate::FolderWidgetDelegate(QObject* parent)
+FolderItemDelegate::FolderItemDelegate(QObject* parent)
     : QStyledItemDelegate(parent),
       m_lineColor(QColor(221, 221, 221))
 {
     m_view = qobject_cast<QTreeView*>(parent);
 }
 
-QWidget* FolderWidgetDelegate::createEditor(QWidget *parent,
+QWidget* FolderItemDelegate::createEditor(QWidget *parent,
                                             const QStyleOptionViewItem &option,
                                             const QModelIndex &index) const {
 
@@ -30,7 +30,7 @@ QWidget* FolderWidgetDelegate::createEditor(QWidget *parent,
     return e;
 }
 
-void FolderWidgetDelegate::paint(QPainter* painter,
+void FolderItemDelegate::paint(QPainter* painter,
                                  const QStyleOptionViewItem& option,
                                  const QModelIndex& index) const
 {

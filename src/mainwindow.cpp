@@ -6,9 +6,9 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "notewidgetdelegate.h"
-#include "folderwidgetdelegate.h"
-#include "tagwidgetdelegate.h"
+#include "noteitemdelegate.h"
+#include "folderitemdelegate.h"
+#include "tagitemdelegate.h"
 #include "tagnotemodel.h"
 #include "qxtglobalshortcut.h"
 
@@ -458,15 +458,15 @@ void MainWindow::setupModelView()
     m_proxyNoteModel->setFilterRole(NoteModel::NoteContent);
     m_proxyNoteModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-    m_noteView->setItemDelegate(new NoteWidgetDelegate(m_noteView));
+    m_noteView->setItemDelegate(new NoteItemDelegate(m_noteView));
     m_noteView->setModel(m_proxyNoteModel);
 
     m_folderView->setModel(m_folderModel);
-    m_folderView->setItemDelegate(new FolderWidgetDelegate(m_folderView));
+    m_folderView->setItemDelegate(new FolderItemDelegate(m_folderView));
     m_folderView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_tagView->setModel(m_tagModel);
-    m_tagView->setItemDelegate(new TagWidgetDelegate(m_tagView));
+    m_tagView->setItemDelegate(new TagItemDelegate(m_tagView));
     m_tagView->setContextMenuPolicy(Qt::CustomContextMenu);
 
 }

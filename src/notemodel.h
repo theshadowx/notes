@@ -37,6 +37,7 @@ public:
 
     QList<QPersistentModelIndex> tagIndexes(const int noteId) const;
     bool addTagIndex(const int noteId, const QModelIndex tagIndex);
+    void addTagIndexes(const int noteId, const QModelIndexList& tagindexes);
     bool removeTagIndex(const int noteId, const QModelIndex tagIndex);
     bool removeTagIndex(QModelIndex tagIndex);
 

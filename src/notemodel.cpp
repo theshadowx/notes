@@ -121,6 +121,13 @@ bool NoteModel::addTagIndex(const int noteId, const QModelIndex tagIndex)
     return true;
 }
 
+void NoteModel::addTagIndexes(const int noteId, const QModelIndexList& tagIndexes)
+{
+    foreach (QModelIndex index, tagIndexes) {
+        addTagIndex(noteId, index);
+    }
+}
+
 bool NoteModel::removeTagIndex(const int noteId, const QModelIndex tagIndex)
 {
     Q_ASSERT_X(tagIndex.isValid(), "NoteModel::removeTagIndex", "tagIndex is not valid");

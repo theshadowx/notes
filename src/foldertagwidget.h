@@ -36,6 +36,7 @@ public:
     QModelIndex addNewTagInEditMode();
 
     TagModel* tagModel();
+    QModelIndexList tagIndexesFromIds(const QString& tagIdSerial);
 
 private:
     Ui::FolderTagWidget *ui;

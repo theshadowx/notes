@@ -693,11 +693,8 @@ void MainWindow::fillNoteModel(QList<NoteData*> noteList)
         foreach(NoteData* note, noteList){
             QString tagStr = note->tagIdSerial();
             if(!tagStr.isEmpty()){
-                foreach (QString tagIDStr, tagStr.split(TagData::TagSeparator)) {
-                    int id = tagIDStr.toInt();
-                    QModelIndex index = m_folderTagWidget->tagModel()->indexFromId(id);
-                    m_noteModel->addTagIndex(note->id(), index);
-                }
+                QModelIndexList tagIndexes = m_folderTagWidget->tagIndexesFromIds(tagStr);
+                m_noteModel->addTagIndexes(note->id(), tagIndexes);
             }
         }
 

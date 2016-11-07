@@ -239,6 +239,16 @@ TagModel* FolderTagWidget::tagModel()
     return m_tagModel;
 }
 
+QModelIndexList FolderTagWidget::tagIndexesFromIds(const QString& tagIdSerial)
+{
+    QList<QModelIndex> tagIndexes;
+    if(tagIdSerial.isEmpty())
+        return tagIndexes;
+
+    QStringList tagIdList = tagIdSerial.split(TagData::TagSeparator);
+    return m_tagModel->indexesFromIds(tagIdList).values();
+}
+
 void FolderTagWidget::deleteFolder(QModelIndex index)
 {
     if(m_folderModel->rowCount() > 0){

@@ -94,7 +94,7 @@ QModelIndex TagModel::indexFromId(int id)
     return index(row);
 }
 
-QMap<int, QModelIndex> TagModel::indexesFromIds(QList<int> idList)
+QMap<int, QModelIndex> TagModel::indexesFromIds(const QList<int>& idList)
 {
     QMap<int, QModelIndex> indexList;
 
@@ -102,6 +102,19 @@ QMap<int, QModelIndex> TagModel::indexesFromIds(QList<int> idList)
         QModelIndex index = indexFromId(id);
         if(index.isValid())
             indexList[id] = index;
+    }
+    return indexList;
+}
+
+QMap<QString, QModelIndex> TagModel::indexesFromIds(const QList<QString>& idStringList)
+{
+    QMap<QString, QModelIndex> indexList;
+
+    foreach (QString idStr, idStringList) {
+        int id = idStr.toInt();
+        QModelIndex index = indexFromId(id);
+        if(index.isValid())
+            indexList[idStr] = index;
     }
     return indexList;
 }

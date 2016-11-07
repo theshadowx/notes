@@ -35,9 +35,9 @@ QLabel{font-family:"Ubuntu"; color:rgb(26, 26, 26);}
 #delRootFolderButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
 #delRootFolderButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
 
-#newTagButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
-#newTagButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#newTagButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+#addTagButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
+#addTagButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
+#addTagButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
 
 #deleteTagButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
 #deleteTagButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}

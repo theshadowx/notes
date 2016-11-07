@@ -4,7 +4,8 @@ const QString TagData::TagSeparator = QStringLiteral("_");
 
 TagData::TagData(QObject*parent):
      QObject(parent),
-     m_id(-1)
+     m_id(-1),
+     m_color(QColor(26,26,26))
 {
 
 }

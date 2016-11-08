@@ -169,7 +169,7 @@ private slots:
     void onNoteClicked(const QModelIndex &index);
     void onNoteModelRowsRemoved(const QModelIndex &parent, int first, int last);
     void onTextEditTextChanged();
-    void onTextEditTimeoutTriggered();
+    void onNoteChangedTimeoutTriggered();
     void onLineEditTextChanged(const QString& keyword);
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onTrayRestoreActionTriggered();

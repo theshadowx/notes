@@ -113,8 +113,6 @@ void MainWindow::InitData()
         // get tag list
         m_dbManager->getAllTags();
     }
-
-    //////////    ui->scrollAreaFolderTag->ensureVisible(0,0);
 }
 
 void MainWindow::onFolderSelected(const QString& folderPath, const int noteCount)
@@ -436,7 +434,7 @@ void MainWindow::setupSignalsSlots()
     connect(m_noteModel, &NoteModel::rowsRemoved, this, &MainWindow::onNoteModelRowsRemoved);
     connect(m_noteModel, &NoteModel::rowsMoved, m_noteView, &NoteView::rowsMoved);
     // auto save timer
-    connect(m_autoSaveTimer, &QTimer::timeout, this, &MainWindow::onTextEditTimeoutTriggered);
+    connect(m_autoSaveTimer, &QTimer::timeout, this, &MainWindow::onNoteChangedTimeoutTriggered);
     // clear button
     connect(m_clearSearchButton, &QToolButton::clicked, this, &MainWindow::onClearSearchButtonClicked);
     // Restore Notes Action
@@ -873,33 +871,36 @@ void MainWindow::onTextEditTextChanged ()
     QString content = m_currentSelectedNoteProxy.data(NoteModel::NoteContent).toString();
     if(m_textEdit->toPlainText() != content){
         m_isContentModified = true;
-        // start/restart the timer
-        m_autoSaveTimer->start(500);
+
+        // Get the new data
+        QString firstline = getFirstLine(m_textEdit->toPlainText());
+        QDateTime dateTime = QDateTime::currentDateTime();
+        QString noteDate = dateTime.toString(Qt::ISODate);
+        m_editorDateLabel->setText(getNoteDateEditor(noteDate));
+
+        // update model
+        QMap<int, QVariant> dataValue;
+        dataValue[NoteModel::NoteContent] = QVariant::fromValue(m_textEdit->toPlainText());
+        dataValue[NoteModel::NoteFullTitle] = QVariant::fromValue(firstline);
+        dataValue[NoteModel::NoteLastModificationDateTime] = QVariant::fromValue(dateTime);
+
+
         // move note to the top of the list
         if(m_currentSelectedNoteProxy.row() != 0)
             moveNoteToTop();
+
+        QModelIndex index = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
+        m_noteModel->setItemData(index, dataValue);
     }
 
     m_textEdit->blockSignals(false);
 }
 
-void MainWindow::onTextEditTimeoutTriggered()
+void MainWindow::onNoteChangedTimeoutTriggered()
 {
     m_autoSaveTimer->stop();
-    // Get the new data
-    QString firstline = getFirstLine(m_textEdit->toPlainText());
-    QDateTime dateTime = QDateTime::currentDateTime();
-    QString noteDate = dateTime.toString(Qt::ISODate);
-    m_editorDateLabel->setText(getNoteDateEditor(noteDate));
-
-    // update model
-    QMap<int, QVariant> dataValue;
-    dataValue[NoteModel::NoteContent] = QVariant::fromValue(m_textEdit->toPlainText());
-    dataValue[NoteModel::NoteFullTitle] = QVariant::fromValue(firstline);
-    dataValue[NoteModel::NoteLastModificationDateTime] = QVariant::fromValue(dateTime);
-
-    QModelIndex index = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
-    m_noteModel->setItemData(index, dataValue);
+    m_isContentModified = true;
+    saveNoteToDB(m_currentSelectedNoteProxy);
 }
 
 /**
@@ -976,9 +977,8 @@ void MainWindow::onLineEditTextChanged (const QString &keyword)
 void MainWindow::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
 {
     Q_UNUSED(bottomRight)
-
-    m_isContentModified = true;
-    saveNoteToDB(topLeft);
+    // start/restart the timer
+    m_autoSaveTimer->start(500);
 
     if(roles.contains(NoteModel::NoteTagIndexList)){
         int noteId = topLeft.data(NoteModel::NoteID).toInt();

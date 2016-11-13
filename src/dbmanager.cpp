@@ -435,10 +435,10 @@ bool DBManager::removeFolder(int id) const
 
     // Get all notes having a path that contains the id
     QString queryStr = QStringLiteral("SELECT * FROM active_notes "
-                                      "WHERE (full_path LIKE '%%1%') "
-                                      "OR (full_path LIKE '%_%1%') "
+                                      "WHERE (full_path='%1') "
+                                      "OR (full_path LIKE '%1_%') "
                                       "OR (full_path LIKE '%_%1_%') "
-                                      "OR (full_path LIKE '%_%1%')").arg(id);
+                                      "OR (full_path LIKE '%_%1')").arg(id);
 
     queryGetNotes.exec(queryStr);
     while(queryGetNotes.next()){
@@ -449,6 +449,7 @@ bool DBManager::removeFolder(int id) const
         QString content = queryGetNotes.value(4).toString();
         QString fullTitle = queryGetNotes.value(5).toString();
         QString fullPath = queryGetNotes.value(6).toString();
+        QString tags = queryGetNotes.value(7).toString();
 
         // remove each note from active_notes table
         queryStr = QStringLiteral("DELETE FROM active_notes "
@@ -460,14 +461,15 @@ bool DBManager::removeFolder(int id) const
 
         // add removed note to deleted_notes table
         queryStr = QString("INSERT INTO deleted_notes "
-                           "VALUES (%1, %2, %3, %4, '%5', '%6', '%7');")
+                           "VALUES (%1, %2, %3, %4, '%5', '%6', '%7', '%8');")
                    .arg(noteID)
                    .arg(epochDateTimeCreation)
                    .arg(epochDateTimeModification)
                    .arg(epochTimeDateDeleted)
                    .arg(content)
                    .arg(fullTitle)
-                   .arg(fullPath);
+                   .arg(fullPath)
+                   .arg(tags);
 
         queryAddTrashNotes.exec(queryStr);
         success &= (queryAddTrashNotes.numRowsAffected() == 1);
@@ -483,10 +485,10 @@ bool DBManager::removeFolder(int id) const
 
     // delete sub directories where their parentPath contains id
     queryStr = QStringLiteral("DELETE FROM folders "
-                              "WHERE (parent_path LIKE '%%1%') "
-                              "OR (parent_path LIKE '%_%1%') "
+                              "WHERE (parent_path='%1') "
+                              "OR (parent_path LIKE '%1_%') "
                               "OR (parent_path LIKE '%_%1_%') "
-                              "OR (parent_path LIKE '%_%1%')").arg(id);
+                              "OR (parent_path LIKE '%_%1')").arg(id);
     queryDeleteFolders.exec(queryStr);
 
     return success;
@@ -625,7 +627,16 @@ bool DBManager::removeTag(const TagData* tag) const
                .arg(tag->id());
 
     query.exec(queryStr);
+
     return (query.numRowsAffected() == 1);
+}
+
+bool DBManager::removeTags(const QList<TagData*> tagList) const
+{
+    foreach (TagData* tag, tagList) {
+        if(tag != Q_NULLPTR)
+            removeTag(tag);
+    }
 }
 
 bool DBManager::modifyTag(const TagData* tag) const

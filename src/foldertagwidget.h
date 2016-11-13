@@ -19,14 +19,19 @@ class FolderTagWidget : public QWidget
     Q_OBJECT
 
 public:
+    enum FolderType{
+        Normal=0,
+        AllNotes,
+        Trash
+        };
+
+    Q_ENUM(FolderType)
+
     explicit FolderTagWidget(QWidget *parent = 0);
     ~FolderTagWidget();
 
-    int folderCounter() const;
-    void setFolderCounter(int folderCounter);
-
-    int tagCounter() const;
-    void setTagCounter(int tagCounter);
+    void initFolderCounter(int folderCounter);
+    void initTagCounter(int tagCounter);
 
     QString currentFolderPath() const;
 
@@ -38,12 +43,15 @@ public:
     TagModel* tagModel();
     QModelIndexList tagIndexesFromIds(const QString& tagIdSerial);
 
+    FolderType folderType() const;
+
 private:
     Ui::FolderTagWidget *ui;
 
     int m_folderCounter;
     int m_tagCounter;
     QString m_currentFolderPath;
+    FolderType m_folderType;
 
     FolderModel* m_folderModel;
     TagModel* m_tagModel;
@@ -115,6 +123,7 @@ Q_SIGNALS:
     void tagUpdated(const TagData* tag);
 
     void tagSelectionChanged(const QString& filterRegexpString);
+    void tagSelectionCleared();
 
     void tagModelInitialized(QPrivateSignal);
     void folderModelInitialized(QPrivateSignal);

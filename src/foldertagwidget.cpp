@@ -14,6 +14,7 @@ FolderTagWidget::FolderTagWidget(QWidget *parent) :
     ui(new Ui::FolderTagWidget),
     m_folderCounter(0),
     m_tagCounter(0),
+    m_folderType(Normal),
     m_folderModel(new FolderModel(this)),
     m_tagModel(new TagModel(this)),
     m_isFolderModelInitialized(false),
@@ -71,11 +72,9 @@ FolderTagWidget::FolderTagWidget(QWidget *parent) :
     connect(m_tagView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FolderTagWidget::onTagSelectionChanged);
     // general List Widget / All Notes/ Trash
     connect(m_generalListW, &QListWidget::currentRowChanged, this, &FolderTagWidget::onGeneralListWCurrentRowChanged);
-    //
+    // inner connections
     connect(this, &FolderTagWidget::folderModelInitialized, this, &FolderTagWidget::onInitDone);
     connect(this, &FolderTagWidget::tagModelInitialized, this, &FolderTagWidget::onInitDone);
-
-
 }
 
 FolderTagWidget::~FolderTagWidget()
@@ -83,22 +82,12 @@ FolderTagWidget::~FolderTagWidget()
     delete ui;
 }
 
-int FolderTagWidget::folderCounter() const
-{
-    return m_folderCounter;
-}
-
-void FolderTagWidget::setFolderCounter(int folderCounter)
+void FolderTagWidget::initFolderCounter(int folderCounter)
 {
     m_folderCounter = folderCounter;
 }
 
-int FolderTagWidget::tagCounter() const
-{
-    return m_tagCounter;
-}
-
-void FolderTagWidget::setTagCounter(int tagCounter)
+void FolderTagWidget::initTagCounter(int tagCounter)
 {
     m_tagCounter = tagCounter;
 }
@@ -212,6 +201,8 @@ void FolderTagWidget::clearTagSelection()
         m_tagView->update();
 
         m_tagView->selectionModel()->blockSignals(false);
+
+        emit tagSelectionCleared();
     }
 }
 
@@ -247,6 +238,11 @@ QModelIndexList FolderTagWidget::tagIndexesFromIds(const QString& tagIdSerial)
 
     QStringList tagIdList = tagIdSerial.split(TagData::TagSeparator);
     return m_tagModel->indexesFromIds(tagIdList).values();
+}
+
+FolderTagWidget::FolderType FolderTagWidget::folderType() const
+{
+    return m_folderType;
 }
 
 void FolderTagWidget::deleteFolder(QModelIndex index)
@@ -330,9 +326,11 @@ void FolderTagWidget::onGeneralListWCurrentRowChanged(int currentRow)
         clearTagSelection();
 
         if(currentRow == 0){ // All Notes
+            m_folderType = AllNotes;
             emit allNotesFolderSelected();
 
         }else if(currentRow == 1){ // Trash
+            m_folderType = Trash;
             emit trashFolderSelected();
         }
     }
@@ -376,6 +374,8 @@ void FolderTagWidget::onFolderSelectionChanged(const QItemSelection& selected, c
     m_folderView->setFocus();
 
     if(!selected.indexes().isEmpty()){
+        m_folderType = Normal;
+
         QModelIndex selectedFolderIndex = selected.indexes().at(0);
 
         //clear tags selection
@@ -469,7 +469,6 @@ void FolderTagWidget::showFolderViewContextMenu(const QPoint& pos)
 
     QWidgetAction addSubFolderWidgetAction(&menu);
     QPushButton addSubFolderPb;
-    addSubFolderPb.setEnabled(m_tagModel->rowCount() > 0);
     addSubFolderPb.setObjectName(QStringLiteral("addSubFolderMenuButton"));
     addSubFolderPb.setText(tr("Add subfolder"));
     addSubFolderPb.setFlat(true);
@@ -479,7 +478,6 @@ void FolderTagWidget::showFolderViewContextMenu(const QPoint& pos)
 
     QWidgetAction deleteFolderWidgetAction(&menu);
     QPushButton deleteFolderPb;
-    deleteFolderPb.setEnabled(m_tagModel->rowCount() > 0);
     deleteFolderPb.setObjectName(QStringLiteral("deleteFolderMenuButton"));
     deleteFolderPb.setText(tr("Delete folder"));
     deleteFolderPb.setFlat(true);
@@ -595,6 +593,7 @@ void FolderTagWidget::showTagViewContextMenu(const QPoint& pos)
                 m_tagModel->setData(index, v, TagModel::TagColor);
             }
         }
+        this->activateWindow();
     });
 
     connect(&deleteTagPb, &QPushButton::clicked, [&](){

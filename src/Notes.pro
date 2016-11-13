@@ -41,7 +41,8 @@ SOURCES += \
     tagnotemodel.cpp \
     tagitemdelegate.cpp \
     folderitemdelegate.cpp \
-    foldertagwidget.cpp
+    foldertagwidget.cpp \
+    notewidget.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -59,10 +60,12 @@ HEADERS  += \
     tagnotemodel.h \
     tagitemdelegate.h \
     folderitemdelegate.h \
-    foldertagwidget.h
+    foldertagwidget.h \
+    notewidget.h
 
 FORMS += $$PWD/mainwindow.ui \
-    foldertagwidget.ui
+    foldertagwidget.ui \
+    notewidget.ui
 RESOURCES += $$PWD/images.qrc \
     fonts.qrc \
     styles.qrc

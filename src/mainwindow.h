@@ -28,6 +28,7 @@
 #include "dbmanager.h"
 #include "foldertagwidget.h"
 #include "notewidget.h"
+#include "editorwidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -62,8 +63,6 @@ private:
     QPushButton* m_greenMaximizeButton;
     QPushButton* m_redCloseButton;
     QPushButton* m_yellowMinimizeButton;
-    QTextEdit* m_textEdit;
-    QLabel* m_editorDateLabel;
     QSplitter *m_splitter;
     QSystemTrayIcon* m_trayIcon;
     QAction* m_trayRestoreAction;
@@ -73,6 +72,7 @@ private:
     DBManager* m_dbManager;
     FolderTagWidget* m_folderTagWidget;
     NoteWidget* m_noteWidget;
+    EditorWidget* m_editorWidget;
 
     int m_currentVerticalScrollAreaRange;
     int m_mousePressX;
@@ -80,7 +80,6 @@ private:
     int m_textEditLeftPadding;
     bool m_canMoveWindow;
     bool m_isContentModified;
-    bool m_isTextEditable;
 
     void setupMainWindow();
     void setupTrayIcon();
@@ -88,20 +87,15 @@ private:
     void setupSplitter();
     void setupTitleBarButtons();
     void setupSignalsSlots();
-    void setupTextEdit();
     void setupDatabases();
     void initializeSettingsDatabase();
     void setButtonsAndFieldsEnabled(bool doEnable);
     void restoreStates();
-    void showNoteInEditor(const QModelIndex& noteIndex);
-    void clearTextAndHeader();
 
     void checkMigration();
     void migrateNote(QString notePath);
     void migrateTrash(QString trashPath);
     void setNoteEditabled(bool state);
-    QString dateToLocal (QString dateString);
-    QDateTime getQDateTime(QString date);
 
 private slots:
     void InitData();
@@ -130,10 +124,9 @@ private slots:
     void onNoteSearchBeing();
     void onNoteModelContentChanged();
 
-    void onTextEditTextChanged();
+    void onEditorFocusedIn();
 
     void onTrayRestoreActionTriggered();
-    void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();
     void minimizeWindow();

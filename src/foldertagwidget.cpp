@@ -593,7 +593,10 @@ void FolderTagWidget::showTagViewContextMenu(const QPoint& pos)
                 m_tagModel->setData(index, v, TagModel::TagColor);
             }
         }
-        this->activateWindow();
+        activateWindow();
+        // prevent row background to be colored as if the row was hovered
+        QEvent e(QEvent::HoverLeave);
+        QApplication::sendEvent(m_tagView->viewport(), &e);
     });
 
     connect(&deleteTagPb, &QPushButton::clicked, [&](){

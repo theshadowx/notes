@@ -30,7 +30,6 @@ public:
 
     void initNoteCounter(int count);
     void setNoteScrollBarPosition(QModelIndex index, int pos);
-    void setNoteText(const QString& text);
     void setNoteTagIndexes(QModelIndex index, QList<QPersistentModelIndex>& tagIndexes);
     void addTagIndexesToNote(const int noteId, QModelIndexList& tagIndexes);
     void setCurrentFolderPath(const QString& currentFolderPath);
@@ -85,6 +84,7 @@ private:
     void selectFirstNote();
     void moveNoteToTop();
     void clearSearch();
+    void clearFilter();
     void findNotesContaining(const QString &keyword);
     void selectNote(const QModelIndex& noteIndex);
     void removeTempNote();
@@ -99,8 +99,9 @@ public slots:
     void onSearchFieldTextChanged(const QString& keyword);
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onClearSearchButtonClicked();
-    void updateNoteCountLabel();
     void onNoteViewViewportClicked();
+    void onNoteChangedTimeoutTriggered();
+    void updateNoteCountLabel();
     void addNewNote();
     void removeNote(const QModelIndex& noteIndex);
     void removeSelectedNote();
@@ -110,8 +111,8 @@ public slots:
     void selectNoteUp();
     void showTagNoteMenu();
     void filterByTag(const QString& regexString);
-    void clearFilter();
-    void onNoteChangedTimeoutTriggered();
+    void clearTagFilter();
+    void setNoteText(const QString& text);
 
 signals:
     void noteSelectionChanged(QModelIndex selected, QModelIndex deselected);

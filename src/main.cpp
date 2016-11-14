@@ -9,6 +9,8 @@
 #include "QSimpleUpdater.h"
 
 #include <QApplication>
+#include <QFontDatabase>
+#include <QFile>
 
 // Define from where we download update definitions.
 // This should be changed from "dev" to "master" for production releases.

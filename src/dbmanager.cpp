@@ -631,7 +631,7 @@ bool DBManager::removeTag(const TagData* tag) const
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::removeTags(const QList<TagData*> tagList) const
+void DBManager::removeTags(const QList<TagData*> tagList) const
 {
     foreach (TagData* tag, tagList) {
         if(tag != Q_NULLPTR)

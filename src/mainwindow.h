@@ -7,28 +7,17 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QtGui>
-#include <QtCore>
-#include <QGroupBox>
-#include <QPushButton>
-#include <vector>
-#include <QToolButton>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QTextEdit>
-#include <QSettings>
-#include <QSplitter>
-#include <QSystemTrayIcon>
-#include <QMenu>
-#include <QTreeView>
-#include <QListWidget>
-#include <QAction>
-#include <QMutexLocker>
 #include "dbmanager.h"
 #include "foldertagwidget.h"
 #include "notewidget.h"
 #include "editorwidget.h"
+
+#include <QMainWindow>
+#include <QSettings>
+#include <QSplitter>
+#include <QSystemTrayIcon>
+#include <QMutexLocker>
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
@@ -73,6 +62,7 @@ private:
     FolderTagWidget* m_folderTagWidget;
     NoteWidget* m_noteWidget;
     EditorWidget* m_editorWidget;
+    QThread m_dbThread;
 
     int m_currentVerticalScrollAreaRange;
     int m_mousePressX;

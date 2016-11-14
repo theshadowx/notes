@@ -48,7 +48,7 @@ public slots:
     bool addTag(const TagData* tag) const;
     bool deleteTagInNote(const int noteId, const QString tagIdStr, const QString tableName) const;
     bool removeTag(const TagData* tag) const;
-    bool removeTags(const QList<TagData*> tagList) const;
+    void removeTags(const QList<TagData*> tagList) const;
     bool modifyTag(const TagData* tag) const;
     int getTagsLastRowID() const;
 };

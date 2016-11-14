@@ -9,15 +9,12 @@
 #include "qxtglobalshortcut.h"
 #include "tagnotemodel.h"
 
-#include <QScrollBar>
 #include <QShortcut>
-#include <QTextStream>
-#include <QScrollArea>
-#include <QtConcurrent>
 #include <QProgressDialog>
-#include <QGraphicsDropShadowEffect>
+#include <QMenu>
+#include <QMouseEvent>
 #include <QWidgetAction>
-#include <QColorDialog>
+#include <QtConcurrent>
 
 /**
 * Setting up the main window and it's content

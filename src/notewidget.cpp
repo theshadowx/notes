@@ -508,10 +508,6 @@ void NoteWidget::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
     }
 }
 
-/**
- * @brief MainWindow::onClearButtonClicked clears the search and
- * select the note that was selected before searching if it is still valid.
- */
 void NoteWidget::onClearSearchButtonClicked()
 {
     if(!m_isOperationRunning){
@@ -540,11 +536,6 @@ void NoteWidget::updateNoteCountLabel()
     ui->noteCntLabel->setText(QStringLiteral("%1").arg(cnt));
 }
 
-/**
- * @brief create a new note
- * add it to the database
- * add it to the scrollArea
- */
 void NoteWidget::addNewNote ()
 {
     if(m_isAddingNoteEnabled){
@@ -618,10 +609,6 @@ void NoteWidget::removeSelectedNote ()
     }
 }
 
-/**
-* @brief
-* Set focus on current selected note
-*/
 void NoteWidget::setFocusOnCurrentNote ()
 {
     if(m_currentSelectedNoteProxy.isValid())

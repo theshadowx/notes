@@ -17,9 +17,6 @@
 #include <QtConcurrent>
 #include <QThread>
 
-/**
-* Setting up the main window and it's content
-*/
 MainWindow::MainWindow (QWidget *parent) :
     QMainWindow (parent),
     ui (new Ui::MainWindow),
@@ -52,20 +49,11 @@ MainWindow::MainWindow (QWidget *parent) :
     QTimer::singleShot(200,this, SLOT(InitData()));
 }
 
-/**
-* @brief
-* Deconstructor of the class
-*/
 MainWindow::~MainWindow ()
 {
     delete ui;
 }
 
-/**
-* @brief
-* Setting up main window prefrences like frameless window and the minimum size of the window
-* Setting the window background color to be white
-*/
 void MainWindow::setupMainWindow ()
 {
 #ifdef Q_OS_LINUX

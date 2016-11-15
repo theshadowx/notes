@@ -110,11 +110,6 @@ void EditorWidget::clearTextAndHeader()
     m_textEdit->blockSignals(false);
 }
 
-/**
- * @brief show the specified note content text in the text editor
- * Set editorDateLabel text to the the selected note date
- * And restore the scrollBar position if it changed before.
- */
 void EditorWidget::showNoteInEditor(const QModelIndex &noteIndex)
 {
     Q_ASSERT_X(noteIndex.isValid(), "MainWindow::showNoteInEditor", "noteIndex is not valid");

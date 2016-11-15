@@ -17,7 +17,6 @@
 #include <QSplitter>
 #include <QSystemTrayIcon>
 #include <QMutexLocker>
-#include <QThread>
 
 namespace Ui {
 class MainWindow;
@@ -62,7 +61,6 @@ private:
     FolderTagWidget* m_folderTagWidget;
     NoteWidget* m_noteWidget;
     EditorWidget* m_editorWidget;
-    QThread m_dbThread;
 
     int m_currentVerticalScrollAreaRange;
     int m_mousePressX;
@@ -90,6 +88,8 @@ private:
 private slots:
     void InitData();
 
+    void onTableLastRowIdReceived(int noteRowId, int tagRowId, int FolderRowId);
+
     void onTrashFolderSelected();
     void onAllNotesFolderSelected();
 
@@ -111,7 +111,7 @@ private slots:
     void onNoteMenuAddTagClicked(QModelIndex index);
     void onTagIndexesToBeAdded(const int noteId, const QString& tagIdString);
     void onNoteUpdated(NoteData* note);
-    void onNoteSearchBeing();
+    void onNoteSearchBegin();
     void onNoteModelContentChanged();
 
     void onEditorFocusedIn();
@@ -128,6 +128,28 @@ private slots:
 signals:
     void noteAdded();
     void noteRemoved();
+
+    void tablesLastRowIdRequested();
+
+    void foldersRequested();
+    void addFolderRequested(FolderData* folder);
+    void removeFolderRequested(const int id);
+    void updateFolderRequested(const FolderData* folder);
+
+    void tagsRequested();
+    void addTagRequested(const TagData* tag);
+    void removeTagRequested(TagData* tag);
+    void removeTagsRequested(QList<TagData*> tag);
+    void updateTagRequested(const TagData* tag);
+
+    void migrateNoteInTrashResquested(NoteData* note);
+    void migrateNoteResquested(NoteData* note);
+    void notesInTrashRequested();
+    void allNotesRequested();
+    void notesRequested(const QString& path);
+    void addNoteRequested(const NoteData* note);
+    void removeNoteRequested(NoteData* note);
+    void updateNoteRequested(const NoteData* note);
 };
 
 #endif // MAINWINDOW_H

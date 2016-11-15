@@ -55,6 +55,7 @@ void NoteModel::addListNote(QList<NoteData *> noteList)
     endInsertRows();
 
     foreach (NoteData* note, noteList) {
+        note->setParent(this);
         m_noteIdMap[note->id()] = note;
     }
 }

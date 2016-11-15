@@ -15,6 +15,7 @@
 #include <QMouseEvent>
 #include <QWidgetAction>
 #include <QtConcurrent>
+#include <QThread>
 
 /**
 * Setting up the main window and it's content
@@ -144,16 +145,12 @@ void MainWindow::setupDatabases ()
         doCreate = true;
     }
 
-    m_dbManager = new DBManager(noteDBFilePath, doCreate, this);
-
-    int noteCounter = m_dbManager->getNotesLastRowID();
-    m_noteWidget->initNoteCounter(noteCounter);
-
-    int folderCounter = m_dbManager->getFoldersLastRowID();
-    m_folderTagWidget->initFolderCounter(folderCounter);
-
-    int tagCounter = m_dbManager->getTagsLastRowID();
-    m_folderTagWidget->initTagCounter(tagCounter);
+    m_dbManager = new DBManager;
+    QThread* dbThread = new QThread;
+    dbThread->setObjectName(QStringLiteral("dbThread"));
+    m_dbManager->moveToThread(dbThread);
+    connect(dbThread, &QThread::started, [=](){m_dbManager->open(noteDBFilePath, doCreate);});
+    dbThread->start();
 }
 
 void MainWindow::restoreStates()
@@ -225,16 +222,39 @@ void MainWindow::setupSignalsSlots()
     connect(m_noteWidget, &NoteWidget::tagIndexesToBeAdded, this, &MainWindow::onTagIndexesToBeAdded);
     connect(m_noteWidget, &NoteWidget::tagsInNoteChanged, m_folderTagWidget, &FolderTagWidget::onTagsInNoteChanged);
     connect(m_noteWidget, &NoteWidget::noteUpdated, this, &MainWindow::onNoteUpdated);
-    connect(m_noteWidget, &NoteWidget::noteSearchBegin, this, &MainWindow::onNoteSearchBeing);
+    connect(m_noteWidget, &NoteWidget::noteSearchBegin, this, &MainWindow::onNoteSearchBegin);
     connect(m_noteWidget, &NoteWidget::noteModelContentChanged, this, &MainWindow::onNoteModelContentChanged);
     // EditorWidget
     connect(m_editorWidget, &EditorWidget::editorFocusedIn, this, &MainWindow::onEditorFocusedIn);
     connect(m_editorWidget, &EditorWidget::editorTextChanged, m_noteWidget, &NoteWidget::setNoteText);
-    // DataBase
+    // From DataBase
     connect(m_dbManager, &DBManager::foldersReceived, m_folderTagWidget, &FolderTagWidget::initFolders);
     connect(m_dbManager, &DBManager::tagsReceived, m_folderTagWidget, &FolderTagWidget::initTags);
     connect(m_dbManager, &DBManager::notesReceived, m_noteWidget, &NoteWidget::initNotes);
     connect(m_dbManager, &DBManager::notesInTrashReceived, m_noteWidget, &NoteWidget::initNotes);
+    connect(m_dbManager, &DBManager::tablesLastRowIdReceived, this, &MainWindow::onTableLastRowIdReceived);
+    // To DataBase
+    connect(this, &MainWindow::tablesLastRowIdRequested, m_dbManager, &DBManager::onTablesLastRowIdRequested);
+
+    connect(this, &MainWindow::foldersRequested, m_dbManager, &DBManager::onFoldersRequested);
+    connect(this, &MainWindow::addFolderRequested, m_dbManager, &DBManager::onAddFolderRequested);
+    connect(this, &MainWindow::removeFolderRequested, m_dbManager, &DBManager::onRemoveFolderRequested);
+    connect(this, &MainWindow::updateFolderRequested, m_dbManager, &DBManager::onUpdateFolderRequested);
+
+    connect(this, &MainWindow::tagsRequested, m_dbManager, &DBManager::onTagsRequested);
+    connect(this, &MainWindow::addTagRequested, m_dbManager, &DBManager::onAddTagRequested);
+    connect(this, &MainWindow::removeTagRequested, m_dbManager, &DBManager::onRemoveTagRequested);
+    connect(this, &MainWindow::removeTagsRequested, m_dbManager, &DBManager::onRemoveTagsRequested);
+    connect(this, &MainWindow::updateTagRequested, m_dbManager, &DBManager::onUpdateTagRequested);
+
+    connect(this, &MainWindow::migrateNoteInTrashResquested, m_dbManager, &DBManager::onMigrateNoteInTrashResquested);
+    connect(this, &MainWindow::migrateNoteResquested, m_dbManager, &DBManager::onMigrateNoteResquested);
+    connect(this, &MainWindow::allNotesRequested, m_dbManager, &DBManager::onAllNotesRequested);
+    connect(this, &MainWindow::notesInTrashRequested, m_dbManager, &DBManager::onNotesInTrashRequested);
+    connect(this, &MainWindow::notesRequested, m_dbManager, &DBManager::onNotesRequested);
+    connect(this, &MainWindow::addNoteRequested, m_dbManager, &DBManager::onAddNoteRequested);
+    connect(this, &MainWindow::removeNoteRequested, m_dbManager, &DBManager::onRemoveNoteRequested);
+    connect(this, &MainWindow::updateNoteRequested, m_dbManager, &DBManager::onUpdateNoteRequested);
 }
 
 
@@ -260,21 +280,32 @@ void MainWindow::InitData()
         connect(watcher, &QFutureWatcher<void>::finished, this, [&](){
             pd->deleteLater();
             setButtonsAndFieldsEnabled(true);
+            // get last tables id
+            emit tablesLastRowIdRequested();
             // get Folder list
-            m_dbManager->getAllFolders();
+            emit foldersRequested();
             // get tag list
-            m_dbManager->getAllTags();
+            emit tagsRequested();
           });
 
         QFuture<void> migration = QtConcurrent::run(this, &MainWindow::checkMigration);
         watcher->setFuture(migration);
 
     }else{
+        // get last tables id
+        emit tablesLastRowIdRequested();
         // get Folder list
-        m_dbManager->getAllFolders();
+        emit foldersRequested();
         // get tag list
-        m_dbManager->getAllTags();
+        emit tagsRequested();
     }
+}
+
+void MainWindow::onTableLastRowIdReceived(int noteRowId, int tagRowId, int FolderRowId)
+{
+    m_noteWidget->initNoteCounter(noteRowId);
+    m_folderTagWidget->initTagCounter(tagRowId);
+    m_folderTagWidget->initFolderCounter(FolderRowId);
 }
 
 void MainWindow::onTrashFolderSelected()
@@ -286,7 +317,7 @@ void MainWindow::onTrashFolderSelected()
     m_noteWidget->setNoteDeletionEnabled(false);
     setNoteEditabled(false);
 
-    m_dbManager->getNotesInTrash();
+    emit notesInTrashRequested();
 }
 
 void MainWindow::onAllNotesFolderSelected()
@@ -301,7 +332,7 @@ void MainWindow::onAllNotesFolderSelected()
     setNoteEditabled(false);
 
     // get notes from database  and them to the model
-    m_dbManager->getAllNotes();
+    emit allNotesRequested();
 }
 
 void MainWindow::onFolderSelected(const QString& folderPath, const int noteCount)
@@ -317,49 +348,56 @@ void MainWindow::onFolderSelected(const QString& folderPath, const int noteCount
     setNoteEditabled(true);
 
     if(noteCount >0)
-        m_dbManager->getAllNotes(folderPath);
+        emit notesRequested(folderPath);
 }
 
 void MainWindow::onFolderAdded(FolderData* folder)
 {
-    if(folder != Q_NULLPTR)
-        QtConcurrent::run(m_dbManager, &DBManager::addFolder, folder);
+    Q_ASSERT_X(folder != Q_NULLPTR, "MainWindow::onFolderAdded", "folder is null");
+
+    emit addFolderRequested(folder);
 }
 
 void MainWindow::onFolderRemoved(const int folderId)
 {
-    QtConcurrent::run(m_dbManager, &DBManager::removeFolder, folderId);
+    emit removeFolderRequested(folderId);
 }
 
 void MainWindow::onFolderUpdated(const FolderData* folder)
 {
-    if(folder != Q_NULLPTR)
-        QtConcurrent::run(m_dbManager, &DBManager::modifyFolder, folder);
+    Q_ASSERT_X(folder != Q_NULLPTR, "MainWindow::onFolderUpdated", "folder is null");
+
+    emit updateFolderRequested(folder);
 }
 
 void MainWindow::onTagAdded(TagData* tag)
 {
-    if(tag != Q_NULLPTR)
-     QtConcurrent::run(m_dbManager, &DBManager::addTag, tag);
+    Q_ASSERT_X(tag != Q_NULLPTR, "MainWindow::onTagAdded", "tag is null");
+
+    emit addTagRequested(tag);
 }
 
 void MainWindow::onTagRemoved(TagData* tag)
 {
-    if(tag != Q_NULLPTR)
-        QtConcurrent::run(m_dbManager, &DBManager::removeTag, tag);
+    Q_ASSERT_X(tag != Q_NULLPTR, "MainWindow::onTagRemoved", "tag is null");
+
+    emit removeTagRequested(tag);
 }
 
 void MainWindow::onTagsRemoved(QList<TagData*> tagList)
 {
-    QtConcurrent::run(m_dbManager, &DBManager::removeTags, tagList);
+    Q_ASSERT_X(tagList.count() > 0, "MainWindow::onTagsRemoved", "list is empty");
+
+    emit removeTagsRequested(tagList);
 }
 
 void MainWindow::onTagUpdated(const TagData* tag)
 {
-    if(tag != Q_NULLPTR){
-        m_noteWidget->updateNoteView();
-        QtConcurrent::run(m_dbManager, &DBManager::modifyTag, tag);
-    }
+    Q_ASSERT_X(tag != Q_NULLPTR, "MainWindow::onTagUpdated", "tag is null");
+
+    m_noteWidget->updateNoteView();
+    emit updateTagRequested(tag);
+
 }
 
 void MainWindow::onNoteSelectionChanged(QModelIndex selected, QModelIndex deselected)
@@ -391,29 +429,24 @@ void MainWindow::onNewNoteAdded(QModelIndex index)
 
 void MainWindow::onNoteAdded(NoteData* note)
 {
-    if(note != Q_NULLPTR){
-        m_folderTagWidget->onNoteAdded();
+    Q_ASSERT_X(note != Q_NULLPTR, "MainWindow::onNoteAdded", "note is null");
 
-        QtConcurrent::run([=](){
-            QMutexLocker locker(&m_mutex);
-            m_dbManager->addNote(note);
-        });
-    }
+    m_folderTagWidget->onNoteAdded();
+    emit addNoteRequested(note);
 }
 
 void MainWindow::onNoteRemoved(NoteData* note)
 {
-    if(note != Q_NULLPTR){
-        bool isEmpty = m_noteWidget->isViewEmpty();
-        m_noteWidget->setNoteDeletionEnabled(!isEmpty);
-        m_folderTagWidget->onNoteRemoved();
+    Q_ASSERT_X(note != Q_NULLPTR, "MainWindow::onNoteRemoved", "note is null");
 
-        if(m_folderTagWidget->folderType() == FolderTagWidget::AllNotes)
-            setNoteEditabled(!isEmpty);
+    bool isEmpty = m_noteWidget->isViewEmpty();
+    m_noteWidget->setNoteDeletionEnabled(!isEmpty);
+    m_folderTagWidget->onNoteRemoved();
 
+    if(m_folderTagWidget->folderType() == FolderTagWidget::AllNotes)
+        setNoteEditabled(!isEmpty);
 
-        QtConcurrent::run(m_dbManager, &DBManager::removeNote, note);
-    }
+    emit removeNoteRequested(note);
 }
 
 void MainWindow::onNoteTagMenuAboutTobeShown(const QModelIndex& index, QMenu& menu)
@@ -447,11 +480,12 @@ void MainWindow::onTagIndexesToBeAdded(const int noteId, const QString& tagIdStr
 
 void MainWindow::onNoteUpdated(NoteData* note)
 {
-    if(note != Q_NULLPTR)
-        QtConcurrent::run(m_dbManager, &DBManager::modifyNote, note);
+    Q_ASSERT_X(note != Q_NULLPTR, "MainWindow::onNoteUpdated", "note is null");
+
+    emit updateNoteRequested(note);
 }
 
-void MainWindow::onNoteSearchBeing()
+void MainWindow::onNoteSearchBegin()
 {
     m_folderTagWidget->clearTagSelection();
 }
@@ -683,8 +717,8 @@ void MainWindow::migrateNote(QString notePath)
         QString firstLine = NoteWidget::getFirstLine(contentText);
         newNote->setFullTitle(firstLine);
 
-        m_dbManager->migrateNote(newNote);
-        delete newNote;
+        emit migrateNoteResquested(newNote);
+        newNote->deleteLater();
     }
 
     QFile oldNoteDBFile(notePath);
@@ -714,8 +748,8 @@ void MainWindow::migrateTrash(QString trashPath)
         QString firstLine = NoteWidget::getFirstLine(contentText);
         newNote->setFullTitle(firstLine);
 
-        m_dbManager->migrateTrash(newNote);
-        delete newNote;
+        emit migrateNoteInTrashResquested(newNote);
+        newNote->deleteLater();
     }
 
     QFile oldTrashDBFile(trashPath);

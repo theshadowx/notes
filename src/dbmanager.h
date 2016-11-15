@@ -7,27 +7,26 @@
 
 #include <QObject>
 #include <QtSql/QSqlDatabase>
+#include <QMutexLocker>
 
 class DBManager : public QObject
 {
     Q_OBJECT
 public:
+    explicit DBManager(QObject *parent = 0);
     explicit DBManager(const QString& path, bool doCreate = false, QObject *parent = 0);
+
+    void open(const QString& path, bool doCreate = false);
 
     bool noteExist(NoteData* note) const;
     bool folderExist(int id) const;
 
 private:
     QSqlDatabase m_db;
+    QMutex m_mutex;
 
+    void createTables();
 
-signals:
-    void notesReceived(QList<NoteData*> noteList);
-    void notesInTrashReceived(QList<NoteData*> noteList);
-    void foldersReceived(QList<FolderData*> folderList);
-    void tagsReceived(QList<TagData*> tagList);
-
-public slots:
     QList<NoteData*> getAllNotes();
     QList<NoteData*> getAllNotes(const QString& fullPath);
     QList<NoteData*> getNotesInTrash();
@@ -51,6 +50,37 @@ public slots:
     void removeTags(const QList<TagData*> tagList) const;
     bool modifyTag(const TagData* tag) const;
     int getTagsLastRowID() const;
+
+signals:
+    void notesReceived(QList<NoteData*> noteList);
+    void notesInTrashReceived(QList<NoteData*> noteList);
+    void foldersReceived(QList<FolderData*> folderList);
+    void tagsReceived(QList<TagData*> tagList);
+    void tablesLastRowIdReceived(int noteRowId, int tagRowId, int FolderRowId);
+
+public slots:
+
+    void onTablesLastRowIdRequested();
+
+    void onFoldersRequested();
+    void onAddFolderRequested(FolderData* folder);
+    void onRemoveFolderRequested(const int id);
+    void onUpdateFolderRequested(const FolderData* folder);
+
+    void onTagsRequested();
+    void onAddTagRequested(const TagData* tag);
+    void onRemoveTagRequested(TagData* tag);
+    void onRemoveTagsRequested(QList<TagData*> tagList);
+    void onUpdateTagRequested(const TagData* tag);
+
+    void onMigrateNoteInTrashResquested(NoteData* note);
+    void onMigrateNoteResquested(NoteData* note);
+    void onNotesInTrashRequested();
+    void onAllNotesRequested();
+    void onNotesRequested(const QString& path);
+    void onAddNoteRequested(const NoteData* note);
+    void onRemoveNoteRequested(NoteData* note);
+    void onUpdateNoteRequested(const NoteData* note);
 };
 
 #endif // DBMANAGER_H

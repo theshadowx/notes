@@ -529,7 +529,7 @@ void MainWindow::setMainWindowVisibility(bool state)
 void MainWindow::initializeSettingsDatabase()
 {
     if(m_settingsDatabase->value("version", "NULL") == "NULL")
-        m_settingsDatabase->setValue("version", "0.8.0");
+        m_settingsDatabase->setValue("version", qApp->applicationVersion());
 
     if(m_settingsDatabase->value("defaultWindowWidth", "NULL") == "NULL")
         m_settingsDatabase->setValue("defaultWindowWidth", 757);

@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
     // Set application information
     app.setApplicationName ("Notes");
-    app.setApplicationVersion ("0.9");
+    app.setApplicationVersion ("0.9.0");
 
     // Prevent many instances of the app to be launched
     QString name = "com.awsomeness.notes";

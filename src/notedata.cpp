@@ -52,26 +52,6 @@ void NoteData::setContent(const QString &content)
     m_content = content;
 }
 
-bool NoteData::isModified() const
-{
-    return m_isModified;
-}
-
-void NoteData::setModified(bool isModified)
-{
-    m_isModified = isModified;
-}
-
-bool NoteData::isSelected() const
-{
-    return m_isSelected;
-}
-
-void NoteData::setSelected(bool isSelected)
-{
-    m_isSelected = isSelected;
-}
-
 int NoteData::scrollBarPosition() const
 {
     return m_scrollBarPosition;

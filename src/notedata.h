@@ -28,12 +28,6 @@ public:
     QString content() const;
     void setContent(const QString &content);
 
-    bool isModified() const;
-    void setModified(bool isModified);
-
-    bool isSelected() const;
-    void setSelected(bool isSelected);
-
     int scrollBarPosition() const;
     void setScrollBarPosition(int scrollBarPosition);
 

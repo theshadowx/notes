@@ -2,11 +2,24 @@
 #include <QtSql/QSqlQuery>
 #include <QTimeZone>
 #include <QDateTime>
+#include <QApplication>
 #include <QDebug>
+
+DBManager::DBManager(QObject* parent)
+    : QObject(parent)
+{
+    qRegisterMetaType<QList<NoteData*> >("QList<NoteData*>");
+    qRegisterMetaType<QList<NoteData*> >("QList<FolderData*>");
+    qRegisterMetaType<QList<NoteData*> >("QList<TagData*>");
+
+    m_db = QSqlDatabase::addDatabase("QSQLITE");
+}
 
 DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObject(parent)
 {
     qRegisterMetaType<QList<NoteData*> >("QList<NoteData*>");
+    qRegisterMetaType<QList<NoteData*> >("QList<FolderData*>");
+    qRegisterMetaType<QList<NoteData*> >("QList<TagData*>");
 
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(path);
@@ -17,56 +30,26 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
         qDebug() << "Database: connection ok";
     }
 
-    if(doCreate){
-        QSqlQuery query;
-        QString active = "CREATE TABLE active_notes ("
-                         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                         "creation_date INTEGER NOT NULL DEFAULT (0),"
-                         "modification_date INTEGER NOT NULL DEFAULT (0),"
-                         "deletion_date INTEGER NOT NULL DEFAULT (0),"
-                         "content TEXT, "
-                         "full_title TEXT,"
-                         "full_path TEXT,"
-                         "tags TEXT);";
-
-        query.exec(active);
-
-        QString active_index = "CREATE UNIQUE INDEX active_index on active_notes (id ASC);";
-        query.exec(active_index);
-
-        QString deleted = "CREATE TABLE deleted_notes ("
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-                          "creation_date INTEGER NOT NULL DEFAULT (0),"
-                          "modification_date INTEGER NOT NULL DEFAULT (0),"
-                          "deletion_date INTEGER NOT NULL DEFAULT (0),"
-                          "content TEXT,"
-                          "full_title TEXT,"
-                          "full_path TEXT,"
-                          "tags TEXT);";
-        query.exec(deleted);
-
-        QString folders = "CREATE TABLE folders ("
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-                          "name TEXT,"
-                          "parent_path TEXT,"
-                          "notes_cnt INTEGER NOT NULL DEFAULT (0));";
-        query.exec(folders);
-
-        QString folder_index = "CREATE UNIQUE INDEX folder_index on folders (id ASC);";
-        query.exec(folder_index);
-
-        QString tags  = "CREATE TABLE tags ("
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-                        "name TEXT,"
-                        "color TEXT,"
-                        "notes TEXT);";
-        query.exec(tags);
-
-        QString tag_index = "CREATE UNIQUE INDEX tag_index on tags (id ASC);";
-        query.exec(tag_index);
-    }
+    if(doCreate)
+        createTables();
 
 }
+
+
+void DBManager::open(const QString& path, bool doCreate)
+{
+    m_db.setDatabaseName(path);
+
+    if (!m_db.open()){
+        qDebug() << "Error: connection with database fail";
+    }else{
+        qDebug() << "Database: connection ok";
+    }
+
+    if(doCreate)
+        createTables();
+}
+
 
 bool DBManager::noteExist(NoteData* note) const
 {
@@ -93,6 +76,56 @@ bool DBManager::folderExist(int id) const
     return query.value(0).toInt() == 1;
 }
 
+void DBManager::createTables()
+{
+    QSqlQuery query;
+    QString active = "CREATE TABLE active_notes ("
+                     "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                     "creation_date INTEGER NOT NULL DEFAULT (0),"
+                     "modification_date INTEGER NOT NULL DEFAULT (0),"
+                     "deletion_date INTEGER NOT NULL DEFAULT (0),"
+                     "content TEXT, "
+                     "full_title TEXT,"
+                     "full_path TEXT,"
+                     "tags TEXT);";
+
+    query.exec(active);
+
+    QString active_index = "CREATE UNIQUE INDEX active_index on active_notes (id ASC);";
+    query.exec(active_index);
+
+    QString deleted = "CREATE TABLE deleted_notes ("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                      "creation_date INTEGER NOT NULL DEFAULT (0),"
+                      "modification_date INTEGER NOT NULL DEFAULT (0),"
+                      "deletion_date INTEGER NOT NULL DEFAULT (0),"
+                      "content TEXT,"
+                      "full_title TEXT,"
+                      "full_path TEXT,"
+                      "tags TEXT);";
+    query.exec(deleted);
+
+    QString folders = "CREATE TABLE folders ("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                      "name TEXT,"
+                      "parent_path TEXT,"
+                      "notes_cnt INTEGER NOT NULL DEFAULT (0));";
+    query.exec(folders);
+
+    QString folder_index = "CREATE UNIQUE INDEX folder_index on folders (id ASC);";
+    query.exec(folder_index);
+
+    QString tags  = "CREATE TABLE tags ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                    "name TEXT,"
+                    "color TEXT,"
+                    "notes TEXT);";
+    query.exec(tags);
+
+    QString tag_index = "CREATE UNIQUE INDEX tag_index on tags (id ASC);";
+    query.exec(tag_index);
+}
+
 QList<NoteData *> DBManager::getAllNotes()
 {
     QList<NoteData *> noteList;
@@ -103,7 +136,7 @@ QList<NoteData *> DBManager::getAllNotes()
     bool status = query.exec(queryStr);
     if(status){
         while(query.next()){
-            NoteData* note = new NoteData(this);
+            NoteData* note = new NoteData;
             int id =  query.value(0).toInt();
             qint64 epochDateTimeCreation = query.value(1).toLongLong();
             QDateTime dateTimeCreation = QDateTime::fromMSecsSinceEpoch(epochDateTimeCreation, QTimeZone::systemTimeZone());
@@ -123,6 +156,7 @@ QList<NoteData *> DBManager::getAllNotes()
             note->setTagIdSerial(tags);
 
             noteList.push_back(note);
+            note->moveToThread(qApp->thread());
         }
 
         emit notesReceived(noteList);
@@ -145,7 +179,7 @@ QList<NoteData*> DBManager::getAllNotes(const QString& fullPath)
     bool status = query.exec(queryStr);
     if(status){
         while(query.next()){
-            NoteData* note = new NoteData(this);
+            NoteData* note = new NoteData;
             int id =  query.value(0).toInt();
             qint64 epochDateTimeCreation = query.value(1).toLongLong();
             QDateTime dateTimeCreation = QDateTime::fromMSecsSinceEpoch(epochDateTimeCreation, QTimeZone::systemTimeZone());
@@ -165,6 +199,7 @@ QList<NoteData*> DBManager::getAllNotes(const QString& fullPath)
             note->setTagIdSerial(tags);
 
             noteList.push_back(note);
+            note->moveToThread(qApp->thread());
         }
 
         emit notesReceived(noteList);
@@ -182,7 +217,7 @@ QList<NoteData*> DBManager::getNotesInTrash()
     bool status = query.exec();
     if(status){
         while(query.next()){
-            NoteData* note = new NoteData(this);
+            NoteData* note = new NoteData;
             int id =  query.value(0).toInt();
             qint64 epochDateTimeCreation = query.value(1).toLongLong();
             QDateTime dateTimeCreation = QDateTime::fromMSecsSinceEpoch(epochDateTimeCreation, QTimeZone::systemTimeZone());
@@ -205,6 +240,7 @@ QList<NoteData*> DBManager::getNotesInTrash()
             note->setTagIdSerial(tags);
 
             noteList.push_back(note);
+            note->moveToThread(qApp->thread());
         }
 
         emit notesInTrashReceived(noteList);
@@ -386,7 +422,7 @@ QList<FolderData*> DBManager::getAllFolders()
     bool status = query.exec();
     if(status){
         while(query.next()){
-            FolderData* folder = new FolderData(this);
+            FolderData* folder = new FolderData;
             int id =  query.value(0).toInt();
             QString folderName = query.value(1).toString();
             QString folderPath = query.value(2).toString();
@@ -398,6 +434,7 @@ QList<FolderData*> DBManager::getAllFolders()
             folder->setNoteCnt(noteCnt);
 
             folderList.append(folder);
+            folder->moveToThread(qApp->thread());
         }
 
         emit foldersReceived(folderList);
@@ -435,10 +472,10 @@ bool DBManager::removeFolder(int id) const
 
     // Get all notes having a path that contains the id
     QString queryStr = QStringLiteral("SELECT * FROM active_notes "
-                                      "WHERE (full_path LIKE '%%1%') "
-                                      "OR (full_path LIKE '%_%1%') "
+                                      "WHERE (full_path='%1') "
+                                      "OR (full_path LIKE '%1_%') "
                                       "OR (full_path LIKE '%_%1_%') "
-                                      "OR (full_path LIKE '%_%1%')").arg(id);
+                                      "OR (full_path LIKE '%_%1')").arg(id);
 
     queryGetNotes.exec(queryStr);
     while(queryGetNotes.next()){
@@ -449,6 +486,7 @@ bool DBManager::removeFolder(int id) const
         QString content = queryGetNotes.value(4).toString();
         QString fullTitle = queryGetNotes.value(5).toString();
         QString fullPath = queryGetNotes.value(6).toString();
+        QString tags = queryGetNotes.value(7).toString();
 
         // remove each note from active_notes table
         queryStr = QStringLiteral("DELETE FROM active_notes "
@@ -460,14 +498,15 @@ bool DBManager::removeFolder(int id) const
 
         // add removed note to deleted_notes table
         queryStr = QString("INSERT INTO deleted_notes "
-                           "VALUES (%1, %2, %3, %4, '%5', '%6', '%7');")
+                           "VALUES (%1, %2, %3, %4, '%5', '%6', '%7', '%8');")
                    .arg(noteID)
                    .arg(epochDateTimeCreation)
                    .arg(epochDateTimeModification)
                    .arg(epochTimeDateDeleted)
                    .arg(content)
                    .arg(fullTitle)
-                   .arg(fullPath);
+                   .arg(fullPath)
+                   .arg(tags);
 
         queryAddTrashNotes.exec(queryStr);
         success &= (queryAddTrashNotes.numRowsAffected() == 1);
@@ -483,10 +522,10 @@ bool DBManager::removeFolder(int id) const
 
     // delete sub directories where their parentPath contains id
     queryStr = QStringLiteral("DELETE FROM folders "
-                              "WHERE (parent_path LIKE '%%1%') "
-                              "OR (parent_path LIKE '%_%1%') "
+                              "WHERE (parent_path='%1') "
+                              "OR (parent_path LIKE '%1_%') "
                               "OR (parent_path LIKE '%_%1_%') "
-                              "OR (parent_path LIKE '%_%1%')").arg(id);
+                              "OR (parent_path LIKE '%_%1')").arg(id);
     queryDeleteFolders.exec(queryStr);
 
     return success;
@@ -625,7 +664,16 @@ bool DBManager::removeTag(const TagData* tag) const
                .arg(tag->id());
 
     query.exec(queryStr);
+
     return (query.numRowsAffected() == 1);
+}
+
+void DBManager::removeTags(const QList<TagData*> tagList) const
+{
+    foreach (TagData* tag, tagList) {
+        if(tag != Q_NULLPTR)
+            removeTag(tag);
+    }
 }
 
 bool DBManager::modifyTag(const TagData* tag) const
@@ -656,5 +704,118 @@ int DBManager::getTagsLastRowID() const
     query.exec("SELECT seq from SQLITE_SEQUENCE WHERE name='tags';");
     query.next();
     return query.value(0).toInt();
+}
+
+void DBManager::onTablesLastRowIdRequested()
+{
+    QMutexLocker locket(&m_mutex);
+
+    int noteLastRowId = getNotesLastRowID();
+    int tagLastRowId = getTagsLastRowID();
+    int folderLastRowId = getFoldersLastRowID();
+
+    emit tablesLastRowIdReceived(noteLastRowId, tagLastRowId, folderLastRowId);
+}
+
+void DBManager::onFoldersRequested()
+{
+    QMutexLocker locket(&m_mutex);
+    getAllFolders();
+}
+
+void DBManager::onAddFolderRequested(FolderData* folder)
+{
+    QMutexLocker locker(&m_mutex);
+    addFolder(folder);
+}
+
+void DBManager::onRemoveFolderRequested(const int id)
+{
+    QMutexLocker locker(&m_mutex);
+    removeFolder(id);
+}
+
+void DBManager::onUpdateFolderRequested(const FolderData* folder)
+{
+    QMutexLocker locker(&m_mutex);
+    modifyFolder(folder);
+}
+
+void DBManager::onTagsRequested()
+{
+    QMutexLocker locket(&m_mutex);
+    getAllTags();
+}
+
+void DBManager::onAddTagRequested(const TagData* tag)
+{
+    QMutexLocker locker(&m_mutex);
+    addTag(tag);
+}
+
+void DBManager::onRemoveTagRequested(TagData* tag)
+{
+    QMutexLocker locker(&m_mutex);
+    removeTag(tag);
+}
+
+void DBManager::onRemoveTagsRequested(QList<TagData*> tagList)
+{
+    QMutexLocker locker(&m_mutex);
+    removeTags(tagList);
+}
+
+void DBManager::onUpdateTagRequested(const TagData* tag)
+{
+    QMutexLocker locker(&m_mutex);
+    modifyTag(tag);
+}
+
+void DBManager::onMigrateNoteInTrashResquested(NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    migrateNote(note);
+}
+
+void DBManager::onMigrateNoteResquested(NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    migrateTrash(note);
+}
+
+void DBManager::onNotesInTrashRequested()
+{
+    QMutexLocker locker(&m_mutex);
+    getNotesInTrash();
+}
+
+void DBManager::onAllNotesRequested()
+{
+    QMutexLocker locker(&m_mutex);
+    getAllNotes();
+}
+
+void DBManager::onNotesRequested(const QString& path)
+{
+    QMutexLocker locker(&m_mutex);
+    getAllNotes(path);
+}
+
+void DBManager::onAddNoteRequested(const NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    addNote(note);
+}
+
+void DBManager::onRemoveNoteRequested(NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    removeNote(note);
+}
+
+void DBManager::onUpdateNoteRequested(const NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    modifyNote(note);
 }
 

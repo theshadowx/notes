@@ -2,9 +2,21 @@
 #include <QDebug>
 
 TagNoteModel::TagNoteModel(QObject* parent):
-    QAbstractListModel(parent)
+    QAbstractListModel(parent),
+    m_tagModel(Q_NULLPTR)
 {
 
+}
+
+QModelIndex TagNoteModel::mapToSource(QModelIndex index)
+{
+    if(m_tagModel == Q_NULLPTR)
+        return QModelIndex();
+
+    if(!index.isValid())
+        return QModelIndex();
+
+    return m_tagModel->index(index.row());
 }
 
 QVariant TagNoteModel::data(const QModelIndex& index, int role) const
@@ -74,4 +86,5 @@ int TagNoteModel::rowCount(const QModelIndex& parent) const
 void TagNoteModel::setTagModel(TagModel* tagModel)
 {
     m_tagModel = tagModel;
+    emit layoutChanged();
 }

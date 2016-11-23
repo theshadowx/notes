@@ -25,7 +25,8 @@ public:
     TagData* tagData(const QModelIndex& index);
 
     QModelIndex indexFromId(int id);
-    QMap<int, QModelIndex> indexesFromIds(QList<int> idList);
+    QMap<int, QModelIndex> indexesFromIds(const QList<int>& idList);
+    QMap<QString, QModelIndex> indexesFromIds(const QList<QString>& idStringList);
 
     bool removeNoteId(QModelIndex index, int noteId);
     bool addNoteId(QModelIndex index, int noteId);
@@ -35,7 +36,6 @@ public:
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
-
 
 private:
     QList<TagData*> m_tagList;

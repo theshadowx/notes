@@ -55,6 +55,7 @@ void NoteModel::addListNote(QList<NoteData *> noteList)
     endInsertRows();
 
     foreach (NoteData* note, noteList) {
+        note->setParent(this);
         m_noteIdMap[note->id()] = note;
     }
 }
@@ -119,6 +120,13 @@ bool NoteModel::addTagIndex(const int noteId, const QModelIndex tagIndex)
     m_noteTagMap[noteId].append(tagIndex);
     m_noteIdMap[noteId]->addTagId(tagId);
     return true;
+}
+
+void NoteModel::addTagIndexes(const int noteId, const QModelIndexList& tagIndexes)
+{
+    foreach (QModelIndex index, tagIndexes) {
+        addTagIndex(noteId, index);
+    }
 }
 
 bool NoteModel::removeTagIndex(const int noteId, const QModelIndex tagIndex)

@@ -42,7 +42,6 @@ NoteWidget::~NoteWidget()
     delete ui;
 }
 
-
 void NoteWidget::setupNoteWidget()
 {
     m_addNoteButton = ui->addNoteButton;
@@ -641,6 +640,8 @@ void NoteWidget::showTagNoteMenu()
 
         QPoint gPos = m_tagNoteButton->parentWidget()->mapToGlobal(m_tagNoteButton->geometry().bottomLeft());
 
+        bool isTagSelectionModified = false;
+
         QMenu menu;
         menu.setObjectName(QStringLiteral("tagNoteMenu"));
         menu.show();
@@ -677,15 +678,6 @@ void NoteWidget::showTagNoteMenu()
         addtagNoteWidgetAction.setDefaultWidget(&addTagPb);
         menu.addAction(&addtagNoteWidgetAction);
 
-        QWidgetAction validateWidgetAction(&menu);
-        QPushButton validatePb;
-        validatePb.setObjectName(QStringLiteral("validateButton"));
-        validatePb.setText(tr("Validate"));
-        validatePb.setFlat(true);
-        validatePb.setFixedWidth(contentWidth);
-        validateWidgetAction.setDefaultWidget(&validatePb);
-        menu.addAction(&validateWidgetAction);
-
         // check / uncheck when the item is clicked
         connect(&listView, &QListView::pressed, [&](const QModelIndex& index){
             bool isChecked = index.data(Qt::CheckStateRole).toInt() == Qt::Checked;
@@ -696,19 +688,19 @@ void NoteWidget::showTagNoteMenu()
             }
         });
 
+        // init listview geometry
         connect(&noteTagModel, &TagNoteModel::layoutChanged, [&](){
             int bottomMargin = 6;
             int maxRowsInVisibleRegion = 7;
             int rowHeight = listView.sizeHintForIndex(noteTagModel.index(0)).height();
             int listViewMaxHeight =  (rowHeight * maxRowsInVisibleRegion) + bottomMargin;
             int listViewHeight = (rowHeight * noteTagModel.rowCount()) + bottomMargin;
+
             listViewHeight = noteTagModel.rowCount() <= maxRowsInVisibleRegion ? listViewHeight : listViewMaxHeight;
             listView.setFixedHeight(listViewHeight);
 
             if(noteTagModel.rowCount() > 0)
                 menu.insertSeparator(&addtagNoteWidgetAction);
-
-            validatePb.setEnabled(noteTagModel.rowCount() > 0);
         });
 
         connect(&noteTagModel, &TagNoteModel::dataChanged, [&](const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles){
@@ -722,6 +714,7 @@ void NoteWidget::showTagNoteMenu()
                 }else{
                     tagIndexes.removeOne(indexInTagModel);
                 }
+                isTagSelectionModified = true;
             }
         });
 
@@ -732,9 +725,9 @@ void NoteWidget::showTagNoteMenu()
                 emit menuAddTagClicked(indexSrc);
         });
 
-        connect(&validatePb, &QPushButton::clicked, [&](){
-            m_noteModel->setData(indexSrc, QVariant::fromValue(tagIndexes), NoteModel::NoteTagIndexList);
-            menu.hide();
+        connect(&menu, &QMenu::aboutToHide, [&](){
+            if(isTagSelectionModified)
+                m_noteModel->setData(indexSrc, QVariant::fromValue(tagIndexes), NoteModel::NoteTagIndexList);
         });
 
         emit noteTagMenuAboutTobeShown(indexSrc, menu);
@@ -800,7 +793,6 @@ void NoteWidget::onNoteViewViewportClicked()
         selectFirstNote();
     }
 }
-
 
 void NoteWidget::moveNoteToTop()
 {

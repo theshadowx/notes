@@ -93,7 +93,7 @@ private slots:
     void onTrashFolderSelected();
     void onAllNotesFolderSelected();
 
-    void onFolderSelected(const QString& folderPath, const int noteCount);
+    void onFolderSelected(const QString folderName, const QString& folderPath, const int noteCount);
     void onFolderAdded(FolderData* folder);
     void onFolderRemoved(const int folderId);
     void onFolderUpdated(const FolderData* folder);
@@ -104,6 +104,7 @@ private slots:
     void onTagUpdated(const TagData* tag);
 
     void onNoteSelectionChanged(QModelIndex selected, QModelIndex deselected);
+    void onNewNoteToBeAdded();
     void onNewNoteAdded(QModelIndex index);
     void onNoteAdded(NoteData* note);
     void onNoteRemoved(NoteData* note);

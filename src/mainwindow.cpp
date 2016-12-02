@@ -202,6 +202,7 @@ void MainWindow::setupSignalsSlots()
     connect(m_folderTagWidget, &FolderTagWidget::tagAboutToBeRemoved, m_noteWidget, &NoteWidget::removeTagFromNotes);
     // NoteWidget
     connect(m_noteWidget, &NoteWidget::noteSelectionChanged, this, &MainWindow::onNoteSelectionChanged);
+    connect(m_noteWidget, &NoteWidget::newNoteToBeAdded, this, &MainWindow::onNewNoteToBeAdded);
     connect(m_noteWidget, &NoteWidget::newNoteAdded, this, &MainWindow::onNewNoteAdded);
     connect(m_noteWidget, &NoteWidget::noteAdded, this, &MainWindow::onNoteAdded);
     connect(m_noteWidget, &NoteWidget::noteRemoved, this, &MainWindow::onNoteRemoved);
@@ -305,6 +306,8 @@ void MainWindow::onTrashFolderSelected()
     m_noteWidget->setNoteDeletionEnabled(false);
     setNoteEditabled(false);
 
+    m_noteWidget->setCurrentFolderName(QStringLiteral("Trash"));
+
     emit notesInTrashRequested();
 }
 
@@ -319,16 +322,19 @@ void MainWindow::onAllNotesFolderSelected()
     m_noteWidget->setNoteDeletionEnabled(false);
     setNoteEditabled(false);
 
+    m_noteWidget->setCurrentFolderName(QStringLiteral("All Notes"));
+
     // get notes from database  and them to the model
     emit allNotesRequested();
 }
 
-void MainWindow::onFolderSelected(const QString& folderPath, const int noteCount)
+void MainWindow::onFolderSelected(const QString folderName, const QString& folderPath, const int noteCount)
 {
     // initialize
     m_editorWidget->clearTextAndHeader();
     m_noteWidget->reset();
     m_noteWidget->setCurrentFolderPath(folderPath);
+    m_noteWidget->setCurrentFolderName(folderName);
 
     // enable Add/delete/edit of notes
     m_noteWidget->setAddingNoteEnabled(true);
@@ -355,6 +361,7 @@ void MainWindow::onFolderUpdated(const FolderData* folder)
 {
     Q_ASSERT_X(folder != Q_NULLPTR, "MainWindow::onFolderUpdated", "folder is null");
 
+    m_noteWidget->setCurrentFolderName(folder->name());
     emit updateFolderRequested(folder);
 }
 
@@ -404,6 +411,11 @@ void MainWindow::onNoteSelectionChanged(QModelIndex selected, QModelIndex desele
     }
 
     m_editorWidget->showNoteInEditor(selected);
+}
+
+void MainWindow::onNewNoteToBeAdded()
+{
+    m_editorWidget->clearTextAndHeader();
 }
 
 void MainWindow::onNewNoteAdded(QModelIndex index)

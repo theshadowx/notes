@@ -285,6 +285,7 @@ void NoteItemDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem& 
         QColor color = tagIndex.data(TagModel::TagColor).value<QColor>();
         color.setAlpha(128);
 
+        // check if the tag fits in the current line, if not increment the number of line.
         int tagRectWidth = fmTag.boundingRect(name).width() + 10;
         int futureUsedWidth = xAcc + tagRectWidth + BETWEEN_TAG_SPACE_X * currentNbTagInLine + 2 * SIDE_OFFSET;
         if( futureUsedWidth > rowWidth){
@@ -296,18 +297,73 @@ void NoteItemDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem& 
         }
 
         int xRect = xAcc + BETWEEN_TAG_SPACE_X * currentNbTagInLine + SIDE_OFFSET;
-        int yRect = option.rect.y() + BASIC_HEIGHT + nLine * (BETWEEN_TAG_SPACE_Y + TAG_HEIGHT);
-        xAcc += tagRectWidth;
+        int yRectIn = nLine * (BETWEEN_TAG_SPACE_Y + TAG_HEIGHT);
+        int yRect = option.rect.y() + BASIC_HEIGHT + yRectIn;
+        int tagRectHeight = TAG_HEIGHT;
+        Qt::AlignmentFlag textAlignment = Qt::AlignTop;
 
-        QRectF bgRectF(xRect, yRect, tagRectWidth, TAG_HEIGHT);
-        QRectF textRectF(xRect+4, yRect, tagRectWidth-8, TAG_HEIGHT);
+        if(index.row() == m_animatedIndex.row()){
+            switch (m_state) {
+            case Remove:
+            case MoveOut:{
+                textAlignment = Qt::AlignBottom;
+                double basicHeightAnim = BASIC_HEIGHT;
+                int currentRowHeight = sizeHint(option,index).height();
+                double initHeight = initialHeightOfRow(option, index);
+                double tagsHeight = initHeight -  BASIC_HEIGHT;
+                basicHeightAnim =  currentRowHeight > tagsHeight
+                                   ? currentRowHeight - tagsHeight
+                                   : 0;
+
+                xRect = xAcc + BETWEEN_TAG_SPACE_X * currentNbTagInLine + SIDE_OFFSET;
+                yRectIn = nLine * (BETWEEN_TAG_SPACE_Y + TAG_HEIGHT);
+                yRect = option.rect.y() + basicHeightAnim + yRectIn;
+
+                if(basicHeightAnim == 0){
+                    if(yRectIn < initHeight - BASIC_HEIGHT - currentRowHeight){
+                        tagRectHeight = (nLine + 1) * (TAG_HEIGHT) + nLine * BETWEEN_TAG_SPACE_Y  - (initHeight - BASIC_HEIGHT - currentRowHeight);
+                        yRect = option.rect.y();
+                        if(tagRectHeight < 0)
+                            tagRectHeight = 0;
+                    }else{
+                        yRect -=  initHeight - BASIC_HEIGHT - currentRowHeight;
+                    }
+                }
+                break;
+            }
+            case MoveIn:{
+                textAlignment = Qt::AlignTop;
+                double rate = m_timeLine->currentFrame()/(double) m_timeLine->endFrame();
+                double currentRowHeight = (1.0 - rate) * sizeHint(option,index).height();
+                int tagsSectionHeight = currentRowHeight - BASIC_HEIGHT;
+                tagRectHeight = tagsSectionHeight - yRectIn > TAG_HEIGHT ? TAG_HEIGHT :  tagsSectionHeight - yRectIn;
+
+                yRect = option.rect.y() + BASIC_HEIGHT + yRectIn;
+
+                if(currentRowHeight < BASIC_HEIGHT
+                        || yRect - option.rect.y() >= currentRowHeight){
+
+                    yRect = option.rect.y();
+                    tagRectHeight = 0;
+                }
+                break;
+            }
+            default:
+                break;
+            }
+        }
+
+        QRectF bgRectF(xRect, yRect, tagRectWidth, tagRectHeight);
+        QRectF textRectF(xRect+4, yRect, tagRectWidth-8, tagRectHeight);
 
         painter->setPen(Qt::NoPen);
         painter->setBrush(QBrush(color));
-        painter->drawRoundedRect(bgRectF,4,4);
+        painter->drawRoundedRect(bgRectF, 4, 4);
 
         painter->setPen(Qt::black);
-        painter->drawText(textRectF, name);
+        painter->drawText(textRectF, textAlignment, name);
+
+        xAcc += tagRectWidth;
     }
 
     painter->restore();

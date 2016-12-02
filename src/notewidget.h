@@ -33,6 +33,7 @@ public:
     void setNoteTagIndexes(QModelIndex index, QList<QPersistentModelIndex>& tagIndexes);
     void addTagIndexesToNote(const int noteId, QModelIndexList& tagIndexes);
     void setCurrentFolderPath(const QString& currentFolderPath);
+    void setCurrentFolderName(const QString& folderName);
     void reset();
     void updateNoteView();
     void prepareForTextEdition();
@@ -116,6 +117,7 @@ public slots:
 
 signals:
     void noteSelectionChanged(QModelIndex selected, QModelIndex deselected);
+    void newNoteToBeAdded();
     void newNoteAdded(QModelIndex index);
     void noteRemoved(NoteData* note);
     void noteAdded(NoteData* note);

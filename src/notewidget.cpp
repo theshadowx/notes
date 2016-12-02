@@ -342,6 +342,11 @@ void NoteWidget::setCurrentFolderPath(const QString& currentFolderPath)
     m_currentFolderPath = currentFolderPath;
 }
 
+void NoteWidget::setCurrentFolderName(const QString& folderName)
+{
+    ui->labelNotes->setText(folderName);
+}
+
 void NoteWidget::fillNoteModel(QList<NoteData*> noteList)
 {
     if(!noteList.isEmpty()){
@@ -402,20 +407,26 @@ void NoteWidget::addNewNoteIfEmpty ()
 
 void NoteWidget::onAddNoteButtonClicked()
 {
-    m_noteView->setAnimationEnabled(false);
+    if(!m_isOperationRunning && !m_autoSaveTimer->isActive()){
+        m_isOperationRunning = true;
 
-    if(!m_searchField->text().isEmpty()){
-        clearSearch();
-        m_selectedNoteBeforeSearchingInSource = QModelIndex();
-    }else if(!m_proxyNoteModel->filterRegExp().pattern().isEmpty()){
-        blockSignals(true);
-        clearTagFilter();
-        blockSignals(false);
+        m_noteView->setAnimationEnabled(false);
+
+        if(!m_searchField->text().isEmpty()){
+            clearSearch();
+            m_selectedNoteBeforeSearchingInSource = QModelIndex();
+        }else if(!m_proxyNoteModel->filterRegExp().pattern().isEmpty()){
+            blockSignals(true);
+            clearTagFilter();
+            blockSignals(false);
+        }
+
+        m_noteView->setAnimationEnabled(true);
+
+        addNewNote();
+
+        m_isOperationRunning = false;
     }
-
-    m_noteView->setAnimationEnabled(true);
-
-    addNewNote();
 }
 
 void NoteWidget::onRemoveNoteButtonClicked()
@@ -498,8 +509,13 @@ void NoteWidget::onSearchFieldTextChanged (const QString &keyword)
 void NoteWidget::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
 {
     Q_UNUSED(bottomRight)
+
     // start/restart the timer
-    m_autoSaveTimer->start(500);
+    if(m_isTempNoteExist){
+       m_autoSaveTimer->start(0);
+    }else{
+        m_autoSaveTimer->start(500);
+    }
 
     if(roles.contains(NoteModel::NoteTagIndexList)){
         int noteId = topLeft.data(NoteModel::NoteID).toInt();
@@ -547,6 +563,8 @@ void NoteWidget::addNewNote ()
             int row = m_currentSelectedNoteProxy.row();
             m_noteView->animateAddedRow(QModelIndex(),row, row);
         }else{
+            emit newNoteToBeAdded();
+
             ++m_noteCounter;
             NoteData* tmpNote = generateNote(m_noteCounter);
             m_isTempNoteExist = true;

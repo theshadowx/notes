@@ -7,6 +7,7 @@
 #include <QMenu>
 #include <QWidgetAction>
 #include <QColorDialog>
+#include <QScrollBar>
 #include <QDebug>
 
 FolderTagWidget::FolderTagWidget(QWidget *parent) :
@@ -21,23 +22,23 @@ FolderTagWidget::FolderTagWidget(QWidget *parent) :
     m_isTagModelInitialized(false),
     m_folderView(Q_NULLPTR),
     m_tagView(Q_NULLPTR),
-    m_generalListW(Q_NULLPTR),
+    m_generalFoldersView(Q_NULLPTR),
     m_addRootFolderButton(Q_NULLPTR),
-    m_deleteRootFolderButton(Q_NULLPTR),
+    m_removeFolderButton(Q_NULLPTR),
     m_addTagButton(Q_NULLPTR),
     m_deleteTagButton(Q_NULLPTR),
     m_clearTagSelectionButton(Q_NULLPTR)
 {
     ui->setupUi(this);
 
-    m_folderView = ui->folderTree;
-    m_tagView = ui->tagListView;
+    m_folderView = ui->folderView;
+    m_tagView = ui->tagView;
     m_addRootFolderButton = ui->addRootFolderButton;
-    m_deleteRootFolderButton = ui->delRootFolderButton;
+    m_removeFolderButton = ui->removeFolderButton;
     m_addTagButton = ui->addTagButton;
     m_deleteTagButton = ui->deleteTagButton;
     m_clearTagSelectionButton = ui->clearSelectionButton;
-    m_generalListW = ui->generalListW;
+    m_generalFoldersView = ui->generalFoldersView;
 
 
     m_folderView->setModel(m_folderModel);
@@ -50,7 +51,7 @@ FolderTagWidget::FolderTagWidget(QWidget *parent) :
 
     // add/delete folder button
     connect(m_addRootFolderButton, &QPushButton::clicked, this, &FolderTagWidget::onAddFolderButtonClicked);
-    connect(m_deleteRootFolderButton, &QPushButton::clicked, this, &FolderTagWidget::onDeleteFolderButtonClicked);
+    connect(m_removeFolderButton, &QPushButton::clicked, this, &FolderTagWidget::onDeleteFolderButtonClicked);
     // add/delete/select/deselect tag button
     connect(m_addTagButton, &QPushButton::clicked, this, &FolderTagWidget::onAddTagButtonClicked);
     connect(m_deleteTagButton, &QPushButton::clicked, this, &FolderTagWidget::onDeleteTagButtonClicked);
@@ -71,7 +72,7 @@ FolderTagWidget::FolderTagWidget(QWidget *parent) :
     connect(m_tagView, &QListView::customContextMenuRequested,this, &FolderTagWidget::showTagViewContextMenu);
     connect(m_tagView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FolderTagWidget::onTagSelectionChanged);
     // general List Widget / All Notes/ Trash
-    connect(m_generalListW, &QListWidget::currentRowChanged, this, &FolderTagWidget::onGeneralListWCurrentRowChanged);
+    connect(m_generalFoldersView, &QListWidget::currentRowChanged, this, &FolderTagWidget::onGeneralListWCurrentRowChanged);
     // inner connections
     connect(this, &FolderTagWidget::folderModelInitialized, this, &FolderTagWidget::onInitDone);
     connect(this, &FolderTagWidget::tagModelInitialized, this, &FolderTagWidget::onInitDone);
@@ -382,8 +383,8 @@ void FolderTagWidget::onFolderSelectionChanged(const QItemSelection& selected, c
         clearTagSelection();
 
         // clear the selection in the All Notes/ Trash listWidget
-        m_generalListW->clearSelection();
-        m_generalListW->setCurrentRow(-1);
+        m_generalFoldersView->clearSelection();
+        m_generalFoldersView->setCurrentRow(-1);
 
         // update the current Folder Path
         m_currentFolderPath = m_folderModel->data(selectedFolderIndex,
@@ -394,7 +395,10 @@ void FolderTagWidget::onFolderSelectionChanged(const QItemSelection& selected, c
         int noteCnt = m_folderModel->data(selectedFolderIndex,
                                            (int) FolderItem::FolderDataEnum::NoteCount).toInt();
 
-        emit folderSelected(m_currentFolderPath, noteCnt);
+        QString folderName = m_folderModel->data(selectedFolderIndex,
+                                                 (int) FolderItem::FolderDataEnum::Name).toString();
+
+        emit folderSelected(folderName, m_currentFolderPath, noteCnt);
     }
 }
 

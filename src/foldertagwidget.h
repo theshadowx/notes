@@ -61,9 +61,9 @@ private:
 
     QTreeView* m_folderView;
     QListView* m_tagView;
-    QListWidget* m_generalListW;
+    QListWidget* m_generalFoldersView;
     QPushButton* m_addRootFolderButton;
-    QPushButton* m_deleteRootFolderButton;
+    QPushButton* m_removeFolderButton;
     QPushButton* m_addTagButton;
     QPushButton* m_deleteTagButton;
     QPushButton* m_clearTagSelectionButton;
@@ -112,7 +112,7 @@ Q_SIGNALS:
     void folderRemoved(const int id);
     void folderUpdated(const FolderData* folder);
 
-    void folderSelected(const QString& folderPath, const int noteCnt);
+    void folderSelected(const QString& folderName, const QString& folderPath, const int noteCnt);
     void allNotesFolderSelected();
     void trashFolderSelected();
 

@@ -91,7 +91,7 @@
            <x>0</x>
            <y>0</y>
            <width>378</width>
-           <height>577</height>
+           <height>562</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -105,7 +105,7 @@
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>12</number>
+           <number>3</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -144,7 +144,53 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QListWidget" name="generalListW">
+              <widget class="QFrame" name="frameGeneral">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>21</height>
+                </size>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_2">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="generalLabel">
+                  <property name="frameShape">
+                   <enum>QFrame::NoFrame</enum>
+                  </property>
+                  <property name="text">
+                   <string>GENERAL FOLDERS</string>
+                  </property>
+                  <property name="indent">
+                   <number>5</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QListWidget" name="generalFoldersView">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -304,7 +350,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Folders</string>
+                   <string>FOLDERS</string>
                   </property>
                   <property name="indent">
                    <number>5</number>
@@ -344,6 +390,9 @@
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>
+                  <property name="toolTip">
+                   <string>Add root folder</string>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -359,7 +408,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="delRootFolderButton">
+                 <widget class="QPushButton" name="removeFolderButton">
                   <property name="minimumSize">
                    <size>
                     <width>18</width>
@@ -374,6 +423,9 @@
                   </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>Remove folder</string>
                   </property>
                   <property name="text">
                    <string/>
@@ -393,7 +445,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QTreeView" name="folderTree">
+              <widget class="QTreeView" name="folderView">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -543,7 +595,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Tags</string>
+                   <string>TAGS</string>
                   </property>
                   <property name="indent">
                    <number>5</number>
@@ -583,6 +635,9 @@
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>
+                  <property name="toolTip">
+                   <string>Clear tag selection</string>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -613,6 +668,9 @@
                   </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add tag</string>
                   </property>
                   <property name="text">
                    <string/>
@@ -645,6 +703,9 @@
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>
+                  <property name="toolTip">
+                   <string>Remove selected tag</string>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -663,7 +724,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QListView" name="tagListView">
+              <widget class="QListView" name="tagView">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -713,18 +774,35 @@
               </spacer>
              </item>
             </layout>
-            <zorder>generalListW</zorder>
+            <zorder>generalFoldersView</zorder>
             <zorder>vSpacerGenFolder</zorder>
             <zorder>frameFolder</zorder>
-            <zorder>folderTree</zorder>
+            <zorder>folderView</zorder>
             <zorder>vSpacerTagFolder</zorder>
             <zorder>frameTag</zorder>
-            <zorder>tagListView</zorder>
+            <zorder>tagView</zorder>
             <zorder>verticalSpacer</zorder>
+            <zorder>frameGeneral</zorder>
            </widget>
           </item>
          </layout>
         </widget>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QFrame" name="frame">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>15</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
        </widget>
       </item>
      </layout>

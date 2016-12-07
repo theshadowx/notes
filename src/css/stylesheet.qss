@@ -2,6 +2,10 @@ QFrame{background-color: "#EEEEEE";}
 
 QLabel{font-family:"Roboto"; color:rgb(26, 26, 26);}
 
+#centralWidget{
+    background-color : transparent;
+}
+
 #frameTrafficLight{background-color: transparent}
 #frameDecorator{border: none; border-bottom: 1px solid rgb(210,210,210); background-color: rgb(117, 117, 117)}
 

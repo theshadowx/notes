@@ -34,6 +34,20 @@ public:
 
     void setMainWindowVisibility(bool state);
 
+    enum class StretchSide{
+        None = 0,
+        Left,
+        Right,
+        Top,
+        Bottom,
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight
+        };
+
+    Q_ENUM(StretchSide)
+
 protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
@@ -66,7 +80,9 @@ private:
     int m_mousePressX;
     int m_mousePressY;
     int m_textEditLeftPadding;
+    StretchSide m_stretchSide;
     bool m_canMoveWindow;
+    bool m_canStretchWindow;
     bool m_isContentModified;
 
     void setupMainWindow();

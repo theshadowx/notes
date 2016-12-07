@@ -16,6 +16,7 @@
 #include <QWidgetAction>
 #include <QtConcurrent>
 #include <QThread>
+#include <QDesktopWidget>
 
 MainWindow::MainWindow (QWidget *parent) :
     QMainWindow (parent),
@@ -32,6 +33,7 @@ MainWindow::MainWindow (QWidget *parent) :
     m_folderTagWidget(Q_NULLPTR),
     m_noteWidget(Q_NULLPTR),
     m_editorWidget(Q_NULLPTR),
+    m_canStretchWindow(false),
     m_canMoveWindow(false),
     m_isContentModified(false)
 {
@@ -58,6 +60,7 @@ void MainWindow::setupMainWindow ()
 {
 #ifdef Q_OS_LINUX
     this->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
 #elif _WIN32
     this->setWindowFlags(Qt::CustomizeWindowHint);
 #elif __APPLE__
@@ -73,6 +76,10 @@ void MainWindow::setupMainWindow ()
     m_folderTagWidget = ui->folderTagWidget;
     m_noteWidget = ui->noteWidget;
     m_editorWidget = ui->editorWidget;
+
+    ui->frame->installEventFilter(this);
+    ui->centralWidget->setMouseTracking(true);
+    this->setMouseTracking(true);
 
     QPalette pal(palette());
     pal.setColor(QPalette::Background, QColor(248, 248, 248));
@@ -641,15 +648,41 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::mousePressEvent (QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton){
-        if(event->pos().x() < this->width() - 5
-                && event->pos().x() >5
-                && event->pos().y() < this->height()-5
-                && event->pos().y() > 5){
+    m_mousePressX = event->x();
+    m_mousePressY = event->y();
 
-            m_canMoveWindow = true;
-            m_mousePressX = event->x();
-            m_mousePressY = event->y();
+    if(m_mousePressX < this->width() - 10
+            && m_mousePressX >10
+            && m_mousePressY < this->height()-10
+            && m_mousePressY > 10){
+
+//        ui->frameLeft->setCursor(Qt::ClosedHandCursor);
+//        ui->frameRight->setCursor(Qt::ClosedHandCursor);
+        m_canMoveWindow = true;
+    }else{
+        m_canStretchWindow = true;
+        if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
+                && (m_mousePressY < 10 && m_mousePressY > 0)){
+            m_stretchSide = StretchSide::TopRight;
+        }else if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+            m_stretchSide = StretchSide::BottomRight;
+        }else if((m_mousePressX < 10 && m_mousePressX > 0)
+                 && (m_mousePressY < 10 && m_mousePressY > 0)){
+            m_stretchSide = StretchSide::TopLeft;
+        }else if((m_mousePressX < 10 && m_mousePressX > 0)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+            m_stretchSide = StretchSide::BottomLeft;
+        }else if(m_mousePressX < this->width() && m_mousePressX > this->width() - 10){
+            m_stretchSide = StretchSide::Right;
+        }else if(m_mousePressX < 10 && m_mousePressX > 0){
+            m_stretchSide = StretchSide::Left;
+        }else if(m_mousePressY < this->height() && m_mousePressY > this->height() - 10){
+            m_stretchSide = StretchSide::Bottom;
+        }else if(m_mousePressY < 10 && m_mousePressY > 0){
+            m_stretchSide = StretchSide::Top;
+        }else{
+            m_stretchSide = StretchSide::None;
         }
     }
 
@@ -658,18 +691,161 @@ void MainWindow::mousePressEvent (QMouseEvent* event)
 
 void MainWindow::mouseMoveEvent (QMouseEvent* event)
 {
+    if(!m_canStretchWindow && !m_canMoveWindow){
+        m_mousePressX = event->x();
+        m_mousePressY = event->y();
+
+        if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
+                && (m_mousePressY < 10 && m_mousePressY > 0)){
+            m_stretchSide = StretchSide::TopRight;
+        }else if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+            m_stretchSide = StretchSide::BottomRight;
+        }else if((m_mousePressX < 10 && m_mousePressX > 0)
+                 && (m_mousePressY < 10 && m_mousePressY > 0)){
+            m_stretchSide = StretchSide::TopLeft;
+        }else if((m_mousePressX < 10 && m_mousePressX > 0)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+            m_stretchSide = StretchSide::BottomLeft;
+        }else if(m_mousePressX < this->width() && m_mousePressX > this->width() - 10){
+            m_stretchSide = StretchSide::Right;
+        }else if(m_mousePressX < 10 && m_mousePressX > 0){
+            m_stretchSide = StretchSide::Left;
+        }else if(m_mousePressY < this->height() && m_mousePressY > this->height() - 10){
+            m_stretchSide = StretchSide::Bottom;
+        }else if(m_mousePressY < 10 && m_mousePressY > 0){
+            m_stretchSide = StretchSide::Top;
+        }else{
+            m_stretchSide = StretchSide::None;
+        }
+    }
+
+    if(!m_canMoveWindow){
+        switch (m_stretchSide) {
+        case StretchSide::Right:
+        case StretchSide::Left:
+            ui->centralWidget->setCursor(Qt::SizeHorCursor);
+            break;
+        case StretchSide::Top:
+        case StretchSide::Bottom:
+            ui->centralWidget->setCursor(Qt::SizeVerCursor);
+            break;
+        case StretchSide::TopRight:
+        case StretchSide::BottomLeft:
+            ui->centralWidget->setCursor(Qt::SizeBDiagCursor);
+            break;
+        case StretchSide::TopLeft:
+        case StretchSide::BottomRight:
+            ui->centralWidget->setCursor(Qt::SizeFDiagCursor);
+            break;
+        default:
+            if(!m_canStretchWindow)
+                ui->centralWidget->setCursor(Qt::ArrowCursor);
+            break;
+        }
+    }
+
     if(m_canMoveWindow){
-        this->setCursor(Qt::ClosedHandCursor);
         int dx = event->globalX() - m_mousePressX;
         int dy = event->globalY() - m_mousePressY;
         move (dx, dy);
+
+    }else if(m_canStretchWindow){
+        int newX = x();
+        int newY = y();
+        int newWidth = width();
+        int newHeight = height();
+
+        int minY =  QApplication::desktop()->availableGeometry().y();
+
+        switch (m_stretchSide) {
+        case StretchSide::Right:
+            newWidth = abs(event->globalX()-this->x()+1);
+            newWidth = newWidth < minimumWidth() ? minimumWidth() : newWidth;
+            break;
+        case StretchSide::Left:
+            newX = event->globalX() - m_mousePressX;
+            newX = newX > 0 ? newX : 0;
+            newX = newX > geometry().bottomRight().x() - minimumWidth() ? geometry().bottomRight().x() - minimumWidth() : newX;
+            newWidth = geometry().topRight().x() - newX + 1;
+            newWidth = newWidth < minimumWidth() ? minimumWidth() : newWidth;
+            break;
+        case StretchSide::Top:
+            newY = event->globalY() - m_mousePressY;
+            newY = newY < minY ? minY : newY;
+            newY = newY > geometry().bottomRight().y() - minimumHeight() ? geometry().bottomRight().y() - minimumHeight() : newY;
+            newHeight = geometry().bottomLeft().y() - newY + 1;
+            newHeight = newHeight < minimumHeight() ? minimumHeight() : newHeight ;
+
+            break;
+        case StretchSide::Bottom:
+            newHeight = abs(event->globalY()-y()+1);
+            newHeight = newHeight < minimumHeight() ? minimumHeight() : newHeight;
+
+            break;
+        case StretchSide::TopLeft:
+            newX = event->globalX() - m_mousePressX;
+            newX = newX < 0 ? 0: newX;
+            newX = newX > geometry().bottomRight().x() - minimumWidth() ? geometry().bottomRight().x()-minimumWidth() : newX;
+
+            newY = event->globalY() - m_mousePressY;
+            newY = newY < minY ? minY : newY;
+            newY = newY > geometry().bottomRight().y() - minimumHeight() ? geometry().bottomRight().y() - minimumHeight() : newY;
+
+            newWidth = geometry().bottomRight().x() - newX + 1;
+            newWidth = newWidth < minimumWidth() ? minimumWidth() : newWidth;
+
+            newHeight = geometry().bottomRight().y() - newY + 1;
+            newHeight = newHeight < minimumHeight() ? minimumHeight() : newHeight;
+
+            break;
+        case StretchSide::BottomLeft:
+            newX = event->globalX() - m_mousePressX;
+            newX = newX < 0 ? 0: newX;
+            newX = newX > geometry().bottomRight().x() - minimumWidth() ? geometry().bottomRight().x()-minimumWidth() : newX;
+
+            newWidth = geometry().bottomRight().x() - newX + 1;
+            newWidth = newWidth < minimumWidth() ? minimumWidth() : newWidth;
+
+            newHeight = event->globalY() - y() + 1;
+            newHeight = newHeight < minimumHeight() ? minimumHeight() : newHeight;
+
+            break;
+        case StretchSide::TopRight:
+            newY = event->globalY() - m_mousePressY;
+            newY = newY > geometry().bottomRight().y() - minimumHeight() ? geometry().bottomRight().y() - minimumHeight() : newY;
+            newY = newY < minY ? minY : newY;
+
+            newWidth = event->globalX() - x() + 1;
+            newWidth = newWidth < minimumWidth() ? minimumWidth() : newWidth;
+
+            newHeight = geometry().bottomRight().y() - newY + 1;
+            newHeight = newHeight < minimumHeight() ? minimumHeight() : newHeight;
+
+            break;
+        case StretchSide::BottomRight:
+            newWidth = event->globalX() - x() + 1;
+            newWidth = newWidth < minimumWidth() ? minimumWidth() : newWidth;
+
+            newHeight = event->globalY() - y() + 1;
+            newHeight = newHeight < minimumHeight() ? minimumHeight() : newHeight;
+
+            break;
+        default:
+            break;
+        }
+
+        setGeometry(newX, newY, newWidth, newHeight);
     }
+    event->accept();
 }
 
 void MainWindow::mouseReleaseEvent (QMouseEvent *event)
 {
     m_canMoveWindow = false;
-    this->unsetCursor();
+    m_canStretchWindow = false;
+//    ui->frameLeft->setCursor(Qt::ArrowCursor);
+//    ui->frameRight->setCursor(Qt::ArrowCursor);
     event->accept();
 }
 
@@ -790,6 +966,11 @@ bool MainWindow::eventFilter (QObject *object, QEvent *event)
                 qApp->setStyleSheet(qApp->styleSheet());
             }
         }
+
+        if(object == ui->frame){
+            ui->centralWidget->setCursor(Qt::ArrowCursor);
+        }
+
         break;
 
     case QEvent::Leave:

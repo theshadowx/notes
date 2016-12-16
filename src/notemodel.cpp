@@ -304,7 +304,7 @@ Qt::ItemFlags NoteModel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
-    return QAbstractListModel::flags(index);
+    return QAbstractListModel::flags(index) | Qt::ItemIsDragEnabled;
 }
 
 int NoteModel::rowCount(const QModelIndex &parent) const

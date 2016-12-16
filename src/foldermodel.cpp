@@ -105,7 +105,7 @@ Qt::ItemFlags FolderModel::flags(const QModelIndex& index) const
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
-    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable  | Qt::ItemIsDropEnabled;
 }
 
 bool FolderModel::removeFolder(int row, const QModelIndex& parent)

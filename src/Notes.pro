@@ -43,7 +43,8 @@ SOURCES += \
     folderitemdelegate.cpp \
     foldertagwidget.cpp \
     notewidget.cpp \
-    editorwidget.cpp
+    editorwidget.cpp \
+    folderview.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -63,7 +64,8 @@ HEADERS  += \
     folderitemdelegate.h \
     foldertagwidget.h \
     notewidget.h \
-    editorwidget.h
+    editorwidget.h \
+    folderview.h
 
 FORMS += $$PWD/mainwindow.ui \
     foldertagwidget.ui \

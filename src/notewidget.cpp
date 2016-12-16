@@ -27,6 +27,7 @@ NoteWidget::NoteWidget(QWidget *parent) :
     m_isAddingNoteEnabled(true),
     m_isTempNoteExist(false),
     m_isOperationRunning(false),
+    m_doSaveImmediately(false),
     m_noteCounter(0)
 {
     ui->setupUi(this);
@@ -100,7 +101,7 @@ void NoteWidget::setupSignalsSlots()
     connect(m_searchField, &QLineEdit::textChanged, this, &NoteWidget::onSearchFieldTextChanged);
     // noteView / viewport clicked / note clicked
     connect(m_noteView, &NoteView::viewportClicked, this, &NoteWidget::onNoteViewViewportClicked);
-    connect(m_noteView, &NoteView::clicked, this, &NoteWidget::onNoteClicked);
+    connect(m_noteView, &NoteView::pressed, this, &NoteWidget::onNotePressed);
     // Update note count label
     connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsInserted, this, &NoteWidget::updateNoteCountLabel);
     connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsRemoved, this, &NoteWidget::updateNoteCountLabel);
@@ -344,6 +345,8 @@ void NoteWidget::setCurrentFolderPath(const QString& currentFolderPath)
 void NoteWidget::setCurrentFolderName(const QString& folderName)
 {
     ui->labelNotes->setText(folderName);
+    bool enableDrag = !(folderName == QStringLiteral("Trash") || folderName == QStringLiteral("All Notes"));
+    m_noteView->setDragEnabled(enableDrag);
 }
 
 void NoteWidget::fillNoteModel(QList<NoteData*> noteList)
@@ -404,6 +407,18 @@ void NoteWidget::addNewNoteIfEmpty ()
         addNewNote();
 }
 
+void NoteWidget::modifyNoteFolder(const QModelIndex& index, const QString& fullPath)
+{
+    QModelIndex indexInSrc = m_proxyNoteModel->mapToSource(index);
+    qDebug() << indexInSrc;
+    m_doSaveImmediately = true;
+    m_noteModel->setData(indexInSrc, fullPath, NoteModel::NotePath);
+    m_doSaveImmediately = false;
+
+    NoteData* note = m_noteModel->removeNote(indexInSrc);
+    note->deleteLater();
+}
+
 void NoteWidget::onAddNoteButtonClicked()
 {
     if(!m_isOperationRunning && !m_autoSaveTimer->isActive()){
@@ -435,7 +450,7 @@ void NoteWidget::onRemoveNoteButtonClicked()
     m_deleteNoteButton->blockSignals(false);
 }
 
-void NoteWidget::onNoteClicked (const QModelIndex& index)
+void NoteWidget::onNotePressed (const QModelIndex& index)
 {
     if(sender() != Q_NULLPTR){
         selectNote(index);
@@ -510,7 +525,7 @@ void NoteWidget::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
     Q_UNUSED(bottomRight)
 
     // start/restart the timer
-    if(m_isTempNoteExist){
+    if(m_isTempNoteExist || m_doSaveImmediately){
        m_autoSaveTimer->start(0);
     }else{
         m_autoSaveTimer->start(500);

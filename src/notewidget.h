@@ -34,6 +34,7 @@ public:
     void addTagIndexesToNote(const int noteId, QModelIndexList& tagIndexes);
     void setCurrentFolderPath(const QString& currentFolderPath);
     void setCurrentFolderName(const QString& folderName);
+    void modifyNoteFolder(const QModelIndex& index, const QString& fullPath);
     void reset();
     void updateNoteView();
     void prepareForTextEdition();
@@ -72,6 +73,7 @@ private:
     bool m_isNoteEditable;
     bool m_isTempNoteExist;
     bool m_isOperationRunning;
+    bool m_doSaveImmediately;
     int m_noteCounter;
 
     void setupNoteWidget();
@@ -95,7 +97,7 @@ public slots:
     void initNotes(QList<NoteData*> noteList);
     void onAddNoteButtonClicked();
     void onRemoveNoteButtonClicked();
-    void onNoteClicked(const QModelIndex &index);
+    void onNotePressed(const QModelIndex &index);
     void onNoteModelRowsRemoved(const QModelIndex &parent, int first, int last);
     void onSearchFieldTextChanged(const QString& keyword);
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);

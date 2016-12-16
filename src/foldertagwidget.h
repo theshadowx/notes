@@ -3,12 +3,12 @@
 
 #include <QWidget>
 #include <QListView>
-#include <QTreeView>
 #include <QListWidget>
 #include <QPushButton>
 
 #include "foldermodel.h"
 #include "tagmodel.h"
+#include "folderview.h"
 
 namespace Ui {
     class FolderTagWidget;
@@ -55,11 +55,11 @@ private:
 
     FolderModel* m_folderModel;
     TagModel* m_tagModel;
+    FolderView* m_folderView;
 
     bool m_isFolderModelInitialized;
     bool m_isTagModelInitialized;
 
-    QTreeView* m_folderView;
     QListView* m_tagView;
     QListWidget* m_generalFoldersView;
     QPushButton* m_addRootFolderButton;
@@ -111,6 +111,7 @@ Q_SIGNALS:
     void folderAdded(FolderData* folder);
     void folderRemoved(const int id);
     void folderUpdated(const FolderData* folder);
+    void noteDropped(const QModelIndex& index, const QString& fullPath);
 
     void folderSelected(const QString& folderName, const QString& folderPath, const int noteCnt);
     void allNotesFolderSelected();

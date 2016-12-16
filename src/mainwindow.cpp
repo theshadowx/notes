@@ -207,6 +207,7 @@ void MainWindow::setupSignalsSlots()
     connect(m_folderTagWidget, &FolderTagWidget::tagSelectionChanged, m_noteWidget, &NoteWidget::filterByTag);
     connect(m_folderTagWidget, &FolderTagWidget::tagSelectionCleared, m_noteWidget, &NoteWidget::clearTagFilter);
     connect(m_folderTagWidget, &FolderTagWidget::tagAboutToBeRemoved, m_noteWidget, &NoteWidget::removeTagFromNotes);
+    connect(m_folderTagWidget, &FolderTagWidget::noteDropped, this, &MainWindow::onNoteDropped);
     // NoteWidget
     connect(m_noteWidget, &NoteWidget::noteSelectionChanged, this, &MainWindow::onNoteSelectionChanged);
     connect(m_noteWidget, &NoteWidget::newNoteToBeAdded, this, &MainWindow::onNewNoteToBeAdded);
@@ -370,6 +371,11 @@ void MainWindow::onFolderUpdated(const FolderData* folder)
 
     m_noteWidget->setCurrentFolderName(folder->name());
     emit updateFolderRequested(folder);
+}
+
+void MainWindow::onNoteDropped(QModelIndex index, QString fullPath)
+{
+    m_noteWidget->modifyNoteFolder(index, fullPath);
 }
 
 void MainWindow::onTagAdded(TagData* tag)

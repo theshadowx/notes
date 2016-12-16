@@ -113,6 +113,7 @@ private slots:
     void onFolderAdded(FolderData* folder);
     void onFolderRemoved(const int folderId);
     void onFolderUpdated(const FolderData* folder);
+    void onNoteDropped(QModelIndex index, QString fullPath);
 
     void onTagAdded(TagData* tag);
     void onTagRemoved(TagData* tag);

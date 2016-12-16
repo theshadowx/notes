@@ -66,8 +66,9 @@ FolderTagWidget::FolderTagWidget(QWidget *parent) :
     connect(m_tagModel, &TagModel::rowsRemoved, this, &FolderTagWidget::onTagModelRowsRemoved);
     connect(m_tagModel, &TagModel::rowsInserted, this, &FolderTagWidget::onTagModelRowsInserted);
     // folderView / folder selected / context menu
-    connect(m_folderView, &QTreeView::customContextMenuRequested, this, &FolderTagWidget::showFolderViewContextMenu);
+    connect(m_folderView, &FolderView::customContextMenuRequested, this, &FolderTagWidget::showFolderViewContextMenu);
     connect(m_folderView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FolderTagWidget::onFolderSelectionChanged);
+    connect(m_folderView, &FolderView::noteDropped, this, &FolderTagWidget::noteDropped);
     // tagView contextMenu / selection changed
     connect(m_tagView, &QListView::customContextMenuRequested,this, &FolderTagWidget::showTagViewContextMenu);
     connect(m_tagView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FolderTagWidget::onTagSelectionChanged);

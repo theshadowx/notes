@@ -139,7 +139,7 @@ void NoteView::init()
 
 void NoteView::mouseMoveEvent(QMouseEvent*e)
 {
-    if(!m_isMousePressed)
+    if(dragEnabled())
         QListView::mouseMoveEvent(e);
 }
 

@@ -34,7 +34,7 @@ public:
     void addTagIndexesToNote(const int noteId, QModelIndexList& tagIndexes);
     void setCurrentFolderPath(const QString& currentFolderPath);
     void setCurrentFolderName(const QString& folderName);
-    void modifyNoteFolder(const QModelIndex& index, const QString& fullPath);
+    void updateDroppedNote(const QModelIndex& index, const QString& fullPath);
     void reset();
     void updateNoteView();
     void prepareForTextEdition();
@@ -63,6 +63,7 @@ private:
 
     QSortFilterProxyModel* m_proxyNoteModel;
     QModelIndex m_currentSelectedNoteProxy;
+    QModelIndex m_droppedIndex;
     QPersistentModelIndex m_selectedNoteBeforeSearchingInSource;
     QQueue<QString> m_searchQueue;
     QQueue<QString> m_filterTagQueue;
@@ -73,7 +74,7 @@ private:
     bool m_isNoteEditable;
     bool m_isTempNoteExist;
     bool m_isOperationRunning;
-    bool m_doSaveImmediately;
+    bool m_isNoteDropped;
     int m_noteCounter;
 
     void setupNoteWidget();
@@ -86,6 +87,7 @@ private:
     void fillNoteModel(QList<NoteData*> noteList);
     void selectFirstNote();
     void moveNoteToTop();
+    void clearSelection();
     void clearSearch();
     void clearFilter();
     void findNotesContaining(const QString &keyword);
@@ -97,7 +99,7 @@ public slots:
     void initNotes(QList<NoteData*> noteList);
     void onAddNoteButtonClicked();
     void onRemoveNoteButtonClicked();
-    void onNotePressed(const QModelIndex &index);
+    void onNoteClicked(const QModelIndex &index);
     void onNoteModelRowsRemoved(const QModelIndex &parent, int first, int last);
     void onSearchFieldTextChanged(const QString& keyword);
     void onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);

@@ -377,7 +377,7 @@ void MainWindow::onFolderUpdated(const FolderData* folder)
 
 void MainWindow::onNoteDropped(QModelIndex index, QString fullPath)
 {
-    m_noteWidget->modifyNoteFolder(index, fullPath);
+    m_noteWidget->updateDroppedNote(index, fullPath);
 }
 
 void MainWindow::onTagAdded(TagData* tag)

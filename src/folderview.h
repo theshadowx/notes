@@ -11,6 +11,7 @@ public:
 
 protected:
     void dropEvent(QDropEvent *e) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent* e) Q_DECL_OVERRIDE;
 
 signals:
     void noteDropped(const QModelIndex& index, const QString& fullPath);

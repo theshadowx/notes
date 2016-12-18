@@ -27,7 +27,7 @@ NoteWidget::NoteWidget(QWidget *parent) :
     m_isAddingNoteEnabled(true),
     m_isTempNoteExist(false),
     m_isOperationRunning(false),
-    m_doSaveImmediately(false),
+    m_isNoteDropped(false),
     m_noteCounter(0)
 {
     ui->setupUi(this);
@@ -101,7 +101,7 @@ void NoteWidget::setupSignalsSlots()
     connect(m_searchField, &QLineEdit::textChanged, this, &NoteWidget::onSearchFieldTextChanged);
     // noteView / viewport clicked / note clicked
     connect(m_noteView, &NoteView::viewportClicked, this, &NoteWidget::onNoteViewViewportClicked);
-    connect(m_noteView, &NoteView::pressed, this, &NoteWidget::onNotePressed);
+    connect(m_noteView, &NoteView::clicked, this, &NoteWidget::onNoteClicked);
     // Update note count label
     connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsInserted, this, &NoteWidget::updateNoteCountLabel);
     connect(m_proxyNoteModel, &QSortFilterProxyModel::rowsRemoved, this, &NoteWidget::updateNoteCountLabel);
@@ -291,17 +291,17 @@ void NoteWidget::clearTagFilter()
 void NoteWidget::onNoteChangedTimeoutTriggered()
 {
     m_autoSaveTimer->stop();
-    QModelIndex index = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
+    QModelIndex proxyIndex = m_isNoteDropped ? m_droppedIndex : m_currentSelectedNoteProxy;
+    QModelIndex index = m_proxyNoteModel->mapToSource(proxyIndex);
+
     Q_ASSERT_X(index.isValid(), "NoteWidget::onNoteChangedTimeoutTriggered", "index is not valid");
 
     NoteData* note = m_noteModel->getNote(index);
+    emit (m_isTempNoteExist? noteAdded(note) : noteUpdated(note));
 
-    if(m_isTempNoteExist){
-        m_isTempNoteExist = false;
-        emit noteAdded(note);
-    }else{
-        emit noteUpdated(note);
-    }
+    m_isTempNoteExist = false;
+    m_isNoteDropped = false;
+    m_droppedIndex = QModelIndex();
 }
 
 void NoteWidget::updateNoteView()
@@ -407,16 +407,33 @@ void NoteWidget::addNewNoteIfEmpty ()
         addNewNote();
 }
 
-void NoteWidget::modifyNoteFolder(const QModelIndex& index, const QString& fullPath)
+void NoteWidget::updateDroppedNote(const QModelIndex& index, const QString& fullPath)
 {
+
+
     QModelIndex indexInSrc = m_proxyNoteModel->mapToSource(index);
-    qDebug() << indexInSrc;
-    m_doSaveImmediately = true;
+    m_droppedIndex = index;
+    m_isNoteDropped = true;
     m_noteModel->setData(indexInSrc, fullPath, NoteModel::NotePath);
-    m_doSaveImmediately = false;
 
     NoteData* note = m_noteModel->removeNote(indexInSrc);
     note->deleteLater();
+
+    if(m_currentSelectedNoteProxy.row() == index.row()){
+        m_currentSelectedNoteProxy = QModelIndex();
+    }else if(m_currentSelectedNoteProxy.row() > index.row()){
+        m_currentSelectedNoteProxy = m_proxyNoteModel->index(m_currentSelectedNoteProxy.row() - 1, 0);
+    }
+
+    if(m_proxyNoteModel->rowCount() == 0){
+        clearSelection();
+    }else if(!m_currentSelectedNoteProxy.isValid()){
+        if(m_proxyNoteModel->rowCount() == index.row()){
+            selectNote(m_proxyNoteModel->index(index.row()-1,0));
+        }else{
+            selectNote(m_proxyNoteModel->index(index.row(),0));
+        }
+    }
 }
 
 void NoteWidget::onAddNoteButtonClicked()
@@ -450,7 +467,7 @@ void NoteWidget::onRemoveNoteButtonClicked()
     m_deleteNoteButton->blockSignals(false);
 }
 
-void NoteWidget::onNotePressed (const QModelIndex& index)
+void NoteWidget::onNoteClicked (const QModelIndex& index)
 {
     if(sender() != Q_NULLPTR){
         selectNote(index);
@@ -525,7 +542,7 @@ void NoteWidget::onNoteDataChanged(const QModelIndex& topLeft, const QModelIndex
     Q_UNUSED(bottomRight)
 
     // start/restart the timer
-    if(m_isTempNoteExist || m_doSaveImmediately){
+    if(m_isTempNoteExist || m_isNoteDropped){
        m_autoSaveTimer->start(0);
     }else{
         m_autoSaveTimer->start(500);
@@ -822,6 +839,13 @@ void NoteWidget::moveNoteToTop()
     }
 }
 
+void NoteWidget::clearSelection()
+{
+    m_currentSelectedNoteProxy = QModelIndex();
+
+    emit noteSelectionChanged(QModelIndex(), QModelIndex());
+}
+
 void NoteWidget::clearSearch()
 {
     if(!m_searchField->text().isEmpty()){
@@ -876,7 +900,9 @@ void NoteWidget::selectNote(const QModelIndex& noteIndex)
 void NoteWidget::removeTempNote()
 {
     QModelIndex index = m_noteModel->index(0);
+    m_noteView->setAnimationEnabled(false);
     m_noteModel->removeNote(index);
+    m_noteView->setAnimationEnabled(true);
     m_isTempNoteExist = false;
     --m_noteCounter;
 

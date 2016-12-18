@@ -23,11 +23,14 @@ protected:
     void mouseReleaseEvent(QMouseEvent* e) Q_DECL_OVERRIDE;
     bool viewportEvent(QEvent* e) Q_DECL_OVERRIDE;
     void resizeEvent(QResizeEvent *e) Q_DECL_OVERRIDE;
+    void startDrag(Qt::DropActions supportedActions) Q_DECL_OVERRIDE;
 
 private:
     bool m_isScrollBarHidden;
     bool m_isAnimationEnabled;
-    bool m_isMousePressed;
+
+    QPersistentModelIndex m_pressedIndex;
+    QPoint m_pressedPosition;
 
     void setupSignalsSlots();
 

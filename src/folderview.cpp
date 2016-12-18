@@ -33,16 +33,22 @@ void FolderView::dropEvent(QDropEvent* e)
         QModelIndex noteIndexSrc = model->sourceModel()->index(r,c);
         QModelIndex noteIndex = model->mapFromSource(noteIndexSrc);
 
-        emit noteDropped(noteIndex, dropFolderPath);
+        if(noteIndex.isValid()){
+            emit noteDropped(noteIndex, dropFolderPath);
 
-        // update the note count
-        QModelIndex currentIndex = this->currentIndex();
-        int currentFolderCnt = currentIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
-        this->model()->setData(currentIndex, --currentFolderCnt, (int)FolderItem::FolderDataEnum::NoteCount);
+            // update the note count
+            QModelIndex currentIndex = this->currentIndex();
+            int currentFolderCnt = currentIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
+            this->model()->setData(currentIndex, --currentFolderCnt, (int)FolderItem::FolderDataEnum::NoteCount);
 
-        int cnt = index.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
-        this->model()->setData(index, ++cnt, (int)FolderItem::FolderDataEnum::NoteCount);
+            int cnt = index.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
+            this->model()->setData(index, ++cnt, (int)FolderItem::FolderDataEnum::NoteCount);
+        }
     }
+}
 
-    QTreeView::dropEvent(e);
+void FolderView::mouseMoveEvent(QMouseEvent* e)
+{
+    if(e->buttons() == Qt::NoButton)
+        QTreeView::mouseMoveEvent(e);
 }

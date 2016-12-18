@@ -8,12 +8,13 @@
 #include <QSortFilterProxyModel>
 #include <QTimer>
 #include <QScrollBar>
+#include <QMimeData>
+#include <QDrag>
 
 NoteView::NoteView(QWidget *parent)
     : QListView( parent ),
       m_isScrollBarHidden(true),
-      m_isAnimationEnabled(true),
-      m_isMousePressed(false)
+      m_isAnimationEnabled(true)
 {
     this->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
@@ -79,8 +80,6 @@ void NoteView::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int en
             }
         }
     }
-
-    QListView::rowsAboutToBeRemoved(parent, start, end);
 }
 
 void NoteView::rowsAboutToBeMoved(const QModelIndex &sourceParent, int sourceStart, int sourceEnd,
@@ -137,26 +136,53 @@ void NoteView::init()
     setupSignalsSlots();
 }
 
-void NoteView::mouseMoveEvent(QMouseEvent*e)
-{
-    if(dragEnabled())
-        QListView::mouseMoveEvent(e);
-}
-
-void NoteView::mousePressEvent(QMouseEvent*e)
+void NoteView::mousePressEvent(QMouseEvent* e)
 {
     if(e->button() == Qt::LeftButton){
-        m_isMousePressed = true;
-        QListView::mousePressEvent(e);
-    }else{
-        m_isMousePressed = false;
+        QPersistentModelIndex index = indexAt(e->pos());
+        m_pressedIndex = index;
+        m_pressedPosition = e->pos();
+        selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+        emit QAbstractItemView::pressed(index);
     }
 }
 
-void NoteView::mouseReleaseEvent(QMouseEvent*e)
+void NoteView::mouseMoveEvent(QMouseEvent* e)
 {
-    m_isMousePressed = false;
-    QListView::mouseReleaseEvent(e);
+    QPoint topLeft;
+    QPoint bottomRight = e->pos();
+    QPoint offset = QPoint(isRightToLeft() ? -horizontalOffset()
+                                           : horizontalOffset(), verticalOffset());
+
+    if (state() == DraggingState) {
+        topLeft = m_pressedPosition - offset;
+        if ((topLeft - bottomRight).manhattanLength() > QApplication::startDragDistance()) {
+            startDrag(model()->supportedDragActions());
+            setState(NoState); // the startDrag will return when the dnd operation is done
+            stopAutoScroll();
+        }
+        return;
+    }
+
+    if (m_pressedIndex.isValid()
+            && dragEnabled()
+            && (state() != DragSelectingState)
+            && (e->buttons() != Qt::NoButton)
+            && m_pressedIndex.isValid()) {
+        setState(DraggingState);
+        return;
+    }
+}
+
+void NoteView::mouseReleaseEvent(QMouseEvent* e)
+{
+    QPersistentModelIndex index = indexAt(e->pos());
+    if(index == m_pressedIndex && index.isValid()){
+        selectionModel()->select(m_pressedIndex, QItemSelectionModel::ClearAndSelect);
+        setCurrentIndex(m_pressedIndex);
+        m_pressedIndex = QPersistentModelIndex();
+        emit clicked(index);
+    }
 }
 
 bool NoteView::viewportEvent(QEvent*e)
@@ -186,6 +212,26 @@ void NoteView::resizeEvent(QResizeEvent* e)
     }
 
     QListView::resizeEvent(e);
+}
+
+void NoteView::startDrag(Qt::DropActions supportedActions)
+{
+    QModelIndex index = m_pressedIndex;
+    QModelIndexList indexes;
+    indexes << index;
+    if (index.isValid()) {
+        QMimeData *data = model()->mimeData(indexes);
+        if (!data)
+            return;
+        QRect rect = visualRect(index);
+        QPixmap pixmap = grab(rect);
+        QDrag *drag = new QDrag(this);
+        drag->setPixmap(pixmap);
+        drag->setMimeData(data);
+        drag->setHotSpot(QPoint(-10,-10));
+        Qt::DropAction defaultDropAction = Qt::MoveAction;
+        drag->exec(supportedActions, defaultDropAction);
+    }
 }
 
 void NoteView::setAnimationEnabled(bool isAnimationEnabled)

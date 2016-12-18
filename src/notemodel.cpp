@@ -170,7 +170,7 @@ bool NoteModel::removeTagIndex(QModelIndex tagIndex)
 
 QVariant NoteModel::data(const QModelIndex &index, int role) const
 {
-    Q_ASSERT_X(index.model() == this, "NoteModel::setData", "index must be from NoteModel");
+    Q_ASSERT_X(index.model() == this, "NoteModel::data", "index must be from NoteModel");
 
     if (!index.isValid())
         return QVariant();
@@ -205,7 +205,7 @@ QVariant NoteModel::data(const QModelIndex &index, int role) const
 
 bool NoteModel::setItemData(const QModelIndex& index, const QMap<int, QVariant>& roles)
 {
-    Q_ASSERT_X(index.model() == this, "NoteModel::setData", "index must be from NoteModel");
+    Q_ASSERT_X(index.model() == this, "NoteModel::setItemData", "index must be from NoteModel");
 
     if (!index.isValid())
         return false;

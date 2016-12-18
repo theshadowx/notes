@@ -369,7 +369,9 @@ void MainWindow::onFolderUpdated(const FolderData* folder)
 {
     Q_ASSERT_X(folder != Q_NULLPTR, "MainWindow::onFolderUpdated", "folder is null");
 
-    m_noteWidget->setCurrentFolderName(folder->name());
+    if(m_folderTagWidget->currentFolderPath() == folder->fullPath())
+        m_noteWidget->setCurrentFolderName(folder->name());
+
     emit updateFolderRequested(folder);
 }
 

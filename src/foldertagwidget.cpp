@@ -321,8 +321,11 @@ void FolderTagWidget::onDeleteTagButtonClicked()
 
 void FolderTagWidget::onGeneralListWCurrentRowChanged(int currentRow)
 {
-    if(currentRow!=-1){
-        m_folderView->setCurrentIndex(QModelIndex());
+    if(currentRow != -1){
+
+        m_folderView->selectionModel()->clearSelection();
+        m_folderView->selectionModel()->clearCurrentIndex();
+        qApp->processEvents();
 
         //clear tags selection
         clearTagSelection();

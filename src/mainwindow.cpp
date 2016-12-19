@@ -252,6 +252,7 @@ void MainWindow::setupSignalsSlots()
     connect(this, &MainWindow::addNoteRequested, m_dbManager, &DBManager::onAddNoteRequested);
     connect(this, &MainWindow::removeNoteRequested, m_dbManager, &DBManager::onRemoveNoteRequested);
     connect(this, &MainWindow::updateNoteRequested, m_dbManager, &DBManager::onUpdateNoteRequested);
+    connect(this, &MainWindow::restoreNoteRequested, m_dbManager, &DBManager::onRestoreNoteRequested);
 }
 
 
@@ -497,7 +498,16 @@ void MainWindow::onNoteUpdated(NoteData* note)
 {
     Q_ASSERT_X(note != Q_NULLPTR, "MainWindow::onNoteUpdated", "note is null");
 
-    emit updateNoteRequested(note);
+    switch (m_folderTagWidget->folderType()) {
+    case FolderTagWidget::Normal:
+        emit updateNoteRequested(note);
+        break;
+    case FolderTagWidget::Trash:
+        emit restoreNoteRequested(note);
+        break;
+    default:
+        break;
+    }
 }
 
 void MainWindow::onNoteSearchBegin()

@@ -15,8 +15,8 @@ FolderView::FolderView(QWidget *parent) : QTreeView(parent)
 
 void FolderView::dropEvent(QDropEvent* e)
 {
-    QModelIndex index = indexAt(e->pos());
-    QString dropFolderPath = index.data((int)FolderItem::FolderDataEnum::FullPath).toString();
+    QModelIndex dropFolderIndex = indexAt(e->pos());
+    QString dropFolderPath = dropFolderIndex.data((int)FolderItem::FolderDataEnum::FullPath).toString();
     QString currentFolderPath = this->currentIndex().data((int)FolderItem::FolderDataEnum::FullPath).toString();
 
     if(currentFolderPath != dropFolderPath){
@@ -37,12 +37,14 @@ void FolderView::dropEvent(QDropEvent* e)
             emit noteDropped(noteIndex, dropFolderPath);
 
             // update the note count
-            QModelIndex currentIndex = this->currentIndex();
-            int currentFolderCnt = currentIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
-            this->model()->setData(currentIndex, --currentFolderCnt, (int)FolderItem::FolderDataEnum::NoteCount);
+            QModelIndex currentFolderIndex = this->currentIndex();
+            if(currentFolderIndex.isValid()){
+                int currentFolderCnt = currentFolderIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
+                this->model()->setData(currentFolderIndex, --currentFolderCnt, (int)FolderItem::FolderDataEnum::NoteCount);
+            }
 
-            int cnt = index.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
-            this->model()->setData(index, ++cnt, (int)FolderItem::FolderDataEnum::NoteCount);
+            int cnt = dropFolderIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
+            this->model()->setData(dropFolderIndex, ++cnt, (int)FolderItem::FolderDataEnum::NoteCount);
         }
     }
 }

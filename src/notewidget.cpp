@@ -297,9 +297,9 @@ void NoteWidget::onNoteChangedTimeoutTriggered()
     Q_ASSERT_X(index.isValid(), "NoteWidget::onNoteChangedTimeoutTriggered", "index is not valid");
 
     NoteData* note = m_noteModel->getNote(index);
-    emit (m_isTempNoteExist? noteAdded(note) : noteUpdated(note));
+    emit (m_isTempNoteExist && index.row() == 0 ? noteAdded(note) : noteUpdated(note));
 
-    m_isTempNoteExist = false;
+    m_isTempNoteExist = index.row() == 0 ? false : m_isTempNoteExist;
     m_isNoteDropped = false;
     m_droppedIndex = QModelIndex();
 }
@@ -345,7 +345,7 @@ void NoteWidget::setCurrentFolderPath(const QString& currentFolderPath)
 void NoteWidget::setCurrentFolderName(const QString& folderName)
 {
     ui->labelNotes->setText(folderName);
-    bool enableDrag = !(folderName == QStringLiteral("Trash") || folderName == QStringLiteral("All Notes"));
+    bool enableDrag = !(folderName == QStringLiteral("All Notes"));
     m_noteView->setDragEnabled(enableDrag);
 }
 
@@ -409,8 +409,6 @@ void NoteWidget::addNewNoteIfEmpty ()
 
 void NoteWidget::updateDroppedNote(const QModelIndex& index, const QString& fullPath)
 {
-
-
     QModelIndex indexInSrc = m_proxyNoteModel->mapToSource(index);
     m_droppedIndex = index;
     m_isNoteDropped = true;
@@ -900,9 +898,7 @@ void NoteWidget::selectNote(const QModelIndex& noteIndex)
 void NoteWidget::removeTempNote()
 {
     QModelIndex index = m_noteModel->index(0);
-    m_noteView->setAnimationEnabled(false);
     m_noteModel->removeNote(index);
-    m_noteView->setAnimationEnabled(true);
     m_isTempNoteExist = false;
     --m_noteCounter;
 

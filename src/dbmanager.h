@@ -36,6 +36,7 @@ private:
     bool migrateNote(const NoteData* note) const;
     bool migrateTrash(const NoteData* note) const;
     int getNotesLastRowID() const;
+    bool restoreNote(const NoteData* note) const;
 
     QList<FolderData*> getAllFolders();
     bool addFolder(FolderData* folder) const;
@@ -81,6 +82,7 @@ public slots:
     void onAddNoteRequested(const NoteData* note);
     void onRemoveNoteRequested(NoteData* note);
     void onUpdateNoteRequested(const NoteData* note);
+    void onRestoreNoteRequested(const NoteData* note);
 };
 
 #endif // DBMANAGER_H

@@ -168,6 +168,7 @@ signals:
     void addNoteRequested(const NoteData* note);
     void removeNoteRequested(NoteData* note);
     void updateNoteRequested(const NoteData* note);
+    void restoreNoteRequested(const NoteData* note);
 };
 
 #endif // MAINWINDOW_H

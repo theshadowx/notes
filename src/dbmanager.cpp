@@ -414,6 +414,66 @@ int DBManager::getNotesLastRowID() const
     return query.value(0).toInt();
 }
 
+bool DBManager::restoreNote(const NoteData* note) const
+{
+    QSqlQuery query;
+    QSqlQuery verifyQuery;
+    QString emptyStr;
+
+    int id = note->id();
+    QString fullPath = note->fullPath();
+    QStringList folders = fullPath.split(TagData::TagSeparator);
+    QString parentFolder = folders.last();
+
+    QString verifyPathQueryStr = QStringLiteral("SELECT * FROM folders "
+                                                "WHERE id=%1")
+                                 .arg(parentFolder);
+
+    verifyQuery.exec(verifyPathQueryStr);
+    bool found = false;
+    while(verifyQuery.next())
+        found = true;
+
+    if(!found)
+        return false;
+
+    QString queryStr = QStringLiteral("DELETE FROM deleted_notes "
+                                      "WHERE id=%1")
+                       .arg(id);
+    query.exec(queryStr);
+    bool removedFromTrash = (query.numRowsAffected() == 1);
+    if(!removedFromTrash)
+        return false;
+
+    qint64 epochTimeDateCreated = note->creationDateTime().toMSecsSinceEpoch();
+    qint64 epochTimeDateModified = note->lastModificationdateTime().toMSecsSinceEpoch();
+    QString content = note->content()
+                      .replace("'","''")
+                      .replace(QChar('\x0'), emptyStr);
+    QString fullTitle = note->fullTitle()
+                        .replace("'","''")
+                        .replace(QChar('\x0'), emptyStr);
+    QString tags = note->tagIdSerial();
+
+    queryStr = QString("INSERT INTO active_notes "
+                       "VALUES (%1, %2, %3, %4, '%5', '%6', '%7', '%8');")
+               .arg(id)
+               .arg(epochTimeDateCreated)
+               .arg(epochTimeDateModified)
+               .arg(-1)
+               .arg(content)
+               .arg(fullTitle)
+               .arg(fullPath)
+               .arg(tags);
+
+    query.exec(queryStr);
+
+    bool restoredDB = (query.numRowsAffected() == 1);
+
+    return restoredDB;
+
+}
+
 QList<FolderData*> DBManager::getAllFolders()
 {
     QList<FolderData*> folderList;
@@ -817,5 +877,11 @@ void DBManager::onUpdateNoteRequested(const NoteData* note)
 {
     QMutexLocker locker(&m_mutex);
     modifyNote(note);
+}
+
+void DBManager::onRestoreNoteRequested(const NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    restoreNote(note);
 }
 

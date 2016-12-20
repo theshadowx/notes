@@ -33,9 +33,12 @@ MainWindow::MainWindow (QWidget *parent) :
     m_folderTagWidget(Q_NULLPTR),
     m_noteWidget(Q_NULLPTR),
     m_editorWidget(Q_NULLPTR),
+    m_noteActiveTobeMigratedCounter(0),
+    m_noteTrashTobeMigratedCounter(0),
     m_canStretchWindow(false),
     m_canMoveWindow(false),
-    m_isContentModified(false)
+    m_isContentModified(false),
+    m_isDbReady(false)
 {
     ui->setupUi(this);
 
@@ -47,6 +50,9 @@ MainWindow::MainWindow (QWidget *parent) :
     restoreStates();
     setupKeyboardShortcuts();
     setupSignalsSlots();
+
+    while (!m_isDbReady)
+        qApp->processEvents();
 
     QTimer::singleShot(200,this, SLOT(InitData()));
 }
@@ -225,6 +231,7 @@ void MainWindow::setupSignalsSlots()
     connect(m_editorWidget, &EditorWidget::editorFocusedIn, this, &MainWindow::onEditorFocusedIn);
     connect(m_editorWidget, &EditorWidget::editorTextChanged, m_noteWidget, &NoteWidget::setNoteText);
     // From DataBase
+    connect(m_dbManager, &DBManager::databaseReady, this, [=](){m_isDbReady = true;});
     connect(m_dbManager, &DBManager::foldersReceived, m_folderTagWidget, &FolderTagWidget::initFolders);
     connect(m_dbManager, &DBManager::tagsReceived, m_folderTagWidget, &FolderTagWidget::initTags);
     connect(m_dbManager, &DBManager::notesReceived, m_noteWidget, &NoteWidget::initNotes);
@@ -244,6 +251,7 @@ void MainWindow::setupSignalsSlots()
     connect(this, &MainWindow::removeTagsRequested, m_dbManager, &DBManager::onRemoveTagsRequested);
     connect(this, &MainWindow::updateTagRequested, m_dbManager, &DBManager::onUpdateTagRequested);
 
+    connect(this, &MainWindow::syncNoteIndex, m_dbManager, &DBManager::syncNoteTableIndex);
     connect(this, &MainWindow::migrateNoteInTrashResquested, m_dbManager, &DBManager::onMigrateNoteInTrashResquested);
     connect(this, &MainWindow::migrateNoteResquested, m_dbManager, &DBManager::onMigrateNoteResquested);
     connect(this, &MainWindow::allNotesRequested, m_dbManager, &DBManager::onAllNotesRequested);
@@ -272,22 +280,20 @@ void MainWindow::InitData()
         pd->setMinimumDuration(0);
         pd->show();
 
-        setButtonsAndFieldsEnabled(false);
+        ui->frame->setEnabled(false);
 
-        QFutureWatcher<void>* watcher = new QFutureWatcher<void>(this);
-        connect(watcher, &QFutureWatcher<void>::finished, this, [&](){
+        connect(this, &MainWindow::migrationFinished, this, [=](){
             pd->deleteLater();
-            setButtonsAndFieldsEnabled(true);
+            ui->frame->setEnabled(true);
             // get last tables id
             emit tablesLastRowIdRequested();
             // get Folder list
             emit foldersRequested();
             // get tag list
             emit tagsRequested();
-          });
+        });
 
-        QFuture<void> migration = QtConcurrent::run(this, &MainWindow::checkMigration);
-        watcher->setFuture(migration);
+        QtConcurrent::run(this, &MainWindow::checkMigration);
 
     }else{
         // get last tables id
@@ -581,16 +587,6 @@ void MainWindow::initializeSettingsDatabase()
         m_settingsDatabase->setValue("splitterSizes", m_splitter->saveState());
 }
 
-void MainWindow::setButtonsAndFieldsEnabled(bool doEnable)
-{
-    m_greenMaximizeButton->setEnabled(doEnable);
-    m_redCloseButton->setEnabled(doEnable);
-    m_yellowMinimizeButton->setEnabled(doEnable);
-    m_noteWidget->setAddingNoteEnabled(doEnable);
-    m_noteWidget->setNoteDeletionEnabled(doEnable);
-    m_editorWidget->setEnabled(doEnable);
-}
-
 void MainWindow::onTrayRestoreActionTriggered()
 {
     setMainWindowVisibility(isHidden()
@@ -862,8 +858,6 @@ void MainWindow::mouseReleaseEvent (QMouseEvent *event)
 {
     m_canMoveWindow = false;
     m_canStretchWindow = false;
-//    ui->frameLeft->setCursor(Qt::ArrowCursor);
-//    ui->frameRight->setCursor(Qt::ArrowCursor);
     event->accept();
 }
 
@@ -871,13 +865,29 @@ void MainWindow::checkMigration()
 {
     QFileInfo fi(m_settingsDatabase->fileName());
     QDir dir(fi.absolutePath());
+    bool noteFileExists = false;
+    bool trashFileExists = false;
 
     QString oldNoteDBPath(dir.path() + "/Notes.ini");
-    if(QFile::exists(oldNoteDBPath))
-        migrateNote(oldNoteDBPath);
+    if(QFile::exists(oldNoteDBPath)){
+        QSettings notesIni(QSettings::IniFormat, QSettings::UserScope, "Awesomeness", "Notes");
+        QStringList dbKeys = notesIni.allKeys();
+        m_noteActiveTobeMigratedCounter = (dbKeys.count()-1)/3;
+        noteFileExists = true;
+    }
 
     QString oldTrashDBPath(dir.path() + "/Trash.ini");
-    if(QFile::exists(oldTrashDBPath))
+    if(QFile::exists(oldTrashDBPath)){
+        QSettings trashIni(QSettings::IniFormat, QSettings::UserScope, "Awesomeness", "Trash");
+        QStringList dbKeys = trashIni.allKeys();
+        m_noteTrashTobeMigratedCounter = (dbKeys.count()-1)/3;
+        trashFileExists = true;
+    }
+
+    if(noteFileExists)
+        migrateNote(oldNoteDBPath);
+
+    if(trashFileExists)
         migrateTrash(oldTrashDBPath);
 }
 
@@ -886,21 +896,28 @@ void MainWindow::migrateNote(QString notePath)
     QSettings notesIni(QSettings::IniFormat, QSettings::UserScope, "Awesomeness", "Notes");
     QStringList dbKeys = notesIni.allKeys();
 
+    QString cntStr = notesIni.value("notesCounter", "NULL").toString();
+    if(cntStr == "NULL"){
+        m_noteWidget->initNoteCounter(0);
+    }else{
+        m_noteWidget->initNoteCounter(cntStr.toInt());
+    }
+
+    emit syncNoteIndex(cntStr.toInt());
+
     auto it = dbKeys.begin();
     for(; it < dbKeys.end()-1; it += 3){
         QString noteName = it->split("/")[0];
         int id = noteName.split("_")[1].toInt();
 
-
-        NoteData* newNote = new NoteData();
+        QPointer<NoteData> newNote = new NoteData();
         newNote->setId(id);
 
-        QString cntStr = notesIni.value("notesCounter", "NULL").toString();
-        if(cntStr == "NULL"){
-            m_noteWidget->initNoteCounter(0);
-        }else{
-            m_noteWidget->initNoteCounter(cntStr.toInt());
-        }
+        connect(newNote, &NoteData::destroyed, [=](){
+            --m_noteActiveTobeMigratedCounter;
+            if(m_noteActiveTobeMigratedCounter == 0 && m_noteTrashTobeMigratedCounter == 0)
+                emit migrationFinished();
+        });
 
         QString createdDateDB = notesIni.value(noteName + "/dateCreated", "Error").toString();
         newNote->setCreationDateTime(QDateTime::fromString(createdDateDB, Qt::ISODate));
@@ -912,7 +929,6 @@ void MainWindow::migrateNote(QString notePath)
         newNote->setFullTitle(firstLine);
 
         emit migrateNoteResquested(newNote);
-        newNote->deleteLater();
     }
 
     QFile oldNoteDBFile(notePath);
@@ -922,7 +938,6 @@ void MainWindow::migrateNote(QString notePath)
 void MainWindow::migrateTrash(QString trashPath)
 {
     QSettings trashIni(QSettings::IniFormat, QSettings::UserScope, "Awesomeness", "Trash");
-
     QStringList dbKeys = trashIni.allKeys();
 
     auto it = dbKeys.begin();
@@ -930,8 +945,14 @@ void MainWindow::migrateTrash(QString trashPath)
         QString noteName = it->split("/")[0];
         int id = noteName.split("_")[1].toInt();
 
-        NoteData* newNote = new NoteData();
+        QPointer<NoteData> newNote = new NoteData();
         newNote->setId(id);
+
+        connect(newNote, &NoteData::destroyed, [=](){
+            --m_noteTrashTobeMigratedCounter;
+            if(m_noteActiveTobeMigratedCounter == 0 && m_noteTrashTobeMigratedCounter == 0)
+                emit migrationFinished();
+        });
 
         QString createdDateDB = trashIni.value(noteName + "/dateCreated", "Error").toString();
         newNote->setCreationDateTime(QDateTime::fromString(createdDateDB, Qt::ISODate));
@@ -943,7 +964,6 @@ void MainWindow::migrateTrash(QString trashPath)
         newNote->setFullTitle(firstLine);
 
         emit migrateNoteInTrashResquested(newNote);
-        newNote->deleteLater();
     }
 
     QFile oldTrashDBFile(trashPath);

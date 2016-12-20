@@ -23,9 +23,19 @@ public:
 
 private:
     QSqlDatabase m_db;
-    QMutex m_mutex;
+    mutable QMutex m_mutex;
 
     void createTables();
+    void createNoteTable();
+    void createTrashTable();
+    void createFolderTable();
+    void createTagTable();
+
+    void checkNoteTable();
+    void checkTrashTable();
+    void checkFolderTable();
+    void checkTagTable();
+
 
     QList<NoteData*> getAllNotes();
     QList<NoteData*> getAllNotes(const QString& fullPath);
@@ -33,8 +43,8 @@ private:
     bool addNote(const NoteData*note) const;
     bool removeNote(const NoteData* note) const;
     bool modifyNote(const NoteData* note) const;
-    bool migrateNote(const NoteData* note) const;
-    bool migrateTrash(const NoteData* note) const;
+    bool migrateNote(NoteData* note) const;
+    bool migrateTrash(NoteData* note) const;
     int getNotesLastRowID() const;
     bool restoreNote(const NoteData* note) const;
 
@@ -58,6 +68,7 @@ signals:
     void foldersReceived(QList<FolderData*> folderList);
     void tagsReceived(QList<TagData*> tagList);
     void tablesLastRowIdReceived(int noteRowId, int tagRowId, int FolderRowId);
+    void databaseReady();
 
 public slots:
 
@@ -83,6 +94,7 @@ public slots:
     void onRemoveNoteRequested(NoteData* note);
     void onUpdateNoteRequested(const NoteData* note);
     void onRestoreNoteRequested(const NoteData* note);
+    void syncNoteTableIndex(const int index);
 };
 
 #endif // DBMANAGER_H

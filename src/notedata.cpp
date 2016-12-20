@@ -1,6 +1,8 @@
 #include "notedata.h"
 #include "tagdata.h"
 
+#include <QDebug>
+
 const QString NoteData::TagSeparator = "_";
 
 NoteData::NoteData(QObject *parent)

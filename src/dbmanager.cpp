@@ -30,9 +30,16 @@ DBManager::DBManager(const QString& path, bool doCreate, QObject *parent) : QObj
         qDebug() << "Database: connection ok";
     }
 
-    if(doCreate)
+    if(doCreate){
         createTables();
+    }else{
+        checkNoteTable();
+        checkTrashTable();
+        checkFolderTable();
+        checkTagTable();
+    }
 
+    emit databaseReady();
 }
 
 
@@ -46,8 +53,16 @@ void DBManager::open(const QString& path, bool doCreate)
         qDebug() << "Database: connection ok";
     }
 
-    if(doCreate)
+    if(doCreate){
         createTables();
+    }else{
+        checkNoteTable();
+        checkTrashTable();
+        checkFolderTable();
+        checkTagTable();
+    }
+
+    emit databaseReady();
 }
 
 
@@ -78,6 +93,14 @@ bool DBManager::folderExist(int id) const
 
 void DBManager::createTables()
 {
+    createNoteTable();
+    createTrashTable();
+    createFolderTable();
+    createTagTable();
+}
+
+void DBManager::createNoteTable()
+{
     QSqlQuery query;
     QString active = "CREATE TABLE active_notes ("
                      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -93,7 +116,11 @@ void DBManager::createTables()
 
     QString active_index = "CREATE UNIQUE INDEX active_index on active_notes (id ASC);";
     query.exec(active_index);
+}
 
+void DBManager::createTrashTable()
+{
+    QSqlQuery query;
     QString deleted = "CREATE TABLE deleted_notes ("
                       "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                       "creation_date INTEGER NOT NULL DEFAULT (0),"
@@ -104,7 +131,11 @@ void DBManager::createTables()
                       "full_path TEXT,"
                       "tags TEXT);";
     query.exec(deleted);
+}
 
+void DBManager::createFolderTable()
+{
+    QSqlQuery query;
     QString folders = "CREATE TABLE folders ("
                       "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                       "name TEXT,"
@@ -114,7 +145,11 @@ void DBManager::createTables()
 
     QString folder_index = "CREATE UNIQUE INDEX folder_index on folders (id ASC);";
     query.exec(folder_index);
+}
 
+void DBManager::createTagTable()
+{
+    QSqlQuery query;
     QString tags  = "CREATE TABLE tags ("
                     "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                     "name TEXT,"
@@ -124,6 +159,104 @@ void DBManager::createTables()
 
     QString tag_index = "CREATE UNIQUE INDEX tag_index on tags (id ASC);";
     query.exec(tag_index);
+}
+
+void DBManager::checkNoteTable()
+{
+    QSqlQuery query;
+    QSqlQuery queryAlter;
+    QSqlQuery queryTable;
+    QString queryStr;
+
+    queryStr = QStringLiteral("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='active_notes';");
+    queryTable.exec(queryStr);
+    queryTable.next();
+    bool tableExist = queryTable.value(0).toBool();
+
+    if(!tableExist){
+        createNoteTable();
+    }else{
+
+        bool doAlter = true;
+
+        queryStr = QStringLiteral("PRAGMA table_info(active_notes)");
+        query.exec(queryStr);
+        while (query.next()) {
+            doAlter = !(query.value(1).toString() == QStringLiteral("full_path"));
+            if(!doAlter)
+                break;
+        }
+
+        if(doAlter){
+            queryStr = QStringLiteral("ALTER TABLE active_notes ADD COLUMN full_path TEXT");
+            queryAlter.exec(queryStr);
+            queryStr = QStringLiteral("ALTER TABLE active_notes ADD COLUMN tags TEXT");
+            queryAlter.exec(queryStr);
+        }
+    }
+}
+
+void DBManager::checkTrashTable()
+{
+    QSqlQuery query;
+    QSqlQuery queryAlter;
+    QSqlQuery queryTable;
+    QString queryStr;
+
+    queryStr = QStringLiteral("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='deleted_notes';");
+    queryTable.exec(queryStr);
+    queryTable.next();
+    bool tableExist = queryTable.value(0).toBool();
+
+    if(!tableExist){
+        createNoteTable();
+    }else{
+
+        bool doAlter = true;
+
+        queryStr = QStringLiteral("PRAGMA table_info(deleted_notes)");
+        query.exec(queryStr);
+        while (query.next()) {
+            doAlter = !(query.value(1).toString() == QStringLiteral("full_path"));
+            if(!doAlter)
+                break;
+        }
+
+        if(doAlter){
+            queryStr = QStringLiteral("ALTER TABLE deleted_notes ADD COLUMN full_path TEXT");
+            queryAlter.exec(queryStr);
+            queryStr = QStringLiteral("ALTER TABLE deleted_notes ADD COLUMN tags TEXT");
+            queryAlter.exec(queryStr);
+        }
+    }
+}
+
+void DBManager::checkFolderTable()
+{
+    QSqlQuery queryTable;
+    QString queryStr;
+
+    queryStr = QStringLiteral("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='folders';");
+    queryTable.exec(queryStr);
+    queryTable.next();
+    bool tableExist = queryTable.value(1).toBool();
+
+    if(!tableExist)
+        createFolderTable();
+}
+
+void DBManager::checkTagTable()
+{
+    QSqlQuery queryTable;
+    QString queryStr;
+
+    queryStr = QStringLiteral("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='tags';");
+    queryTable.exec(queryStr);
+    queryTable.next();
+    bool tableExist = queryTable.value(1).toBool();
+
+    if(!tableExist)
+        createTagTable();
 }
 
 QList<NoteData *> DBManager::getAllNotes()
@@ -350,7 +483,7 @@ bool DBManager::modifyNote(const NoteData* note) const
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::migrateNote(const NoteData* note) const
+bool DBManager::migrateNote(NoteData* note) const
 {
     QSqlQuery query;
     QString emptyStr;
@@ -365,8 +498,8 @@ bool DBManager::migrateNote(const NoteData* note) const
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
 
-    QString queryStr = QString("INSERT INTO active_notes "
-                               "VALUES (%1, %2, %3, -1, '%4', '%5');")
+    QString queryStr = QString("INSERT INTO active_notes (id, creation_date, modification_date, content, full_title) "
+                               "VALUES (%1, %2, %3, '%4', '%5');")
                        .arg(id)
                        .arg(epochTimeDateCreated)
                        .arg(epochTimeDateModified)
@@ -374,10 +507,11 @@ bool DBManager::migrateNote(const NoteData* note) const
                        .arg(fullTitle);
 
     query.exec(queryStr);
+    delete note;
     return (query.numRowsAffected() == 1);
 }
 
-bool DBManager::migrateTrash(const NoteData* note) const
+bool DBManager::migrateTrash(NoteData* note) const
 {
     QSqlQuery query;
     QString emptyStr;
@@ -393,8 +527,8 @@ bool DBManager::migrateTrash(const NoteData* note) const
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
 
-    QString queryStr = QString("INSERT INTO deleted_notes "
-                               "VALUES (%1, %2, %3, %4, '%5', '%6');")
+    QString queryStr = QStringLiteral("INSERT INTO deleted_notes (id, creation_date, modification_date, deletion_date, content, full_title)"
+                               " VALUES (%1, %2, %3, %4, '%5', '%6');")
                        .arg(id)
                        .arg(epochTimeDateCreated)
                        .arg(epochTimeDateModified)
@@ -403,6 +537,7 @@ bool DBManager::migrateTrash(const NoteData* note) const
                        .arg(fullTitle);
 
     query.exec(queryStr);
+    delete note;
     return (query.numRowsAffected() == 1);
 }
 
@@ -834,13 +969,13 @@ void DBManager::onUpdateTagRequested(const TagData* tag)
 void DBManager::onMigrateNoteInTrashResquested(NoteData* note)
 {
     QMutexLocker locker(&m_mutex);
-    migrateNote(note);
+    migrateTrash(note);
 }
 
 void DBManager::onMigrateNoteResquested(NoteData* note)
 {
     QMutexLocker locker(&m_mutex);
-    migrateTrash(note);
+    migrateNote(note);
 }
 
 void DBManager::onNotesInTrashRequested()
@@ -883,5 +1018,15 @@ void DBManager::onRestoreNoteRequested(const NoteData* note)
 {
     QMutexLocker locker(&m_mutex);
     restoreNote(note);
+}
+
+void DBManager::syncNoteTableIndex(const int index)
+{
+    QMutexLocker locker(&m_mutex);
+    QSqlQuery query;
+    QString queryStr = QStringLiteral("INSERT INTO SQLITE_SEQUENCE VALUES('active_notes', %1);")
+                       .arg(index);
+
+    query.exec(queryStr);
 }
 

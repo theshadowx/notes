@@ -76,7 +76,8 @@ private:
     NoteWidget* m_noteWidget;
     EditorWidget* m_editorWidget;
 
-    int m_currentVerticalScrollAreaRange;
+    int m_noteActiveTobeMigratedCounter;
+    int m_noteTrashTobeMigratedCounter;
     int m_mousePressX;
     int m_mousePressY;
     int m_textEditLeftPadding;
@@ -84,6 +85,7 @@ private:
     bool m_canMoveWindow;
     bool m_canStretchWindow;
     bool m_isContentModified;
+    bool m_isDbReady;
 
     void setupMainWindow();
     void setupTrayIcon();
@@ -93,7 +95,6 @@ private:
     void setupSignalsSlots();
     void setupDatabases();
     void initializeSettingsDatabase();
-    void setButtonsAndFieldsEnabled(bool doEnable);
     void restoreStates();
 
     void checkMigration();
@@ -148,6 +149,7 @@ signals:
     void noteRemoved();
 
     void tablesLastRowIdRequested();
+    void migrationFinished();
 
     void foldersRequested();
     void addFolderRequested(FolderData* folder);
@@ -169,6 +171,7 @@ signals:
     void removeNoteRequested(NoteData* note);
     void updateNoteRequested(const NoteData* note);
     void restoreNoteRequested(const NoteData* note);
+    void syncNoteIndex(const int index);
 };
 
 #endif // MAINWINDOW_H

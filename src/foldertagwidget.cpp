@@ -110,18 +110,6 @@ void FolderTagWidget::initFolders(QList<FolderData*> folderDataList)
     // push folders to the treeview
     m_folderModel->setupModelData(folderDataList);
 
-    // create new Folder if no folder exists
-    if(folderDataList.isEmpty()){
-        ++m_folderCounter;
-        FolderData* folderData = new FolderData;
-        folderData->setId(m_folderCounter);
-        folderData->setName(QStringLiteral("Folder0"));
-        FolderItem* folderItem = new FolderItem(folderData, this);
-        m_folderModel->insertFolder(folderItem, 0);
-
-        emit folderAdded(folderData);
-    }
-
     m_isFolderModelInitialized = true;
     emit folderModelInitialized(QPrivateSignal());
 }
@@ -365,9 +353,9 @@ void FolderTagWidget::onTagsInNoteChanged(const QList<QPersistentModelIndex>& ta
 void FolderTagWidget::onInitDone()
 {
     if(m_isFolderModelInitialized && m_isTagModelInitialized){
-        // select the first folder in the treeview
-        QModelIndex index = m_folderModel->index(0,0);
-        m_folderView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::Select);
+        // select All Notes
+        QModelIndex index = m_generalFoldersView->model()->index(0,0);
+        m_generalFoldersView->setCurrentIndex(index);
     }
 }
 

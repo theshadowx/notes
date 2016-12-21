@@ -7,10 +7,13 @@
 #include <QDebug>
 #include <QSortFilterProxyModel>
 #include <QPainter>
+#include <QApplication>
 
 FolderView::FolderView(QWidget *parent) : QTreeView(parent)
 {
     setAcceptDrops(true);
+    connect(this, &FolderView::collapsed, this, &FolderView::onCollapsed, Qt::QueuedConnection);
+    connect(this, &FolderView::expanded, this, &FolderView::onExpended, Qt::QueuedConnection);
 }
 
 void FolderView::paintEvent(QPaintEvent* e)
@@ -128,3 +131,31 @@ QAbstractItemView::DropIndicatorPosition FolderView::position(const QPoint& pos,
 
     return r;
 }
+
+bool FolderView::isParentCollapsed(QModelIndex& index)
+{
+    QModelIndex parentIndex = index.parent();
+    if(parentIndex.isValid()){
+        return (isExpanded(parentIndex) ? isParentCollapsed(parentIndex) : true);
+    }else{
+        return false;
+    }
+}
+
+void FolderView::onCollapsed(const QModelIndex& index)
+{
+    QModelIndex currentIndex = this->currentIndex();
+    if(isParentCollapsed(currentIndex)){
+        while(state() == QAbstractItemView::AnimatingState){
+            qApp->processEvents();
+        }
+        setCurrentIndex(index);
+    }
+}
+
+void FolderView::onExpended(const QModelIndex& index)
+{
+    Q_UNUSED(index)
+    updateGeometries();
+}
+

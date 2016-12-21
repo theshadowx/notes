@@ -19,11 +19,14 @@ protected:
 
 private:
     QRect m_dropIndicatorRect;
+    bool isParentCollapsed(QModelIndex& index);
 
 signals:
     void noteDropped(const QModelIndex& index, const QString& fullPath);
 
-public slots:
+protected slots:
+    void onCollapsed(const QModelIndex& index);
+    void onExpended(const QModelIndex& index);
 };
 
 #endif // FOLDERTAGVIEW_H

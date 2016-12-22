@@ -48,21 +48,23 @@ void FolderView::dragMoveEvent(QDragMoveEvent* e)
     QModelIndex index = indexAt(e->pos());
 
     FolderItemDelegate* folderItemDelegate = static_cast<FolderItemDelegate*>(itemDelegate());
-    folderItemDelegate->setDraggedOnIndex(index);
 
     if (index.isValid() && index != currentIndex() && showDropIndicator()){
         QRect rect = visualRect(index);
         QAbstractItemView::DropIndicatorPosition dropIndicatorPosition = position(e->pos(), rect, index);
 
         if (dropIndicatorPosition == QAbstractItemView::OnItem){
+            folderItemDelegate->setDraggedOnIndex(index);
             m_dropIndicatorRect = rect;
             QAbstractItemView::dragMoveEvent(e);
         }else{
+            folderItemDelegate->setDraggedOnIndex(QModelIndex());
             m_dropIndicatorRect = QRect();
             viewport()->update();
             e->ignore();
         }
     }else{
+        folderItemDelegate->setDraggedOnIndex(QModelIndex());
         m_dropIndicatorRect = QRect();
         viewport()->update();
         e->ignore();
@@ -82,6 +84,11 @@ void FolderView::dropEvent(QDropEvent* e)
     QModelIndex dropFolderIndex = indexAt(e->pos());
     QString dropFolderPath = dropFolderIndex.data((int)FolderItem::FolderDataEnum::FullPath).toString();
     QString currentFolderPath = this->currentIndex().data((int)FolderItem::FolderDataEnum::FullPath).toString();
+
+    FolderItemDelegate* folderItemDelegate = static_cast<FolderItemDelegate*>(itemDelegate());
+    folderItemDelegate->setDraggedOnIndex(QModelIndex());
+    setState(QAbstractItemView::NoState);
+    viewport()->update();
 
     if(currentFolderPath != dropFolderPath){
         // extract index of the dropped note

@@ -13,6 +13,7 @@ protected:
     void paintEvent(QPaintEvent* e) Q_DECL_OVERRIDE;
     void paintDropIndicator(QPainter *painter);
     void dragMoveEvent(QDragMoveEvent* e) Q_DECL_OVERRIDE;
+    void dragLeaveEvent(QDragLeaveEvent *e) Q_DECL_OVERRIDE;
     void dropEvent(QDropEvent* e) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent* e) Q_DECL_OVERRIDE;
     QAbstractItemView::DropIndicatorPosition position(const QPoint &pos, const QRect &rect, const QModelIndex &index) const;

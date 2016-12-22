@@ -20,9 +20,12 @@ public:
                const QStyleOptionViewItem &option,
                const QModelIndex &index) const Q_DECL_OVERRIDE;
 
+    void setDraggedOnIndex(const QModelIndex& draggedOnIndex);
+
 private:
     QTreeView* m_view;
     QColor m_lineColor;
+    QModelIndex m_draggedOnIndex;
 };
 
 #endif // FOLDERWIDGETDELEGATE_H

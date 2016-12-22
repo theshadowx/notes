@@ -40,7 +40,11 @@ void FolderItemDelegate::paint(QPainter* painter,
     bool isBelowSelected = m_view->selectionModel()->isSelected(indexBelow);
     bool isSelected = (option.state & QStyle::State_Selected) == QStyle::State_Selected;
 
-    if(!isSelected && !isBelowSelected){
+    if(!isSelected
+            && !isBelowSelected
+            && !(indexBelow.isValid() && indexBelow == m_draggedOnIndex)
+            && index != m_draggedOnIndex){
+
         QPoint bottomLeft = option.rect.bottomLeft();
         QPoint bottomRight = QPoint(m_view->width(), bottomLeft.y());
 
@@ -51,4 +55,9 @@ void FolderItemDelegate::paint(QPainter* painter,
         painter->drawLine(bottomLeft, bottomRight);
         painter->restore();
     }
+}
+
+void FolderItemDelegate::setDraggedOnIndex(const QModelIndex& draggedOnIndex)
+{
+    m_draggedOnIndex = draggedOnIndex;
 }

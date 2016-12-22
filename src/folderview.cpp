@@ -1,5 +1,6 @@
 #include "folderview.h"
 #include "foldermodel.h"
+#include "folderitemdelegate.h"
 
 #include <QListView>
 #include <QDropEvent>
@@ -45,6 +46,10 @@ void FolderView::paintDropIndicator(QPainter* painter)
 void FolderView::dragMoveEvent(QDragMoveEvent* e)
 {
     QModelIndex index = indexAt(e->pos());
+
+    FolderItemDelegate* folderItemDelegate = static_cast<FolderItemDelegate*>(itemDelegate());
+    folderItemDelegate->setDraggedOnIndex(index);
+
     if (index.isValid() && index != currentIndex() && showDropIndicator()){
         QRect rect = visualRect(index);
         QAbstractItemView::DropIndicatorPosition dropIndicatorPosition = position(e->pos(), rect, index);
@@ -62,6 +67,14 @@ void FolderView::dragMoveEvent(QDragMoveEvent* e)
         viewport()->update();
         e->ignore();
     }
+}
+
+void FolderView::dragLeaveEvent(QDragLeaveEvent* e)
+{
+    FolderItemDelegate* folderItemDelegate = static_cast<FolderItemDelegate*>(itemDelegate());
+    folderItemDelegate->setDraggedOnIndex(QModelIndex());
+
+    QTreeView::dragLeaveEvent(e);
 }
 
 void FolderView::dropEvent(QDropEvent* e)

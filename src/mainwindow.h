@@ -65,6 +65,7 @@ private:
     QPushButton* m_greenMaximizeButton;
     QPushButton* m_redCloseButton;
     QPushButton* m_yellowMinimizeButton;
+    QPushButton* m_collapseFolderTagButton;
     QSplitter *m_splitter;
     QSystemTrayIcon* m_trayIcon;
     QAction* m_trayRestoreAction;
@@ -80,7 +81,7 @@ private:
     int m_noteTrashTobeMigratedCounter;
     int m_mousePressX;
     int m_mousePressY;
-    int m_textEditLeftPadding;
+    int m_folderTagSpliterWidth;
     StretchSide m_stretchSide;
     bool m_canMoveWindow;
     bool m_canStretchWindow;
@@ -143,6 +144,7 @@ private slots:
     void onGreenMaximizeButtonClicked();
     void onYellowMinimizeButtonClicked();
     void onRedCloseButtonClicked();
+    void onCollapseFolderTagButtonClicked();
 
 signals:
     void noteAdded();

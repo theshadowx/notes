@@ -70,6 +70,9 @@ QLabel{font-family:"Roboto"; color:rgb(26, 26, 26);}
 #greenMaximizeButton:pressed[fullscreen=true]{border-image:url(:/images/greenPressed.png);}
 #greenMaximizeButton:!enabled{border-image:url(:/images/unfocusedButton.png);}
 
+#frameToolButton{background-color: "transparent";}
+#collapseFolderTagButton{qproperty-icon: url(":/images/collapseFolderTag.svg"); qproperty-iconSize: 16px 16px;}
+
 #tagView {border: none; margin: 0px; color:rgb(26, 26, 26); selection-background-color: rgb(68, 138, 201); font-family: "Roboto"; font-size: 13px; outline: none;}
 #tagView::item {border: none; padding-top:2px; padding-bottom:4px; padding-left:20px; height: 16px; color:rgb(46, 43, 43);}
 #tagView::item:selected {background: rgb(68, 138, 201); color:rgb(250, 250, 250);}

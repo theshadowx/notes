@@ -26,5 +26,6 @@
         <file>images/clearSelection_Regular.png</file>
         <file>images/tag_Regular.png</file>
         <file>images/painter_palette.png</file>
+        <file>images/collapseFolderTag.svg</file>
     </qresource>
 </RCC>

@@ -25,6 +25,7 @@ MainWindow::MainWindow (QWidget *parent) :
     m_greenMaximizeButton(Q_NULLPTR),
     m_redCloseButton(Q_NULLPTR),
     m_yellowMinimizeButton(Q_NULLPTR),
+    m_collapseFolderTagButton(Q_NULLPTR),
     m_trayIcon(new QSystemTrayIcon(this)),
     m_trayRestoreAction(new QAction(tr("&Hide Notes"), this)),
     m_quitAction(new QAction(tr("&Quit"), this)),
@@ -33,6 +34,7 @@ MainWindow::MainWindow (QWidget *parent) :
     m_folderTagWidget(Q_NULLPTR),
     m_noteWidget(Q_NULLPTR),
     m_editorWidget(Q_NULLPTR),
+    m_folderTagSpliterWidth(200),
     m_noteActiveTobeMigratedCounter(0),
     m_noteTrashTobeMigratedCounter(0),
     m_canStretchWindow(false),
@@ -78,6 +80,7 @@ void MainWindow::setupMainWindow ()
     m_greenMaximizeButton = ui->greenMaximizeButton;
     m_redCloseButton = ui->redCloseButton;
     m_yellowMinimizeButton = ui->yellowMinimizeButton;
+    m_collapseFolderTagButton = ui->collapseFolderTagButton;
     m_splitter = ui->splitter;
     m_folderTagWidget = ui->folderTagWidget;
     m_noteWidget = ui->noteWidget;
@@ -195,6 +198,7 @@ void MainWindow::setupSignalsSlots()
     connect(m_greenMaximizeButton, &QPushButton::clicked, this, &MainWindow::onGreenMaximizeButtonClicked);
     connect(m_redCloseButton, &QPushButton::clicked, this, &MainWindow::onRedCloseButtonClicked);
     connect(m_yellowMinimizeButton, &QPushButton::clicked, this, &MainWindow::onYellowMinimizeButtonClicked);
+    connect(m_collapseFolderTagButton, &QPushButton::clicked, this, &MainWindow::onCollapseFolderTagButtonClicked);
     // Restore Notes Action
     connect(m_trayRestoreAction, &QAction::triggered, this, &MainWindow::onTrayRestoreActionTriggered);
     // Quit Action
@@ -647,6 +651,22 @@ void MainWindow::onYellowMinimizeButtonClicked()
 void MainWindow::onRedCloseButtonClicked()
 {
     setMainWindowVisibility(false);
+}
+
+void MainWindow::onCollapseFolderTagButtonClicked()
+{
+    int index  = m_splitter->indexOf(m_folderTagWidget);
+    QList<int> sizes = m_splitter->sizes();
+    if(sizes.at(0) == 0){
+        sizes[0] = m_folderTagSpliterWidth;
+    }else{
+        m_folderTagSpliterWidth = sizes[0];
+        sizes[0] = 0;
+    }
+
+    m_splitter->setCollapsible(index, true);
+    m_splitter->setSizes(sizes);
+    m_splitter->setCollapsible(index, false);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

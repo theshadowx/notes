@@ -50,17 +50,16 @@ private:
 
     int m_folderCounter;
     int m_tagCounter;
+    bool m_isFolderModelInitialized;
+    bool m_isTagModelInitialized;
     QString m_currentFolderPath;
     FolderType m_folderType;
 
     FolderModel* m_folderModel;
     TagModel* m_tagModel;
     FolderView* m_folderView;
-
-    bool m_isFolderModelInitialized;
-    bool m_isTagModelInitialized;
-
     QListView* m_tagView;
+
     QListWidget* m_generalFoldersView;
     QPushButton* m_addRootFolderButton;
     QPushButton* m_removeFolderButton;

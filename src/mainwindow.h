@@ -87,6 +87,7 @@ private:
     bool m_canStretchWindow;
     bool m_isContentModified;
     bool m_isDbReady;
+    int m_layoutMargin;
 
     void setupMainWindow();
     void setupTrayIcon();

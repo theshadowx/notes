@@ -34,13 +34,14 @@ MainWindow::MainWindow (QWidget *parent) :
     m_folderTagWidget(Q_NULLPTR),
     m_noteWidget(Q_NULLPTR),
     m_editorWidget(Q_NULLPTR),
-    m_folderTagSpliterWidth(200),
     m_noteActiveTobeMigratedCounter(0),
     m_noteTrashTobeMigratedCounter(0),
-    m_canStretchWindow(false),
+    m_folderTagSpliterWidth(200),
     m_canMoveWindow(false),
+    m_canStretchWindow(false),
     m_isContentModified(false),
-    m_isDbReady(false)
+    m_isDbReady(false),
+    m_layoutMargin(10)
 {
     ui->setupUi(this);
 
@@ -86,6 +87,10 @@ void MainWindow::setupMainWindow ()
     m_noteWidget = ui->noteWidget;
     m_editorWidget = ui->editorWidget;
 
+    ui->centralWidget->layout()->setContentsMargins(m_layoutMargin,
+                                                    m_layoutMargin,
+                                                    m_layoutMargin,
+                                                    m_layoutMargin);
     ui->frame->installEventFilter(this);
     ui->centralWidget->setMouseTracking(true);
     this->setMouseTracking(true);
@@ -600,15 +605,16 @@ void MainWindow::onTrayRestoreActionTriggered()
 
 void MainWindow::fullscreenWindow ()
 {
-    switch (windowState()){
-    case Qt::WindowFullScreen:
+    QMargins margins(m_layoutMargin,m_layoutMargin,m_layoutMargin,m_layoutMargin);
+
+    if(isFullScreen()){
         m_greenMaximizeButton->setProperty("fullscreen",false);
-        setWindowState(Qt::WindowNoState);
-        break;
-    default:
+        setWindowState(windowState() & ~Qt::WindowFullScreen);
+        ui->centralWidget->layout()->setContentsMargins(margins);
+    }else{
         m_greenMaximizeButton->setProperty("fullscreen",true);
-        setWindowState(Qt::WindowFullScreen);
-        break;
+        setWindowState(windowState() | Qt::WindowFullScreen);
+        ui->centralWidget->layout()->setContentsMargins(0,0,0,0);
     }
 }
 
@@ -616,20 +622,28 @@ void MainWindow::maximizeWindow ()
 {
     m_greenMaximizeButton->setProperty("fullscreen",false);
 
-    switch (windowState()) {
-    case Qt::WindowFullScreen:
-    case Qt::WindowMaximized:
-        setWindowState(Qt::WindowNoState);
-        break;
-    default:
-        setWindowState(Qt::WindowMaximized);
-        break;
+    QMargins margins(m_layoutMargin,m_layoutMargin,m_layoutMargin,m_layoutMargin);
+
+    if(isMaximized()){
+        if(!isFullScreen()){
+            ui->centralWidget->layout()->setContentsMargins(margins);
+            setWindowState(windowState() & ~Qt::WindowMaximized);
+        }else{
+            setWindowState(windowState() & ~Qt::WindowFullScreen);
+        }
+
+    }else{
+        setWindowState(windowState() | Qt::WindowMaximized);
+        ui->centralWidget->layout()->setContentsMargins(0,0,0,0);
     }
 }
 
 void MainWindow::minimizeWindow ()
 {
-    this->setWindowState(Qt::WindowMinimized);
+    QMargins margins(m_layoutMargin,m_layoutMargin,m_layoutMargin,m_layoutMargin);
+    ui->centralWidget->layout()->setContentsMargins(margins);
+
+    this->setWindowState(windowState() | Qt::WindowMinimized);
 }
 
 void MainWindow::QuitApplication ()
@@ -685,35 +699,35 @@ void MainWindow::mousePressEvent (QMouseEvent* event)
     m_mousePressX = event->x();
     m_mousePressY = event->y();
 
-    if(m_mousePressX < this->width() - 10
-            && m_mousePressX >10
-            && m_mousePressY < this->height()-10
-            && m_mousePressY > 10){
+    if(m_mousePressX < this->width() - m_layoutMargin
+            && m_mousePressX >m_layoutMargin
+            && m_mousePressY < this->height() - m_layoutMargin
+            && m_mousePressY > m_layoutMargin){
 
 //        ui->frameLeft->setCursor(Qt::ClosedHandCursor);
 //        ui->frameRight->setCursor(Qt::ClosedHandCursor);
         m_canMoveWindow = true;
     }else{
         m_canStretchWindow = true;
-        if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
-                && (m_mousePressY < 10 && m_mousePressY > 0)){
+        if((m_mousePressX < this->width() && m_mousePressX > this->width() - m_layoutMargin)
+                && (m_mousePressY < m_layoutMargin && m_mousePressY > 0)){
             m_stretchSide = StretchSide::TopRight;
-        }else if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
-                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+        }else if((m_mousePressX < this->width() && m_mousePressX > this->width() - m_layoutMargin)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - m_layoutMargin)){
             m_stretchSide = StretchSide::BottomRight;
-        }else if((m_mousePressX < 10 && m_mousePressX > 0)
-                 && (m_mousePressY < 10 && m_mousePressY > 0)){
+        }else if((m_mousePressX < m_layoutMargin && m_mousePressX > 0)
+                 && (m_mousePressY < m_layoutMargin && m_mousePressY > 0)){
             m_stretchSide = StretchSide::TopLeft;
-        }else if((m_mousePressX < 10 && m_mousePressX > 0)
-                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+        }else if((m_mousePressX < m_layoutMargin && m_mousePressX > 0)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - m_layoutMargin)){
             m_stretchSide = StretchSide::BottomLeft;
-        }else if(m_mousePressX < this->width() && m_mousePressX > this->width() - 10){
+        }else if(m_mousePressX < this->width() && m_mousePressX > this->width() - m_layoutMargin){
             m_stretchSide = StretchSide::Right;
-        }else if(m_mousePressX < 10 && m_mousePressX > 0){
+        }else if(m_mousePressX < m_layoutMargin && m_mousePressX > 0){
             m_stretchSide = StretchSide::Left;
-        }else if(m_mousePressY < this->height() && m_mousePressY > this->height() - 10){
+        }else if(m_mousePressY < this->height() && m_mousePressY > this->height() - m_layoutMargin){
             m_stretchSide = StretchSide::Bottom;
-        }else if(m_mousePressY < 10 && m_mousePressY > 0){
+        }else if(m_mousePressY < m_layoutMargin && m_mousePressY > 0){
             m_stretchSide = StretchSide::Top;
         }else{
             m_stretchSide = StretchSide::None;
@@ -729,25 +743,25 @@ void MainWindow::mouseMoveEvent (QMouseEvent* event)
         m_mousePressX = event->x();
         m_mousePressY = event->y();
 
-        if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
-                && (m_mousePressY < 10 && m_mousePressY > 0)){
+        if((m_mousePressX < this->width() && m_mousePressX > this->width() - m_layoutMargin)
+                && (m_mousePressY < m_layoutMargin && m_mousePressY > 0)){
             m_stretchSide = StretchSide::TopRight;
-        }else if((m_mousePressX < this->width() && m_mousePressX > this->width() - 10)
-                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+        }else if((m_mousePressX < this->width() && m_mousePressX > this->width() - m_layoutMargin)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - m_layoutMargin)){
             m_stretchSide = StretchSide::BottomRight;
-        }else if((m_mousePressX < 10 && m_mousePressX > 0)
-                 && (m_mousePressY < 10 && m_mousePressY > 0)){
+        }else if((m_mousePressX < m_layoutMargin && m_mousePressX > 0)
+                 && (m_mousePressY < m_layoutMargin && m_mousePressY > 0)){
             m_stretchSide = StretchSide::TopLeft;
-        }else if((m_mousePressX < 10 && m_mousePressX > 0)
-                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - 10)){
+        }else if((m_mousePressX < m_layoutMargin && m_mousePressX > 0)
+                 && (m_mousePressY < this->height() && m_mousePressY > this->height() - m_layoutMargin)){
             m_stretchSide = StretchSide::BottomLeft;
-        }else if(m_mousePressX < this->width() && m_mousePressX > this->width() - 10){
+        }else if(m_mousePressX < this->width() && m_mousePressX > this->width() - m_layoutMargin){
             m_stretchSide = StretchSide::Right;
-        }else if(m_mousePressX < 10 && m_mousePressX > 0){
+        }else if(m_mousePressX < m_layoutMargin && m_mousePressX > 0){
             m_stretchSide = StretchSide::Left;
-        }else if(m_mousePressY < this->height() && m_mousePressY > this->height() - 10){
+        }else if(m_mousePressY < this->height() && m_mousePressY > this->height() - m_layoutMargin){
             m_stretchSide = StretchSide::Bottom;
-        }else if(m_mousePressY < 10 && m_mousePressY > 0){
+        }else if(m_mousePressY < m_layoutMargin && m_mousePressY > 0){
             m_stretchSide = StretchSide::Top;
         }else{
             m_stretchSide = StretchSide::None;

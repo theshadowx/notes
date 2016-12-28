@@ -87,10 +87,8 @@ void MainWindow::setupMainWindow ()
     m_noteWidget = ui->noteWidget;
     m_editorWidget = ui->editorWidget;
 
-    ui->centralWidget->layout()->setContentsMargins(m_layoutMargin,
-                                                    m_layoutMargin,
-                                                    m_layoutMargin,
-                                                    m_layoutMargin);
+    QMargins margins(m_layoutMargin, m_layoutMargin, m_layoutMargin, m_layoutMargin);
+    ui->centralWidget->layout()->setContentsMargins(margins);
     ui->frame->installEventFilter(this);
     ui->centralWidget->setMouseTracking(true);
     this->setMouseTracking(true);
@@ -608,9 +606,12 @@ void MainWindow::fullscreenWindow ()
     QMargins margins(m_layoutMargin,m_layoutMargin,m_layoutMargin,m_layoutMargin);
 
     if(isFullScreen()){
+        if(!isMaximized())
+            ui->centralWidget->layout()->setContentsMargins(margins);
+
         m_greenMaximizeButton->setProperty("fullscreen",false);
         setWindowState(windowState() & ~Qt::WindowFullScreen);
-        ui->centralWidget->layout()->setContentsMargins(margins);
+
     }else{
         m_greenMaximizeButton->setProperty("fullscreen",true);
         setWindowState(windowState() | Qt::WindowFullScreen);
@@ -798,7 +799,7 @@ void MainWindow::mouseMoveEvent (QMouseEvent* event)
         int dy = event->globalY() - m_mousePressY;
         move (dx, dy);
 
-    }else if(m_canStretchWindow){
+    }else if(m_canStretchWindow && !isMaximized() && !isFullScreen()){
         int newX = x();
         int newY = y();
         int newWidth = width();

@@ -1,15 +1,13 @@
 #include "noteitemdelegate.h"
 #include "noteview.h"
+#include "notemodel.h"
+#include "tagmodel.h"
+
 #include <QPainter>
 #include <QEvent>
 #include <QDebug>
 #include <QApplication>
-#include <QFontDatabase>
 #include <QtMath>
-#include "notemodel.h"
-#include "tagmodel.h"
-
-#include <iostream>
 #include <QScrollBar>
 
 const QFont TITLE_FONT = QFont("Roboto", 10, 60);
@@ -172,12 +170,12 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
     const int spaceY = 1;       // space between title and date
 
     QString title{index.data(NoteModel::NoteFullTitle).toString()};
-    QFontMetrics fmTitle(TITLE_FONT);
-    QRect fmRectTitle = fmTitle.boundingRect(title);
+    QFontMetricsF fmTitle(TITLE_FONT);
+    QRectF fmRectTitle = fmTitle.boundingRect(title);
 
     QString date = parseDateTime(index.data(NoteModel::NoteLastModificationDateTime).toDateTime());
-    QFontMetrics fmDate(DATE_FONT);
-    QRect fmRectDate = fmDate.boundingRect(title);
+    QFontMetricsF fmDate(DATE_FONT);
+    QRectF fmRectDate = fmDate.boundingRect(title);
 
     double rowPosX = option.rect.x();
     double rowPosY = option.rect.y();
@@ -185,7 +183,7 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
 
     double titleRectPosX = rowPosX + SIDE_OFFSET;
     double titleRectPosY = rowPosY;
-    double titleRectWidth = rowWidth - 2 * SIDE_OFFSET;
+    double titleRectWidth = rowWidth - (m_view->verticalScrollBar()->isVisible() ? SIDE_OFFSET : 2 * SIDE_OFFSET) - 1;
     double titleRectHeight = fmRectTitle.height() + topOffsetY;
 
     double dateRectPosX = rowPosX + SIDE_OFFSET;
@@ -236,7 +234,7 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
 
             break;
 
-        default:{
+        default:
             // title
             titleRectHeight = (topOffsetY + fmRectTitle.height()) - (fullRowHeight - currRowHeight) ;
             if(currRowHeight == 0 || titleRectHeight<0)
@@ -253,7 +251,6 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
                 dateRectHeight = floor(currRowHeight) == 0 ? 0 : currRowHeight - bottomSpace;
             }
             break;
-        }
         }
     }
 

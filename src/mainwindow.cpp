@@ -153,10 +153,13 @@ void MainWindow::setupDatabases ()
     }
 
     m_dbManager = new DBManager;
+    connect(m_dbManager, &DBManager::databaseReady, this, [=](){m_isDbReady = true;});
+
     QThread* dbThread = new QThread;
     dbThread->setObjectName(QStringLiteral("dbThread"));
-    m_dbManager->moveToThread(dbThread);
     connect(dbThread, &QThread::started, [=](){m_dbManager->open(noteDBFilePath, doCreate);});
+
+    m_dbManager->moveToThread(dbThread);
     dbThread->start();
 }
 
@@ -238,7 +241,6 @@ void MainWindow::setupSignalsSlots()
     connect(m_editorWidget, &EditorWidget::editorFocusedIn, this, &MainWindow::onEditorFocusedIn);
     connect(m_editorWidget, &EditorWidget::editorTextChanged, m_noteWidget, &NoteWidget::setNoteText);
     // From DataBase
-    connect(m_dbManager, &DBManager::databaseReady, this, [=](){m_isDbReady = true;});
     connect(m_dbManager, &DBManager::foldersReceived, m_folderTagWidget, &FolderTagWidget::initFolders);
     connect(m_dbManager, &DBManager::tagsReceived, m_folderTagWidget, &FolderTagWidget::initTags);
     connect(m_dbManager, &DBManager::notesReceived, m_noteWidget, &NoteWidget::initNotes);

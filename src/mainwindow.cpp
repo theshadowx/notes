@@ -707,8 +707,6 @@ void MainWindow::mousePressEvent (QMouseEvent* event)
             && m_mousePressY < this->height() - m_layoutMargin
             && m_mousePressY > m_layoutMargin){
 
-//        ui->frameLeft->setCursor(Qt::ClosedHandCursor);
-//        ui->frameRight->setCursor(Qt::ClosedHandCursor);
         m_canMoveWindow = true;
     }else{
         m_canStretchWindow = true;

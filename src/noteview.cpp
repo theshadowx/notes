@@ -261,6 +261,15 @@ void NoteView::setupSignalsSlots()
         }
     });
 
+    connect(model(), &QAbstractItemModel::rowsRemoved,[this](const QModelIndex &parent, int first, int last){
+        Q_UNUSED(parent)
+        Q_UNUSED(first)
+        Q_UNUSED(last)
+
+        emit model()->layoutAboutToBeChanged();
+        emit model()->layoutChanged();
+    });
+
     // row was entered
     connect(this, &NoteView::entered,[this](QModelIndex index){
 

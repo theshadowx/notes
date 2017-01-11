@@ -67,53 +67,57 @@ bool FolderItem::removeChild(int position)
     return true;
 }
 
-QVariant FolderItem::data(FolderDataEnum data) const
+int FolderItem::id() const
 {
-    QVariant value;
-
-    switch (data) {
-    case FolderDataEnum::ID:
-        value = QVariant::fromValue(m_folderData->id());
-        break;
-    case FolderDataEnum::Name:
-        value = QVariant::fromValue(m_folderData->name());
-        break;
-    case FolderDataEnum::ParentPath:
-        value = QVariant::fromValue(m_folderData->parentPath());
-        break;
-    case FolderDataEnum::FullPath:
-        value = QVariant::fromValue(m_folderData->fullPath());
-        break;
-    case FolderDataEnum::NoteCount:
-        value = QVariant::fromValue(m_folderData->noteCnt());
-        break;
-    default:
-        break;
-    }
-
-    return value;
+    return m_folderData->id();
 }
 
-bool FolderItem::setData(FolderItem::FolderDataEnum data, const QVariant& value)
+QString FolderItem::name() const
 {
-    switch (data) {
-    case FolderDataEnum::ID:
-        m_folderData->setId(value.toInt());
-        break;
-    case FolderDataEnum::Name:
-        m_folderData->setName(value.toString());
-        break;
-    case FolderDataEnum::ParentPath:
-        m_folderData->setParentPath(value.toString());
-        break;
-    case FolderDataEnum::NoteCount:
-        m_folderData->setNoteCnt(value.toInt());
-        break;
-    default:
-        return false;
-    }
+    return m_folderData->name();
+}
 
-    return true;
+QString FolderItem::parentPath() const
+{
+    return m_folderData->parentPath();
+}
+
+QString FolderItem::fullPath() const
+{
+    return m_folderData->fullPath();
+}
+
+int FolderItem::noteCnt() const
+{
+    return m_folderData->noteCnt();
+}
+
+bool FolderItem::setID(const int id)
+{
+    bool changed = (m_folderData->id() == id);
+    m_folderData->setId(id);
+    return changed ;
+}
+
+bool FolderItem::setName(const QString& name)
+{
+    bool changed = (m_folderData->name() == name);
+    m_folderData->setName(name);
+    return changed;
+}
+
+bool FolderItem::setParentPath(const QString& parentPath)
+{
+    bool changed = (m_folderData->parentPath() == parentPath);
+    m_folderData->setParentPath(parentPath);
+    return changed;
+}
+
+bool FolderItem::setNoteCnt(const int noteCnt)
+{
+    bool changed = (m_folderData->noteCnt() == noteCnt);
+    m_folderData->setNoteCnt(noteCnt);
+    return changed;
 }
 
 FolderItem* FolderItem::parentFolder() const

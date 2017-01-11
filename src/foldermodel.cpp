@@ -16,9 +16,19 @@ QVariant FolderModel::data(const QModelIndex& index, int role) const
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:
-        return item->data(FolderItem::FolderDataEnum::Name);
+        return QVariant::fromValue(item->name());
+    case ID:
+         return QVariant::fromValue(item->id());
+    case Name:
+        return QVariant::fromValue(item->name());
+    case ParentPath:
+        return QVariant::fromValue(item->parentPath());
+    case FullPath:
+        return QVariant::fromValue(item->fullPath());
+    case NoteCount:
+        return QVariant::fromValue(item->noteCnt());
     default:
-        return item->data((FolderItem::FolderDataEnum) role);
+        return QVariant();
     }
 }
 
@@ -31,14 +41,21 @@ bool FolderModel::setData(const QModelIndex& index, const QVariant& value, int r
     FolderItem* item = getFolderItem(index);
 
     switch (role) {
-    case Qt::EditRole:{
-        bool changed = value != item->data(FolderItem::FolderDataEnum::Name);
-        success =  changed && item->setData(FolderItem::FolderDataEnum::Name, value);
-
+    case ID:
+        success = item->setID(value.toInt());
         break;
-    }
+    case Qt::EditRole:
+    case Name:
+        success = item->setName(value.toString());
+        break;
+    case ParentPath:
+        success = item->setParentPath(value.toString());
+        break;
+    case NoteCount:
+        success = item->setNoteCnt(value.toInt());
+        break;
     default:
-        success = item->setData((FolderItem::FolderDataEnum) role, value);
+        success = false;
         break;
     }
 

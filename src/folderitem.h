@@ -10,16 +10,6 @@ class FolderItem : public QObject
     Q_OBJECT
 public:
 
-    enum class FolderDataEnum{
-            ID = Qt::UserRole + 1,
-            Name,
-            ParentPath,
-            FullPath,
-            NoteCount
-        };
-
-    Q_ENUM(FolderDataEnum)
-
     explicit FolderItem(FolderData* folderData, QObject *parent = 0);
 
     int childIndex(int childID) const;
@@ -31,8 +21,16 @@ public:
     bool insertChild(FolderItem* childFolder, int position);
     bool removeChild(int position);
 
-    QVariant data(FolderItem::FolderDataEnum data) const;
-    bool setData(FolderDataEnum data, const QVariant &value);
+    int id() const;
+    QString name() const;
+    QString parentPath() const;
+    QString fullPath() const;
+    int noteCnt() const;
+
+    bool setID(const int id);
+    bool setName(const QString& name);
+    bool setParentPath(const QString& parentName);
+    bool setNoteCnt(const int noteCnt);
 
     FolderItem* parentFolder() const;
     void setParentFolder(FolderItem* parentFolder);

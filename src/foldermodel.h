@@ -8,6 +8,17 @@
 class FolderModel : public QAbstractItemModel
 {
 public:
+
+    enum FolderDataEnum{
+            ID = Qt::UserRole + 1,
+            Name,
+            ParentPath,
+            FullPath,
+            NoteCount
+        };
+
+    Q_ENUM(FolderDataEnum)
+
     FolderModel(QObject *parent = Q_NULLPTR);
 
         QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;

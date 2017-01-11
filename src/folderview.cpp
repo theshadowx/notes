@@ -82,8 +82,8 @@ void FolderView::dragLeaveEvent(QDragLeaveEvent* e)
 void FolderView::dropEvent(QDropEvent* e)
 {
     QModelIndex dropFolderIndex = indexAt(e->pos());
-    QString dropFolderPath = dropFolderIndex.data((int)FolderItem::FolderDataEnum::FullPath).toString();
-    QString currentFolderPath = this->currentIndex().data((int)FolderItem::FolderDataEnum::FullPath).toString();
+    QString dropFolderPath = dropFolderIndex.data(FolderModel::FullPath).toString();
+    QString currentFolderPath = this->currentIndex().data(FolderModel::FullPath).toString();
 
     FolderItemDelegate* folderItemDelegate = static_cast<FolderItemDelegate*>(itemDelegate());
     folderItemDelegate->setDraggedOnIndex(QModelIndex());
@@ -110,12 +110,12 @@ void FolderView::dropEvent(QDropEvent* e)
             // update the note count
             QModelIndex currentFolderIndex = this->currentIndex();
             if(currentFolderIndex.isValid()){
-                int currentFolderCnt = currentFolderIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
-                this->model()->setData(currentFolderIndex, --currentFolderCnt, (int)FolderItem::FolderDataEnum::NoteCount);
+                int currentFolderCnt = currentFolderIndex.data(FolderModel::NoteCount).toInt();
+                this->model()->setData(currentFolderIndex, --currentFolderCnt, FolderModel::NoteCount);
             }
 
-            int cnt = dropFolderIndex.data((int)FolderItem::FolderDataEnum::NoteCount).toInt();
-            this->model()->setData(dropFolderIndex, ++cnt, (int)FolderItem::FolderDataEnum::NoteCount);
+            int cnt = dropFolderIndex.data(FolderModel::NoteCount).toInt();
+            this->model()->setData(dropFolderIndex, ++cnt, FolderModel::NoteCount);
         }
     }
 }

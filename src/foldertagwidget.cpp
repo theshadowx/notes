@@ -152,7 +152,7 @@ QModelIndex FolderTagWidget::addNewFolder(QModelIndex index)
     // building the item and insert it to the model
     int row = m_folderModel->rowCount(index);
     QString folderName = QStringLiteral("Folder%1").arg(row);
-    QString parentPath = m_folderModel->data(index, (int) FolderItem::FolderDataEnum::FullPath).toString();
+    QString parentPath = m_folderModel->data(index, FolderModel::FullPath).toString();
 
     ++m_folderCounter;
     FolderData* folderData = new FolderData;
@@ -243,7 +243,7 @@ void FolderTagWidget::deleteFolder(QModelIndex index)
             index =  m_folderView->selectionModel()->currentIndex();
         }
 
-        int id = index.data((int) FolderItem::FolderDataEnum::ID).toInt();
+        int id = index.data(FolderModel::ID).toInt();
         m_folderModel->removeFolder(index.row(), m_folderModel->parent(index));
 
         emit folderRemoved(id);
@@ -333,16 +333,16 @@ void FolderTagWidget::onNoteAdded()
 {
     // update the number of note contained in the folder
     QModelIndex folderIndex = m_folderView->currentIndex();
-    int noteCnt = folderIndex.data((int) FolderItem::FolderDataEnum::NoteCount).toInt();
-    m_folderModel->setData(folderIndex, QVariant::fromValue(++noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
+    int noteCnt = folderIndex.data(FolderModel::NoteCount).toInt();
+    m_folderModel->setData(folderIndex, QVariant::fromValue(++noteCnt), FolderModel::NoteCount);
 }
 
 void FolderTagWidget::onNoteRemoved()
 {
     // update the number of note contained in the folder
     QModelIndex folderIndex = m_folderView->currentIndex();
-    int noteCnt = folderIndex.data((int) FolderItem::FolderDataEnum::NoteCount).toInt();
-    m_folderModel->setData(folderIndex, QVariant::fromValue(--noteCnt<0?0:noteCnt), (int) FolderItem::FolderDataEnum::NoteCount);
+    int noteCnt = folderIndex.data(FolderModel::NoteCount).toInt();
+    m_folderModel->setData(folderIndex, QVariant::fromValue(--noteCnt<0?0:noteCnt), FolderModel::NoteCount);
 }
 
 void FolderTagWidget::onTagsInNoteChanged(const QList<QPersistentModelIndex>& tagIndexes, const int noteId)
@@ -380,15 +380,15 @@ void FolderTagWidget::onFolderSelectionChanged(const QItemSelection& selected, c
 
         // update the current Folder Path
         m_currentFolderPath = m_folderModel->data(selectedFolderIndex,
-                                                  (int) FolderItem::FolderDataEnum::FullPath).toString();
+                                                  FolderModel::FullPath).toString();
 
         // check the number of notes contained in the current selected folder
         // if the folder contains notes, grab them from database
         int noteCnt = m_folderModel->data(selectedFolderIndex,
-                                           (int) FolderItem::FolderDataEnum::NoteCount).toInt();
+                                          FolderModel::NoteCount).toInt();
 
         QString folderName = m_folderModel->data(selectedFolderIndex,
-                                                 (int) FolderItem::FolderDataEnum::Name).toString();
+                                                 FolderModel::Name).toString();
 
         emit folderSelected(folderName, m_currentFolderPath, noteCnt);
     }
@@ -437,9 +437,9 @@ void FolderTagWidget::onTagModelRowsRemoved(const QModelIndex& parent, int first
     Q_UNUSED(first)
     Q_UNUSED(last)
     if(m_tagModel->rowCount() > 0){
-            int rowHeight = m_tagView->sizeHintForIndex(m_tagModel->index(0)).height();
-            int height =  rowHeight * m_tagModel->rowCount();
-            m_tagView->setFixedHeight(height);
+        int rowHeight = m_tagView->sizeHintForIndex(m_tagModel->index(0)).height();
+        int height =  rowHeight * m_tagModel->rowCount();
+        m_tagView->setFixedHeight(height);
     }else{
         m_tagView->setFixedHeight(0);
     }

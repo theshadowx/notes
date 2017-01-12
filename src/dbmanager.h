@@ -42,6 +42,7 @@ private:
     QList<NoteData*> getNotesInTrash();
     bool addNote(const NoteData*note) const;
     bool removeNote(const NoteData* note) const;
+    bool removeNoteFromTrash(const NoteData* note) const;
     bool modifyNote(const NoteData* note) const;
     bool migrateNote(NoteData* note) const;
     bool migrateTrash(NoteData* note) const;
@@ -92,6 +93,7 @@ public slots:
     void onNotesRequested(const QString& path);
     void onAddNoteRequested(const NoteData* note);
     void onRemoveNoteRequested(NoteData* note);
+    void onRemoveNoteFromTrashRequested(NoteData* note);
     void onUpdateNoteRequested(const NoteData* note);
     void onRestoreNoteRequested(const NoteData* note);
     void syncNoteTableIndex(const int index);

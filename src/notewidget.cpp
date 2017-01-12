@@ -7,6 +7,7 @@
 #include <QTextStream>
 #include <QMenu>
 #include <QWidgetAction>
+#include <QMessageBox>
 #include <QDebug>
 
 const int FIRST_LINE_MAX=80;
@@ -345,6 +346,7 @@ void NoteWidget::setCurrentFolderPath(const QString& currentFolderPath)
 void NoteWidget::setCurrentFolderName(const QString& folderName)
 {
     ui->labelNotes->setText(folderName);
+    m_currentFolderName = folderName;
     bool enableDrag = !(folderName == QStringLiteral("All Notes"));
     m_noteView->setDragEnabled(enableDrag);
 }
@@ -640,6 +642,19 @@ void NoteWidget::removeSelectedNote ()
     if(m_isNoteDeletionEnabled){
         if(!m_isOperationRunning){
             m_isOperationRunning = true;
+
+            if(m_currentFolderName == QStringLiteral("Trash")){
+                // TODO : create a question dialog without having an entry in  desktop taskbar
+                auto ret = QMessageBox::question(Q_NULLPTR,
+                                                 QString(),
+                                                 tr("Do you really want to remove the selected note definitely ?"),
+                                                 QMessageBox::Yes,
+                                                 QMessageBox::No | QMessageBox::Default);
+                if(ret == QMessageBox::No){
+                    m_isOperationRunning = false;
+                    return;
+                }
+            }
 
             if(m_currentSelectedNoteProxy.isValid()){
 

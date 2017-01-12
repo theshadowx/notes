@@ -268,6 +268,7 @@ void MainWindow::setupSignalsSlots()
     connect(this, &MainWindow::notesRequested, m_dbManager, &DBManager::onNotesRequested);
     connect(this, &MainWindow::addNoteRequested, m_dbManager, &DBManager::onAddNoteRequested);
     connect(this, &MainWindow::removeNoteRequested, m_dbManager, &DBManager::onRemoveNoteRequested);
+    connect(this, &MainWindow::removeNoteFromTrashRequested, m_dbManager, &DBManager::onRemoveNoteFromTrashRequested);
     connect(this, &MainWindow::updateNoteRequested, m_dbManager, &DBManager::onUpdateNoteRequested);
     connect(this, &MainWindow::restoreNoteRequested, m_dbManager, &DBManager::onRestoreNoteRequested);
 }
@@ -475,7 +476,14 @@ void MainWindow::onNoteRemoved(NoteData* note)
     if(m_folderTagWidget->folderType() == FolderTagWidget::AllNotes)
         setNoteEditabled(!isEmpty);
 
-    emit removeNoteRequested(note);
+    switch (m_folderTagWidget->folderType()) {
+    case FolderTagWidget::Trash:
+        emit removeNoteFromTrashRequested(note);
+        break;
+    default:
+        emit removeNoteRequested(note);
+        break;
+    }
 }
 
 void MainWindow::onNoteTagMenuAboutTobeShown(const QModelIndex& index, QMenu& menu)
@@ -530,11 +538,9 @@ void MainWindow::onNoteSearchBegin()
 
 void MainWindow::onNoteModelContentChanged()
 {
-    if(m_folderTagWidget->folderType() == FolderTagWidget::AllNotes){
-        bool isViewEmpty =  m_noteWidget->isViewEmpty();
-        setNoteEditabled(!isViewEmpty);
-        m_noteWidget->setNoteDeletionEnabled(!isViewEmpty);
-    }
+    bool isViewEmpty =  m_noteWidget->isViewEmpty();
+    setNoteEditabled(!isViewEmpty);
+    m_noteWidget->setNoteDeletionEnabled(!isViewEmpty);
 }
 
 void MainWindow::onEditorFocusedIn()
@@ -644,7 +650,8 @@ void MainWindow::minimizeWindow ()
     QMargins margins(m_layoutMargin,m_layoutMargin,m_layoutMargin,m_layoutMargin);
     ui->centralWidget->layout()->setContentsMargins(margins);
 
-    this->setWindowState(windowState() | Qt::WindowMinimized);
+    // BUG : QTBUG-57902 minimize doesn't store the window state before minimizing
+    showMinimized();
 }
 
 void MainWindow::QuitApplication ()

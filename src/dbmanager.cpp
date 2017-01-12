@@ -453,6 +453,18 @@ bool DBManager::removeNote(const NoteData* note) const
     return (removed && addedToTrashDB);
 }
 
+bool DBManager::removeNoteFromTrash(const NoteData* note) const
+{
+    QSqlQuery query;
+
+    QString queryStr = QStringLiteral("DELETE FROM deleted_notes "
+                                      "WHERE id=%1")
+                       .arg(note->id());
+
+    query.exec(queryStr);
+    return (query.numRowsAffected() == 1);
+}
+
 bool DBManager::modifyNote(const NoteData* note) const
 {
     QSqlQuery query;
@@ -1008,6 +1020,12 @@ void DBManager::onRemoveNoteRequested(NoteData* note)
 {
     QMutexLocker locker(&m_mutex);
     removeNote(note);
+}
+
+void DBManager::onRemoveNoteFromTrashRequested(NoteData* note)
+{
+    QMutexLocker locker(&m_mutex);
+    removeNoteFromTrash(note);
 }
 
 void DBManager::onUpdateNoteRequested(const NoteData* note)

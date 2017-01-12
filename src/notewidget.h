@@ -68,6 +68,7 @@ private:
     QQueue<QString> m_searchQueue;
     QQueue<QString> m_filterTagQueue;
     QString m_currentFolderPath;
+    QString m_currentFolderName;
 
     bool m_isNoteDeletionEnabled;
     bool m_isAddingNoteEnabled;

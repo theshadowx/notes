@@ -172,6 +172,7 @@ signals:
     void notesRequested(const QString& path);
     void addNoteRequested(const NoteData* note);
     void removeNoteRequested(NoteData* note);
+    void removeNoteFromTrashRequested(NoteData* note);
     void updateNoteRequested(const NoteData* note);
     void restoreNoteRequested(const NoteData* note);
     void syncNoteIndex(const int index);

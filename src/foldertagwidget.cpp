@@ -146,12 +146,12 @@ void FolderTagWidget::onAddTagButtonClicked()
     m_tagView->edit(index);
 }
 
-QModelIndex FolderTagWidget::addNewFolder(QModelIndex index)
+QModelIndex FolderTagWidget::addNewFolder(const QString& name, QModelIndex index)
 {
     // getting folder data for the new child folder
     // building the item and insert it to the model
     int row = m_folderModel->rowCount(index);
-    QString folderName = QStringLiteral("Folder%1").arg(row);
+    QString folderName = name.isEmpty() ? QStringLiteral("Folder%1").arg(row) : name;
     QString parentPath = m_folderModel->data(index, FolderModel::FullPath).toString();
 
     ++m_folderCounter;
@@ -173,6 +173,19 @@ QModelIndex FolderTagWidget::addNewFolder(QModelIndex index)
     emit folderAdded(folderData);
 
     return newFolderIndex;
+}
+
+void FolderTagWidget::selectAllNotes()
+{
+    // select All Notes
+    QModelIndex index = m_generalFoldersView->model()->index(0,0);
+    m_generalFoldersView->setCurrentIndex(index);
+}
+
+void FolderTagWidget::clearFolderSelection()
+{
+    m_folderView->selectionModel()->clearSelection();
+    m_folderView->selectionModel()->clearCurrentIndex();
 }
 
 void FolderTagWidget::onClearTagSelectionButtonClicked()
@@ -497,7 +510,7 @@ void FolderTagWidget::showFolderViewContextMenu(const QPoint& pos)
         menu.hide();
 
         if(index.isValid()){
-            QModelIndex subFolderIndex = addNewFolder(index);
+            QModelIndex subFolderIndex = addNewFolder(QString(), index);
             m_folderView->edit(subFolderIndex);
         }
     });

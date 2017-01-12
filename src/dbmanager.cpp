@@ -497,14 +497,16 @@ bool DBManager::migrateNote(NoteData* note) const
     QString fullTitle = note->fullTitle()
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
+    QString fullPath = note->fullPath();
 
-    QString queryStr = QString("INSERT INTO active_notes (id, creation_date, modification_date, content, full_title) "
-                               "VALUES (%1, %2, %3, '%4', '%5');")
+    QString queryStr = QString("INSERT INTO active_notes (id, creation_date, modification_date, content, full_title, full_path) "
+                               "VALUES (%1, %2, %3, '%4', '%5', '%6');")
                        .arg(id)
                        .arg(epochTimeDateCreated)
                        .arg(epochTimeDateModified)
                        .arg(content)
-                       .arg(fullTitle);
+                       .arg(fullTitle)
+                       .arg(fullPath);
 
     query.exec(queryStr);
     delete note;

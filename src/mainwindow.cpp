@@ -283,7 +283,7 @@ void MainWindow::InitData()
     bool exist = (QFile::exists(oldNoteDBPath) || QFile::exists(oldTrashDBPath));
     // migrate the old notes contained in files to  SQLite DB
     if(exist){
-        QProgressDialog* pd = new QProgressDialog("Migrating database, please wait.", "", 0, 0, this);
+        QProgressDialog* pd = new QProgressDialog(tr("Migrating database, please wait."), "", 0, 0, this);
         pd->setCancelButton(0);
         pd->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
         pd->setMinimumDuration(0);
@@ -296,13 +296,11 @@ void MainWindow::InitData()
             ui->frame->setEnabled(true);
             // get last tables id
             emit tablesLastRowIdRequested();
-            // get Folder list
-            emit foldersRequested();
-            // get tag list
-            emit tagsRequested();
+            // select all Notes
+            m_folderTagWidget->selectAllNotes();
         });
 
-        QtConcurrent::run(this, &MainWindow::checkMigration);
+        checkMigration();
 
     }else{
         // get last tables id
@@ -919,55 +917,64 @@ void MainWindow::checkMigration()
         trashFileExists = true;
     }
 
-    if(noteFileExists)
-        migrateNote(oldNoteDBPath);
+    if(noteFileExists){
+        QModelIndex folderIndex = m_folderTagWidget->addNewFolder(tr("_migratedNotes_"));
+        QString folderID = folderIndex.data(FolderModel::ID).toString();
+        QAbstractItemModel* folderModel = const_cast<QAbstractItemModel*>(folderIndex.model());
+        folderModel->setData(folderIndex, m_noteActiveTobeMigratedCounter, FolderModel::NoteCount);
+        m_folderTagWidget->clearFolderSelection();
+
+        QtConcurrent::run(this, &MainWindow::migrateNote, oldNoteDBPath, folderID);
+    }
 
     if(trashFileExists)
-        migrateTrash(oldTrashDBPath);
+        QtConcurrent::run(this, &MainWindow::migrateTrash, oldTrashDBPath);
 }
 
-void MainWindow::migrateNote(QString notePath)
+void MainWindow::migrateNote(QString notePath, QString folderID)
 {
     QSettings notesIni(QSettings::IniFormat, QSettings::UserScope, "Awesomeness", "Notes");
     QStringList dbKeys = notesIni.allKeys();
+    if(!dbKeys.isEmpty()){
+        QString cntStr = notesIni.value("notesCounter", "NULL").toString();
+        if(cntStr == "NULL"){
+            m_noteWidget->initNoteCounter(0);
+        }else{
+            m_noteWidget->initNoteCounter(cntStr.toInt());
+        }
 
-    QString cntStr = notesIni.value("notesCounter", "NULL").toString();
-    if(cntStr == "NULL"){
-        m_noteWidget->initNoteCounter(0);
-    }else{
-        m_noteWidget->initNoteCounter(cntStr.toInt());
+        emit syncNoteIndex(cntStr.toInt());
+
+        auto it = dbKeys.begin();
+        for(; it < dbKeys.end()-1; it += 3){
+            QString noteName = it->split("/")[0];
+            int id = noteName.split("_")[1].toInt();
+
+            QPointer<NoteData> newNote = new NoteData();
+            newNote->setId(id);
+
+            connect(newNote, &NoteData::destroyed, [=](){
+                --m_noteActiveTobeMigratedCounter;
+                if(m_noteActiveTobeMigratedCounter == 0 && m_noteTrashTobeMigratedCounter == 0)
+                    emit migrationFinished();
+            });
+
+            QString createdDateDB = notesIni.value(noteName + "/dateCreated", "Error").toString();
+            newNote->setCreationDateTime(QDateTime::fromString(createdDateDB, Qt::ISODate));
+            QString lastEditedDateDB = notesIni.value(noteName + "/dateEdited", "Error").toString();
+            newNote->setLastModificationDateTime(QDateTime::fromString(lastEditedDateDB, Qt::ISODate));
+            QString contentText = notesIni.value(noteName + "/content", "Error").toString();
+            newNote->setContent(contentText);
+            QString firstLine = NoteWidget::getFirstLine(contentText);
+            newNote->setFullTitle(firstLine);
+            newNote->setFullPath(folderID);
+
+            emit migrateNoteResquested(newNote);
+        }
+
+        QFile oldNoteDBFile(notePath);
+        oldNoteDBFile.rename(QFileInfo(notePath).dir().path() + "/oldNotes.ini");
     }
-
-    emit syncNoteIndex(cntStr.toInt());
-
-    auto it = dbKeys.begin();
-    for(; it < dbKeys.end()-1; it += 3){
-        QString noteName = it->split("/")[0];
-        int id = noteName.split("_")[1].toInt();
-
-        QPointer<NoteData> newNote = new NoteData();
-        newNote->setId(id);
-
-        connect(newNote, &NoteData::destroyed, [=](){
-            --m_noteActiveTobeMigratedCounter;
-            if(m_noteActiveTobeMigratedCounter == 0 && m_noteTrashTobeMigratedCounter == 0)
-                emit migrationFinished();
-        });
-
-        QString createdDateDB = notesIni.value(noteName + "/dateCreated", "Error").toString();
-        newNote->setCreationDateTime(QDateTime::fromString(createdDateDB, Qt::ISODate));
-        QString lastEditedDateDB = notesIni.value(noteName + "/dateEdited", "Error").toString();
-        newNote->setLastModificationDateTime(QDateTime::fromString(lastEditedDateDB, Qt::ISODate));
-        QString contentText = notesIni.value(noteName + "/content", "Error").toString();
-        newNote->setContent(contentText);
-        QString firstLine = NoteWidget::getFirstLine(contentText);
-        newNote->setFullTitle(firstLine);
-
-        emit migrateNoteResquested(newNote);
-    }
-
-    QFile oldNoteDBFile(notePath);
-    oldNoteDBFile.rename(QFileInfo(notePath).dir().path() + "/oldNotes.ini");
 }
 
 void MainWindow::migrateTrash(QString trashPath)

@@ -36,6 +36,10 @@ public:
     QString currentFolderPath() const;
 
     void addNewFolderIfNotExists();
+    QModelIndex addNewFolder(const QString& name = QString(), QModelIndex index = QModelIndex());
+
+    void selectAllNotes();
+    void clearFolderSelection();
     void clearTagSelection();
     bool isTagSelectionEmpty();
     QModelIndex addNewTagInEditMode();
@@ -67,7 +71,6 @@ private:
     QPushButton* m_deleteTagButton;
     QPushButton* m_clearTagSelectionButton;
 
-    QModelIndex addNewFolder(QModelIndex index = QModelIndex());
     void deleteFolder(QModelIndex index = QModelIndex());
     QModelIndex addNewTag();
     void removeTag();

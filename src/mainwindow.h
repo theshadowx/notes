@@ -100,7 +100,7 @@ private:
     void restoreStates();
 
     void checkMigration();
-    void migrateNote(QString notePath);
+    void migrateNote(QString notePath, QString folderID);
     void migrateTrash(QString trashPath);
     void setNoteEditabled(bool state);
 

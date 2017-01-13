@@ -647,7 +647,8 @@ void NoteWidget::removeSelectedNote ()
                 // TODO : create a question dialog without having an entry in  desktop taskbar
                 auto ret = QMessageBox::question(Q_NULLPTR,
                                                  QString(),
-                                                 tr("Do you really want to remove the selected note definitely ?"),
+                                                 tr("Do you really want to delete this note ?\n"
+                                                    "This will delete the note permanently."),
                                                  QMessageBox::Yes,
                                                  QMessageBox::No | QMessageBox::Default);
                 if(ret == QMessageBox::No){

@@ -664,6 +664,10 @@ void NoteWidget::removeSelectedNote ()
 
                 // update the the current selected note
                 m_currentSelectedNoteProxy = m_noteView->currentIndex();
+
+                if(m_currentSelectedNoteProxy.isValid())
+                    m_noteView->selectionModel()->select(m_currentSelectedNoteProxy, QItemSelectionModel::SelectCurrent);
+
                 QModelIndex index = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
                 emit noteSelectionChanged(index, QModelIndex());
             }

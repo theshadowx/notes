@@ -31,12 +31,6 @@
    </property>
    <item row="0" column="0">
     <widget class="QFrame" name="frameRight">
-     <property name="minimumSize">
-      <size>
-       <width>500</width>
-       <height>0</height>
-      </size>
-     </property>
      <layout class="QVBoxLayout" name="verticalLayout_textEdit">
       <property name="spacing">
        <number>3</number>

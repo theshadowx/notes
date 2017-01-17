@@ -15,12 +15,7 @@ const QFont DATE_FONT = QFont("Roboto", 10);
 const QFont TAG_FONT = QFont("Roboto", 9);
 const QColor TITLE_COLOR = qRgb(26, 26, 26);
 const QColor DATE_COLOR = qRgb(50, 50, 50);
-const QColor ACTIVE_COLOR = qRgb(144, 164, 174);
-const QColor NOT_ACTIVE_COLOR = qRgb(176, 190, 197);
-const QColor HOVER_COLOR = qRgb(207, 207, 207);
-const QColor APPLICATION_INACTIVE_COLOR = qRgb(207, 207, 207);
 const QColor SEPARATOR_COLOR = qRgb(221, 221, 221);
-const QColor DEFAULT_COLOR = QColor(Qt::transparent);
 const int MAX_FRAME = 300;
 const int TAG_HEIGHT = 16;
 const int BETWEEN_TAG_SPACE_Y = 2;
@@ -142,22 +137,14 @@ void NoteItemDelegate::paintBackground(QPainter* painter, const QStyleOptionView
     QModelIndex hoveredIndex = m_view->indexAt(m_view->mapFromGlobal(QCursor::pos()));
 
     painter->save();
-    if((option.state & QStyle::State_Selected) == QStyle::State_Selected){
-        if(qApp->applicationState() == Qt::ApplicationActive){
-            if((option.state & QStyle::State_HasFocus) == QStyle::State_HasFocus){
-                painter->fillRect(option.rect, QBrush(ACTIVE_COLOR));
-            }else{
-                painter->fillRect(option.rect, QBrush(NOT_ACTIVE_COLOR));
-            }
-        }else if(qApp->applicationState() == Qt::ApplicationInactive){
-            painter->fillRect(option.rect, QBrush(APPLICATION_INACTIVE_COLOR));
-        }
-    }else if((option.state & QStyle::State_MouseOver) == QStyle::State_MouseOver){
-        painter->fillRect(option.rect, QBrush(HOVER_COLOR));
-    }else if((index.row() !=  selectedIndex.row() - 1)
-             && (index.row() !=  hoveredIndex.row() - 1)){
 
-        painter->fillRect(option.rect, QBrush(DEFAULT_COLOR));
+    if(((option.state & QStyle::State_Selected) == QStyle::State_Selected)
+            || ((option.state & QStyle::State_MouseOver) == QStyle::State_MouseOver)){
+
+        QStyledItemDelegate::paint(painter, option, index);
+    }else if((index.row() !=  selectedIndex.row() - 1)
+               && (index.row() !=  hoveredIndex.row() - 1)){
+
         paintSeparator(painter, option, index);
     }
     painter->restore();

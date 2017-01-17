@@ -120,6 +120,18 @@ void FolderView::dropEvent(QDropEvent* e)
     }
 }
 
+void FolderView::mousePressEvent(QMouseEvent* e)
+{
+    switch (e->button()) {
+    case Qt::RightButton:
+        e->accept();
+        break;
+    default:
+        QTreeView::mousePressEvent(e);
+        break;
+    }
+}
+
 void FolderView::mouseMoveEvent(QMouseEvent* e)
 {
     if(e->buttons() == Qt::NoButton)

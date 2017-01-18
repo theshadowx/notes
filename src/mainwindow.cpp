@@ -361,8 +361,8 @@ void MainWindow::onFolderSelected(const QString folderName, const QString& folde
 
     // enable Add/delete/edit of notes
     m_noteWidget->setAddingNoteEnabled(true);
-    m_noteWidget->setNoteDeletionEnabled(true);
-    setNoteEditabled(true);
+    m_noteWidget->setNoteDeletionEnabled(noteCount != 0);
+    setNoteEditabled(noteCount != 0);
 
     if(noteCount >0)
         emit notesRequested(folderPath);
@@ -539,7 +539,10 @@ void MainWindow::onNoteSearchBegin()
 void MainWindow::onNoteModelContentChanged()
 {
     bool isViewEmpty =  m_noteWidget->isViewEmpty();
-    setNoteEditabled(!isViewEmpty);
+
+    if(m_folderTagWidget->folderType() != FolderTagWidget::Trash)
+        setNoteEditabled(!isViewEmpty);
+
     m_noteWidget->setNoteDeletionEnabled(!isViewEmpty);
 }
 
@@ -547,7 +550,6 @@ void MainWindow::onEditorFocusedIn()
 {
     switch (m_folderTagWidget->folderType()) {
     case FolderTagWidget::Normal:
-        setNoteEditabled(true);
         m_folderTagWidget->addNewFolderIfNotExists();
         m_folderTagWidget->blockSignals(true);
         m_folderTagWidget->clearTagSelection();

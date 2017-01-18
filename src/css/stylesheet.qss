@@ -59,32 +59,16 @@ QLineEdit:focus{border: 1px solid rgb(61, 155, 218);}
 #greenMaximizeButton, #redCloseButton, #yellowMinimizeButton,
 #newNoteButton, #trashButton, #newFolderButton, #newTagButton {border: none; padding: 0px;}
 
-#deleteNoteButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
-#deleteNoteButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
-#deleteNoteButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
+#deleteNoteButton{qproperty-icon: url(":/images/trashCan_Regular.png"); qproperty-iconSize: 12px 12px;}
+#addNoteButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+#tagNoteButton{qproperty-icon: url(":/images/tag_Regular.png"); qproperty-iconSize: 12px 12px;}
 
-#addNoteButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
-#addNoteButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#addNoteButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
+#addRootFolderButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+#removeFolderButton{qproperty-icon: url(":/images/trashCan_Regular.png"); qproperty-iconSize: 12px 12px;}
 
-#addRootFolderButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
-#addRootFolderButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#addRootFolderButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
-
-#removeFolderButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
-#removeFolderButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
-#removeFolderButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
-
-#addTagButton{border-image: url(:/images/newNote_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px; }
-#addTagButton:pressed{border-image: url(:/images/newNote_Pressed.png);}
-#addTagButton:!pressed:hover{border-image: url(:/images/newNote_Hovered.png);}
-
-#deleteTagButton{border-image: url(:/images/trashCan_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px 4px;}
-#deleteTagButton:pressed{border-image: url(:/images/trashCan_Pressed.png);}
-#deleteTagButton:!pressed:hover{border-image: url(:/images/trashCan_Hovered.png);}
-
-#clearSelectionButton{border-image: url(:/images/clearSelection_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px;}
-#tagNoteButton{border-image: url(:/images/tag_Regular.png); background-repeat: no-repeat; background-position: center center; margin:3px;}
+#addTagButton{qproperty-icon: url(":/images/newNote_Regular.png"); qproperty-iconSize: 12px 12px;}
+#deleteTagButton{qproperty-icon: url(":/images/trashCan_Regular.png"); qproperty-iconSize: 12px 12px;}
+#clearSelectionButton{qproperty-icon: url(":/images/clearSelection_Regular.png"); qproperty-iconSize: 12px 12px;}
 
 #redCloseButton{border-image:url(:/images/red.png)0 0 0 0 stretch stretch;}
 #redCloseButton[hovered=true]{border-image:url(:/images/redHovered.png);}

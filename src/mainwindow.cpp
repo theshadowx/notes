@@ -521,6 +521,7 @@ void MainWindow::onNoteUpdated(NoteData* note)
 
     switch (m_folderTagWidget->folderType()) {
     case FolderTagWidget::Normal:
+    case FolderTagWidget::AllNotes:
         emit updateNoteRequested(note);
         break;
     case FolderTagWidget::Trash:

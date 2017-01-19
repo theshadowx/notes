@@ -3,6 +3,10 @@
 #include "notemodel.h"
 #include "tagmodel.h"
 
+#include "notetitleitem.h"
+#include "notedatetimeitem.h"
+#include "notetagitem.h"
+
 #include <QPainter>
 #include <QEvent>
 #include <QDebug>
@@ -16,7 +20,7 @@ const QFont TAG_FONT = QFont("Roboto", 9);
 const QColor TITLE_COLOR = qRgb(26, 26, 26);
 const QColor DATE_COLOR = qRgb(50, 50, 50);
 const QColor SEPARATOR_COLOR = qRgb(221, 221, 221);
-const int MAX_FRAME = 300;
+const int MAX_FRAME = 3000;
 const int TAG_HEIGHT = 16;
 const int BETWEEN_TAG_SPACE_Y = 2;
 const int BETWEEN_TAG_SPACE_X = 2;
@@ -162,7 +166,7 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
 
     QString date = parseDateTime(index.data(NoteModel::NoteLastModificationDateTime).toDateTime());
     QFontMetricsF fmDate(DATE_FONT);
-    QRectF fmRectDate = fmDate.boundingRect(title);
+    QRectF fmRectDate = fmDate.boundingRect(date);
 
     double rowPosX = option.rect.x();
     double rowPosY = option.rect.y();
@@ -179,14 +183,6 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
     double dateRectHeight = fmRectDate.height() + spaceY;
 
     Qt::AlignmentFlag textAlignment = Qt::AlignBottom;
-
-    auto drawStr = [painter](double posX, double posY, double width, double height,
-                   QColor color, QFont font, QString str, Qt::AlignmentFlag alignment){
-        QRectF rect(posX, posY, width, height);
-        painter->setPen(color);
-        painter->setFont(font);
-        painter->drawText(rect, alignment, str);
-    };
 
     // set the bounding Rect of title and date string
     if(index.row() == m_animatedIndex.row()){
@@ -244,8 +240,17 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
     // draw title & date
     // TODO: find a way to remove the space between the end of the text and textRect right border when text elided
     title = fmTitle.elidedText(title, Qt::ElideRight, titleRectWidth, Qt::TextSingleLine);
-    drawStr(titleRectPosX, titleRectPosY, titleRectWidth, titleRectHeight, TITLE_COLOR, TITLE_FONT, title, textAlignment);
-    drawStr(dateRectPosX, dateRectPosY, dateRectWidth, dateRectHeight, DATE_COLOR, DATE_FONT, date, textAlignment);
+
+    NoteTitleItem noteTitleItem(title, textAlignment);
+    noteTitleItem.setGeometry(titleRectPosX, titleRectPosY, titleRectWidth, titleRectHeight);
+    QPixmap px = noteTitleItem.grab();
+    painter->drawPixmap(noteTitleItem.geometry(), px);
+
+    NoteDateTimeItem noteDateTimeItem(date, textAlignment);
+    noteDateTimeItem.setGeometry(dateRectPosX, dateRectPosY, dateRectWidth, dateRectHeight);
+    px = noteDateTimeItem.grab();
+    painter->drawPixmap(noteDateTimeItem.geometry(), px);
+
     painter->restore();
 }
 
@@ -337,15 +342,10 @@ void NoteItemDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem& 
             }
         }
 
-        QRectF bgRectF(xRect, yRect, tagRectWidth, tagRectHeight);
-        QRectF textRectF(xRect+4, yRect, tagRectWidth-8, tagRectHeight);
-
-        painter->setPen(Qt::NoPen);
-        painter->setBrush(QBrush(color));
-        painter->drawRoundedRect(bgRectF, 4, 4);
-
-        painter->setPen(Qt::black);
-        painter->drawText(textRectF, textAlignment, name);
+        NoteTagItem noteTagItem(name, color, textAlignment);
+        noteTagItem.setGeometry(xRect, yRect, tagRectWidth, tagRectHeight);
+        QPixmap px = noteTagItem.grab();
+        painter->drawPixmap(noteTagItem.geometry(), px);
 
         xAcc += tagRectWidth;
     }

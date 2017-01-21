@@ -20,7 +20,7 @@ const QFont TAG_FONT = QFont("Roboto", 9);
 const QColor TITLE_COLOR = qRgb(26, 26, 26);
 const QColor DATE_COLOR = qRgb(50, 50, 50);
 const QColor SEPARATOR_COLOR = qRgb(221, 221, 221);
-const int MAX_FRAME = 3000;
+const int MAX_FRAME = 300;
 const int TAG_HEIGHT = 16;
 const int BETWEEN_TAG_SPACE_Y = 2;
 const int BETWEEN_TAG_SPACE_X = 2;
@@ -238,9 +238,6 @@ void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem
     }
 
     // draw title & date
-    // TODO: find a way to remove the space between the end of the text and textRect right border when text elided
-    title = fmTitle.elidedText(title, Qt::ElideRight, titleRectWidth, Qt::TextSingleLine);
-
     NoteTitleItem noteTitleItem(title, textAlignment);
     noteTitleItem.setGeometry(titleRectPosX, titleRectPosY, titleRectWidth, titleRectHeight);
     QPixmap px = noteTitleItem.grab();

@@ -17,6 +17,7 @@ NoteView::item:selected:!focus:enabled{background-color:rgb(176, 190, 197);}
 NoteView::item:selected:!enabled{background-color:rgb(207, 207, 207);}
 NoteView::item:!selected:hover{background-color:rgb(207, 207, 207);}
 
+NoteItem{background-color: "transparent";}
 NoteTitleItem{font:500 10pt "Roboto"; color: rgb(26, 26, 26);}
 NoteDateTimeItem{font: 10pt "Roboto"; color: rgb(50, 50, 50);}
 NoteTagItem{font: 9pt "Roboto";}

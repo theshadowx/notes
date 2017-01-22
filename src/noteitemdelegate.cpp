@@ -1,32 +1,14 @@
 #include "noteitemdelegate.h"
-#include "noteview.h"
-#include "notemodel.h"
-#include "tagmodel.h"
-
-#include "notetitleitem.h"
-#include "notedatetimeitem.h"
-#include "notetagitem.h"
+#include "noteitem.h"
 
 #include <QPainter>
 #include <QEvent>
 #include <QDebug>
-#include <QApplication>
 #include <QtMath>
-#include <QScrollBar>
 
-const QFont TITLE_FONT = QFont("Roboto", 10, 60);
-const QFont DATE_FONT = QFont("Roboto", 10);
-const QFont TAG_FONT = QFont("Roboto", 9);
-const QColor TITLE_COLOR = qRgb(26, 26, 26);
-const QColor DATE_COLOR = qRgb(50, 50, 50);
 const QColor SEPARATOR_COLOR = qRgb(221, 221, 221);
 const int MAX_FRAME = 300;
-const int TAG_HEIGHT = 16;
-const int BETWEEN_TAG_SPACE_Y = 2;
-const int BETWEEN_TAG_SPACE_X = 2;
 const int SIDE_OFFSET = 10;
-const int BASIC_HEIGHT = 44;
-const QLocale LOCAL = QLocale("en_US");
 
 NoteItemDelegate::NoteItemDelegate(QObject *parent)
     : QStyledItemDelegate(parent),
@@ -85,29 +67,48 @@ void NoteItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
 {
     QStyleOptionViewItem opt = option;
 
-    switch(m_state){
-    case MoveIn:
-        if(index == m_animatedIndex){
-            int initHeight = initialHeightOfRow(option, index);
-            int currentFrame = m_timeLine->currentFrame();
+    QPixmap px;
+    NoteItem item(index, m_view->viewport()->width());
+
+    if(index == m_animatedIndex){
+        int initHeight = item.sizeHint().height();
+        int currentFrame = m_timeLine->currentFrame();
+
+        switch(m_state){
+        case MoveIn:{
             double rate = (currentFrame/(MAX_FRAME * 1.0));
-            double height = initHeight * rate;
-            // be careful: this changes also the rectangle height
-            opt.rect.setY(floor(height));
+            double posY = floor(initHeight * rate);
+
+            opt.rect.setY(posY);
+            item.setGeometry(opt.rect);
+            px = item.grab();
+
+            break;
         }
-        break;
-    default:
-        break;
+        default:
+            double rate = ((MAX_FRAME - currentFrame)/(MAX_FRAME * 1.0));
+            double posY = opt.rect.y() - ceil(initHeight * rate);
+
+            item.setGeometry(QRect(QPoint(opt.rect.x(), posY), QSize(opt.rect.width(), initHeight)));
+            px = item.grab();
+            px = px.copy(QRect(QPoint(px.rect().x(), px.rect().bottomRight().y() - opt.rect.height() + 1), px.rect().bottomRight()));
+
+            break;
+        }
+    }else{
+        item.setGeometry(opt.rect);
+        px = item.grab();
     }
 
     paintBackground(painter, opt, index);
-    paintLabels(painter, opt, index);
-    paintTags(painter, opt, index);
+    painter->drawPixmap(opt.rect, px);
 }
 
 QSize NoteItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-    int initHeight = initialHeightOfRow(option, index);
+    NoteItem item(index, m_view->viewport()->width());
+
+    int initHeight = item.sizeHint().height();
     int initWidth = m_view->viewport()->width();
 
     QSize result = QStyledItemDelegate::sizeHint(option, index);
@@ -119,7 +120,7 @@ QSize NoteItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QMode
         default:
             double rate = m_timeLine->currentFrame()/(MAX_FRAME * 1.0);
             double height = initHeight * rate;
-            result.setHeight(int(height));
+            result.setHeight(floor(height));
             break;
         }
     }else{
@@ -154,202 +155,6 @@ void NoteItemDelegate::paintBackground(QPainter* painter, const QStyleOptionView
     painter->restore();
 }
 
-void NoteItemDelegate::paintLabels(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
-{
-    painter->save();
-    const int topOffsetY = 5;   // space on top of title
-    const int spaceY = 1;       // space between title and date
-
-    QString title{index.data(NoteModel::NoteFullTitle).toString()};
-    QFontMetricsF fmTitle(TITLE_FONT);
-    QRectF fmRectTitle = fmTitle.boundingRect(title);
-
-    QString date = parseDateTime(index.data(NoteModel::NoteLastModificationDateTime).toDateTime());
-    QFontMetricsF fmDate(DATE_FONT);
-    QRectF fmRectDate = fmDate.boundingRect(date);
-
-    double rowPosX = option.rect.x();
-    double rowPosY = option.rect.y();
-    double rowWidth = option.rect.width();
-
-    double titleRectPosX = rowPosX + SIDE_OFFSET;
-    double titleRectPosY = rowPosY;
-    double titleRectWidth = rowWidth - (m_view->verticalScrollBar()->isVisible() ? SIDE_OFFSET : 2 * SIDE_OFFSET) - 1;
-    double titleRectHeight = fmRectTitle.height() + topOffsetY;
-
-    double dateRectPosX = rowPosX + SIDE_OFFSET;
-    double dateRectPosY = rowPosY + titleRectHeight + 1.0;
-    double dateRectWidth = rowWidth - 2.0 * SIDE_OFFSET;
-    double dateRectHeight = fmRectDate.height() + spaceY;
-
-    Qt::AlignmentFlag textAlignment = Qt::AlignBottom;
-
-    // set the bounding Rect of title and date string
-    if(index.row() == m_animatedIndex.row()){
-
-        int fullRowHeight = initialHeightOfRow(option, index);
-        double rowRate = m_timeLine->currentFrame()/(MAX_FRAME * 1.0);
-        double currRowHeight = fullRowHeight * rowRate;
-
-        switch (m_state) {
-        case MoveIn:
-            textAlignment = Qt::AlignTop;
-            // title
-            if(ceil(currRowHeight) < fullRowHeight - topOffsetY){
-                titleRectPosY = ceil(currRowHeight) + topOffsetY;
-                titleRectHeight = fullRowHeight - ceil(currRowHeight) - topOffsetY;
-
-                if(titleRectHeight > topOffsetY + fmRectTitle.height())
-                    titleRectHeight = fmRectTitle.height() + topOffsetY;
-            }else{
-                titleRectHeight = 0;
-            }
-            // date
-            if(ceil(currRowHeight) < fullRowHeight - titleRectHeight - spaceY){
-                dateRectPosY = ceil(currRowHeight) + titleRectHeight + spaceY;
-                dateRectHeight = fullRowHeight - ceil(currRowHeight) - titleRectHeight - spaceY;
-
-                if(dateRectHeight > fmRectDate.height() + spaceY)
-                    dateRectHeight = fmRectDate.height() + spaceY;
-            }else{
-                dateRectHeight = 0;
-            }
-
-            break;
-
-        default:
-            // title
-            titleRectHeight = (topOffsetY + fmRectTitle.height()) - (fullRowHeight - currRowHeight) ;
-            if(currRowHeight == 0 || titleRectHeight<0)
-                titleRectHeight = 0;
-
-            // date
-            dateRectPosY = rowPosY + titleRectHeight + 1;
-            if(dateRectPosY <= rowPosY + 1 || currRowHeight == 0)
-                dateRectPosY = rowPosY;
-
-            if(dateRectPosY == rowPosY){
-                double totalLabelHeight = fmRectTitle.height() + topOffsetY + fmRectDate.height() + spaceY + 1;
-                double bottomSpace = fullRowHeight - totalLabelHeight;
-                dateRectHeight = floor(currRowHeight) == 0 ? 0 : currRowHeight - bottomSpace;
-            }
-            break;
-        }
-    }
-
-    // draw title & date
-    NoteTitleItem noteTitleItem(title, textAlignment);
-    noteTitleItem.setGeometry(titleRectPosX, titleRectPosY, titleRectWidth, titleRectHeight);
-    QPixmap px = noteTitleItem.grab();
-    painter->drawPixmap(noteTitleItem.geometry(), px);
-
-    NoteDateTimeItem noteDateTimeItem(date, textAlignment);
-    noteDateTimeItem.setGeometry(dateRectPosX, dateRectPosY, dateRectWidth, dateRectHeight);
-    px = noteDateTimeItem.grab();
-    painter->drawPixmap(noteDateTimeItem.geometry(), px);
-
-    painter->restore();
-}
-
-void NoteItemDelegate::paintTags(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
-{
-    int nLine = 0;
-    int rowWidth = option.rect.width();
-    int xAcc = option.rect.x();
-    int currentNbTagInLine = 0;
-
-    painter->save();
-    painter->setFont(TAG_FONT);
-    painter->setRenderHint(QPainter::Antialiasing);
-
-    QFontMetrics fmTag(TAG_FONT);
-
-    QVariant data = index.data(NoteModel::NoteTagIndexList);
-    QList<QPersistentModelIndex> tagsIndexList = data.value<QList<QPersistentModelIndex>>();
-    foreach (QPersistentModelIndex tagIndex, tagsIndexList) {
-        QString name = tagIndex.data(TagModel::TagName).toString();
-        QColor color = tagIndex.data(TagModel::TagColor).value<QColor>();
-        color.setAlpha(128);
-
-        // check if the tag fits in the current line, if not increment the number of line.
-        int tagRectWidth = fmTag.boundingRect(name).width() + 10;
-        int futureUsedWidth = xAcc + tagRectWidth + BETWEEN_TAG_SPACE_X * currentNbTagInLine + 2 * SIDE_OFFSET;
-        if( futureUsedWidth > rowWidth){
-            xAcc = option.rect.x();
-            ++nLine;
-            currentNbTagInLine = 0;
-        }else if(xAcc != option.rect.x()){
-            ++currentNbTagInLine;
-        }
-
-        int xRect = xAcc + BETWEEN_TAG_SPACE_X * currentNbTagInLine + SIDE_OFFSET;
-        int yRectIn = nLine * (BETWEEN_TAG_SPACE_Y + TAG_HEIGHT);
-        int yRect = option.rect.y() + BASIC_HEIGHT + yRectIn;
-        int tagRectHeight = TAG_HEIGHT;
-        Qt::AlignmentFlag textAlignment = Qt::AlignTop;
-
-        if(index.row() == m_animatedIndex.row()){
-            switch (m_state) {
-            case Remove:
-            case MoveOut:{
-                textAlignment = Qt::AlignBottom;
-                double basicHeightAnim = BASIC_HEIGHT;
-                int currentRowHeight = sizeHint(option,index).height();
-                double initHeight = initialHeightOfRow(option, index);
-                double tagsHeight = initHeight -  BASIC_HEIGHT;
-                basicHeightAnim =  currentRowHeight > tagsHeight
-                                   ? currentRowHeight - tagsHeight
-                                   : 0;
-
-                xRect = xAcc + BETWEEN_TAG_SPACE_X * currentNbTagInLine + SIDE_OFFSET;
-                yRectIn = nLine * (BETWEEN_TAG_SPACE_Y + TAG_HEIGHT);
-                yRect = option.rect.y() + basicHeightAnim + yRectIn;
-
-                if(basicHeightAnim == 0){
-                    if(yRectIn < initHeight - BASIC_HEIGHT - currentRowHeight){
-                        tagRectHeight = (nLine + 1) * (TAG_HEIGHT) + nLine * BETWEEN_TAG_SPACE_Y  - (initHeight - BASIC_HEIGHT - currentRowHeight);
-                        yRect = option.rect.y();
-                        if(tagRectHeight < 0)
-                            tagRectHeight = 0;
-                    }else{
-                        yRect -=  initHeight - BASIC_HEIGHT - currentRowHeight;
-                    }
-                }
-                break;
-            }
-            case MoveIn:{
-                textAlignment = Qt::AlignTop;
-                double rate = m_timeLine->currentFrame()/(double) m_timeLine->endFrame();
-                double currentRowHeight = (1.0 - rate) * sizeHint(option,index).height();
-                int tagsSectionHeight = currentRowHeight - BASIC_HEIGHT;
-                tagRectHeight = tagsSectionHeight - yRectIn > TAG_HEIGHT ? TAG_HEIGHT :  tagsSectionHeight - yRectIn;
-
-                yRect = option.rect.y() + BASIC_HEIGHT + yRectIn;
-
-                if(currentRowHeight < BASIC_HEIGHT
-                        || yRect - option.rect.y() >= currentRowHeight){
-
-                    yRect = option.rect.y();
-                    tagRectHeight = 0;
-                }
-                break;
-            }
-            default:
-                break;
-            }
-        }
-
-        NoteTagItem noteTagItem(name, color, textAlignment);
-        noteTagItem.setGeometry(xRect, yRect, tagRectWidth, tagRectHeight);
-        QPixmap px = noteTagItem.grab();
-        painter->drawPixmap(noteTagItem.geometry(), px);
-
-        xAcc += tagRectWidth;
-    }
-
-    painter->restore();
-}
-
 void NoteItemDelegate::paintSeparator(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     painter->save();
@@ -363,56 +168,4 @@ void NoteItemDelegate::paintSeparator(QPainter* painter, const QStyleOptionViewI
     painter->drawLine(QPoint(posX1, posY),
                       QPoint(posX2, posY));
     painter->restore();
-}
-
-int NoteItemDelegate::initialHeightOfRow(const QStyleOptionViewItem& option, const QModelIndex& index) const
-{
-    int height = BASIC_HEIGHT;
-    int nLine = 0;
-    int bottomSpace = 0;
-    int rowWidth =  m_view->viewport()->width();
-    int currentNbTagInLine = 0;
-    int xAcc = option.rect.x();
-
-    QFontMetrics fmTag(TAG_FONT);
-
-    QVariant data = index.data(NoteModel::NoteTagIndexList);
-    QList<QPersistentModelIndex> tagsIndexList = data.value<QList<QPersistentModelIndex>>();
-    foreach (QPersistentModelIndex tagIndex, tagsIndexList) {
-        bottomSpace = 3;
-        nLine = nLine == 0 ? 1: nLine;
-        QString name = tagIndex.data(TagModel::TagName).toString();
-
-        int tagRectWidth = fmTag.boundingRect(name).width() + 10;
-        int futureUsedWidth = xAcc + tagRectWidth + BETWEEN_TAG_SPACE_X * currentNbTagInLine + 2 * SIDE_OFFSET;
-        if( futureUsedWidth > rowWidth){
-            ++nLine;
-            xAcc = option.rect.x();
-            currentNbTagInLine = 0;
-        }else if(xAcc != option.rect.x()){
-            ++currentNbTagInLine;
-        }
-
-        xAcc += tagRectWidth;
-    }
-
-    height = BASIC_HEIGHT + nLine * (TAG_HEIGHT)  + (nLine-1 < 0? 0 : nLine-1) * BETWEEN_TAG_SPACE_Y + bottomSpace;
-
-    return height;
-}
-
-QString NoteItemDelegate::parseDateTime(const QDateTime& dateTime) const
-{
-    auto currDateTime = QDateTime::currentDateTime();
-
-    if(dateTime.date() == currDateTime.date()){
-        return LOCAL.toString(dateTime.time(),"h:mm A");
-    }else if(dateTime.daysTo(currDateTime) == 1){
-        return tr("Yesterday");
-    }else if(dateTime.daysTo(currDateTime) >= 2 &&
-             dateTime.daysTo(currDateTime) <= 7){
-        return LOCAL.toString(dateTime.date(), "dddd");
-    }
-
-    return dateTime.date().toString("M/d/yy");
 }

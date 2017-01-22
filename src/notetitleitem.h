@@ -9,6 +9,8 @@ class NoteTitleItem : public QWidget
 public:
     explicit NoteTitleItem(QString title, Qt::AlignmentFlag alignment, QWidget *parent = 0);
 
+    QSize initSize() const;
+
 protected:
     void paintEvent(QPaintEvent *event);
 

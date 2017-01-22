@@ -16,6 +16,12 @@ NoteDateTimeItem::NoteDateTimeItem(QString dateTime, Qt::AlignmentFlag alignment
     setPalette(p);
 }
 
+QSize NoteDateTimeItem::initSize() const
+{
+    QFontMetrics fmDateTime(font());
+    return fmDateTime.boundingRect(m_dateTime).size();
+}
+
 void NoteDateTimeItem::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event)

@@ -16,6 +16,12 @@ NoteTagItem::NoteTagItem(QString text, QColor color, Qt::AlignmentFlag alignment
     setPalette(p);
 }
 
+QSize NoteTagItem::initSize() const
+{
+    QFontMetrics fmTag(font());
+    return fmTag.boundingRect(m_tagText).size();
+}
+
 void NoteTagItem::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event)

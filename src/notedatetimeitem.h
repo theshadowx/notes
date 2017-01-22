@@ -10,6 +10,8 @@ class NoteDateTimeItem : public QWidget
 public:
     explicit NoteDateTimeItem(QString dateTime, Qt::AlignmentFlag alignment, QWidget *parent = 0);
 
+    QSize initSize() const;
+
 protected:
     void paintEvent(QPaintEvent *event);
 

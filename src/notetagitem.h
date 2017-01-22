@@ -10,6 +10,8 @@ class NoteTagItem : public QWidget
 public:
     explicit NoteTagItem(QString text, QColor color, Qt::AlignmentFlag alignment, QWidget *parent = 0);
 
+    QSize initSize() const;
+
 protected:
     void paintEvent(QPaintEvent *event);
 

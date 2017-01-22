@@ -47,7 +47,8 @@ SOURCES += \
     folderview.cpp \
     notetagitem.cpp \
     notetitleitem.cpp \
-    notedatetimeitem.cpp
+    notedatetimeitem.cpp \
+    noteitem.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -71,7 +72,8 @@ HEADERS  += \
     folderview.h \
     notetagitem.h \
     notetitleitem.h \
-    notedatetimeitem.h
+    notedatetimeitem.h \
+    noteitem.h
 
 FORMS += $$PWD/mainwindow.ui \
     foldertagwidget.ui \

@@ -141,8 +141,6 @@ void NoteItemDelegate::paintBackground(QPainter* painter, const QStyleOptionView
     QModelIndex selectedIndex = m_view->selectionModel()->currentIndex();
     QModelIndex hoveredIndex = m_view->indexAt(m_view->mapFromGlobal(QCursor::pos()));
 
-    painter->save();
-
     if(((option.state & QStyle::State_Selected) == QStyle::State_Selected)
             || ((option.state & QStyle::State_MouseOver) == QStyle::State_MouseOver)){
 
@@ -152,7 +150,6 @@ void NoteItemDelegate::paintBackground(QPainter* painter, const QStyleOptionView
 
         paintSeparator(painter, option, index);
     }
-    painter->restore();
 }
 
 void NoteItemDelegate::paintSeparator(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const

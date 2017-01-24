@@ -117,6 +117,8 @@ void FolderView::dropEvent(QDropEvent* e)
             int cnt = dropFolderIndex.data(FolderModel::NoteCount).toInt();
             this->model()->setData(dropFolderIndex, ++cnt, FolderModel::NoteCount);
         }
+
+        e->accept();
     }
 }
 

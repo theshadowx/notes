@@ -142,7 +142,6 @@ void NoteView::mousePressEvent(QMouseEvent* e)
         QPersistentModelIndex index = indexAt(e->pos());
         m_pressedIndex = index;
         m_pressedPosition = e->pos();
-        selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
         emit QAbstractItemView::pressed(index);
     }
 }
@@ -153,7 +152,6 @@ void NoteView::mouseMoveEvent(QMouseEvent* e)
     QPoint bottomRight = e->pos();
     QPoint offset = QPoint(isRightToLeft() ? -horizontalOffset()
                                            : horizontalOffset(), verticalOffset());
-
     if (state() == DraggingState) {
         topLeft = m_pressedPosition - offset;
         if ((topLeft - bottomRight).manhattanLength() > QApplication::startDragDistance()) {
@@ -172,15 +170,21 @@ void NoteView::mouseMoveEvent(QMouseEvent* e)
         setState(DraggingState);
         return;
     }
+
+    QModelIndex index = indexAt(e->pos());
+    QModelIndex indexTop2 = index.sibling(index.row()-2,0);
+    if(indexTop2.isValid())
+        viewport()->update(visualRect(indexTop2));
 }
 
 void NoteView::mouseReleaseEvent(QMouseEvent* e)
 {
     QPersistentModelIndex index = indexAt(e->pos());
-    if(index == m_pressedIndex && index.isValid()){
+    if((index.isValid() && index == m_pressedIndex)){
         selectionModel()->select(m_pressedIndex, QItemSelectionModel::ClearAndSelect);
         setCurrentIndex(m_pressedIndex);
         m_pressedIndex = QPersistentModelIndex();
+        m_pressedPosition = QPoint();
         emit clicked(index);
     }
 }

@@ -225,7 +225,7 @@ void NoteWidget::prepareForTextEdition()
         addNewNote();
     }else if(m_currentSelectedNoteProxy.isValid()){
         selectNote(m_currentSelectedNoteProxy);
-    }else {
+    }else if(m_proxyNoteModel->rowCount() != 0){
         selectFirstNote();
     }
 }

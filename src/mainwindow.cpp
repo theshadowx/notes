@@ -552,17 +552,24 @@ void MainWindow::onEditorFocusedIn()
     switch (m_folderTagWidget->folderType()) {
     case FolderTagWidget::Normal:
         m_folderTagWidget->addNewFolderIfNotExists();
-        m_folderTagWidget->blockSignals(true);
-        m_folderTagWidget->clearTagSelection();
-        m_folderTagWidget->blockSignals(false);
+        setNoteEditabled(true);
         break;
     case FolderTagWidget::AllNotes:
         setNoteEditabled(!m_noteWidget->isEmpty());
-        m_folderTagWidget->clearTagSelection();
+        break;
+    case FolderTagWidget::Trash:
+        setNoteEditabled(false);
         break;
     default:
-        m_folderTagWidget->clearTagSelection();
         break;
+    }
+
+    // clear tag selection
+    // prevent FolderTagWidget from sending signal to clear tagFilter in NoteWidget
+    if(!m_folderTagWidget->isTagSelectionEmpty()){
+        m_folderTagWidget->blockSignals(true);
+        m_folderTagWidget->clearTagSelection();
+        m_folderTagWidget->blockSignals(false);
     }
 
     m_noteWidget->prepareForTextEdition();

@@ -193,7 +193,7 @@ void NoteWidget::prepareForTextEdition()
     bool isNoteListFilteredByTag = !m_proxyNoteModel->filterRegExp().pattern().isEmpty();
     bool isNoteListFilteredByKeyword = !m_searchField->text().isEmpty();
 
-    auto resetProxyModel = [&](){
+    auto resetProxyModel = [=](){
         m_noteView->setAnimationEnabled(false);
         if(isNoteListFilteredByKeyword){
             clearSearch();
@@ -209,8 +209,8 @@ void NoteWidget::prepareForTextEdition()
         if(m_currentSelectedNoteProxy.isValid()){
             QModelIndex indexInSource = m_proxyNoteModel->mapToSource(m_currentSelectedNoteProxy);
             resetProxyModel();
-            m_currentSelectedNoteProxy = m_proxyNoteModel->mapFromSource(indexInSource);
-            selectNote(m_currentSelectedNoteProxy);
+            QModelIndex indexInProxy = m_proxyNoteModel->mapFromSource(indexInSource);
+            selectNote(indexInProxy);
 
         }else{
             resetProxyModel();
@@ -303,6 +303,7 @@ void NoteWidget::onNoteChangedTimeoutTriggered()
     m_isTempNoteExist = index.row() == 0 ? false : m_isTempNoteExist;
     m_isNoteDropped = false;
     m_droppedIndex = QModelIndex();
+    m_tagNoteButton->setEnabled(true);
 }
 
 void NoteWidget::updateNoteView()
@@ -335,7 +336,7 @@ void NoteWidget::setAddingNoteEnabled(bool isAddingNoteEnabled)
 void NoteWidget::setNoteEditable(bool isNoteEditable)
 {
     m_isNoteEditable = isNoteEditable;
-    m_tagNoteButton->setEnabled(isNoteEditable);
+    m_tagNoteButton->setEnabled(isNoteEditable && !m_isTempNoteExist);
 }
 
 void NoteWidget::setCurrentFolderPath(const QString& currentFolderPath)

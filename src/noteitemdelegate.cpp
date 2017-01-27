@@ -3,7 +3,6 @@
 
 #include <QPainter>
 #include <QEvent>
-#include <QDebug>
 #include <QtMath>
 
 const QColor SEPARATOR_COLOR = qRgb(221, 221, 221);
@@ -66,9 +65,14 @@ void NoteItemDelegate::setAnimationDuration(const int duration)
 void NoteItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     QStyleOptionViewItem opt = option;
+    int width = m_view->viewport()->width() - SIDE_OFFSET * 2;
+    int x = SIDE_OFFSET;
+
+    opt.rect.setX(x);
+    opt.rect.setWidth(width);
 
     QPixmap px;
-    NoteItem item(index, m_view->viewport()->width());
+    NoteItem item(index, width);
 
     if(index == m_animatedIndex){
         int initHeight = item.sizeHint().height();
@@ -100,7 +104,11 @@ void NoteItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
         px = item.grab();
     }
 
-    paintBackground(painter, opt, index);
+    QStyleOptionViewItem optBg = opt;
+    optBg.rect.setX(option.rect.x());
+    optBg.rect.setWidth(option.rect.width());
+
+    paintBackground(painter, optBg, index);
     painter->drawPixmap(opt.rect, px);
 }
 

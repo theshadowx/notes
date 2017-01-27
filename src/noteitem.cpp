@@ -10,7 +10,7 @@ const QLocale LOCAL = QLocale("en_US");
 const int TOPOFFSETY = 5;
 const int SPACEY = 1;
 const int BOTTOMOFFSETY = 4;
-const int SIDE_OFFSET = 10;
+const int SIDE_OFFSET = 0;
 const int BETWEEN_TAG_SPACE_Y = 2;
 const int BETWEEN_TAG_SPACE_X = 2;
 
@@ -53,21 +53,21 @@ void NoteItem::resizeEvent(QResizeEvent* event)
 
     int nLine = 0;
     int rowWidth = event->size().width();
-    int xAcc = geometry().x();
+    int xAcc = SIDE_OFFSET;
     int currentNbTagInLine = 0;
 
     foreach (NoteTagItem* tagItem, m_tagList) {
         int tagRectWidth = tagItem->initSize().width() + 10;
         int futureUsedWidth = xAcc + tagRectWidth + BETWEEN_TAG_SPACE_X * currentNbTagInLine + 2 * SIDE_OFFSET;
         if( futureUsedWidth > rowWidth){
-            xAcc = geometry().x();
+            xAcc = SIDE_OFFSET;
             ++nLine;
             currentNbTagInLine = 0;
-        }else if(xAcc != geometry().x()){
+        }else if(xAcc != SIDE_OFFSET){
             ++currentNbTagInLine;
         }
 
-        int xRect = xAcc + BETWEEN_TAG_SPACE_X * currentNbTagInLine + SIDE_OFFSET;
+        int xRect = xAcc + BETWEEN_TAG_SPACE_X * currentNbTagInLine;
         int yRectIn = nLine * (BETWEEN_TAG_SPACE_Y + tagItem->initSize().height());
         int yRect = m_noteDateTimeItem->geometry().bottomLeft().y() + yRectIn;
         int tagRectHeight = tagItem->initSize().height();
@@ -90,7 +90,7 @@ QSize NoteItem::sizeHint() const
     int bottomSpace = 0;
     int rowWidth = this->width();
     int currentNbTagInLine = 0;
-    int xAcc = geometry().x();
+    int xAcc = SIDE_OFFSET;
     int tagHeight = 0;
 
     foreach (NoteTagItem* tagItem, m_tagList) {
@@ -102,9 +102,9 @@ QSize NoteItem::sizeHint() const
         int futureUsedWidth = xAcc + tagRectWidth + BETWEEN_TAG_SPACE_X * currentNbTagInLine + 2 * SIDE_OFFSET;
         if( futureUsedWidth > rowWidth){
             ++nLine;
-            xAcc = geometry().x();
+            xAcc = SIDE_OFFSET;
             currentNbTagInLine = 0;
-        }else if(xAcc != geometry().x()){
+        }else if(xAcc != SIDE_OFFSET){
             ++currentNbTagInLine;
         }
 

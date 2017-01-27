@@ -899,6 +899,7 @@ void NoteWidget::selectNote(const QModelIndex& noteIndex)
         if(m_isTempNoteExist){
             removeTempNote();
             m_currentSelectedNoteProxy = noteIndex;
+            m_tagNoteButton->setEnabled(m_isNoteEditable);
         }else{
             deselectedIndexInProxy = m_currentSelectedNoteProxy;
             m_currentSelectedNoteProxy = noteIndex;

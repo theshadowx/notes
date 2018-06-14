@@ -29,6 +29,7 @@
 #include "noteview.h"
 #include "updaterwindow.h"
 #include "dbmanager.h"
+#include "notewidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -96,14 +97,14 @@ private:
 
     Ui::MainWindow* ui;
 
+    NoteWidget* m_noteWidget;
+
     QTimer* m_autoSaveTimer;
     QSettings* m_settingsDatabase;
-    QToolButton* m_clearButton;
+
     QPushButton* m_greenMaximizeButton;
     QPushButton* m_redCloseButton;
     QPushButton* m_yellowMinimizeButton;
-    QPushButton* m_newNoteButton;
-    QPushButton* m_trashButton;
     QPushButton* m_dotsButton;
     QTextEdit* m_textEdit;
     QLineEdit* m_searchEdit;
@@ -119,9 +120,6 @@ private:
     NoteModel* m_noteModel;
     NoteModel* m_deletedNotesModel;
     QSortFilterProxyModel* m_proxyModel;
-    QModelIndex m_currentSelectedNoteProxy;
-    QModelIndex m_selectedNoteBeforeSearchingInSource;
-    QQueue<QString> m_searchQueue;
     DBManager* m_dbManager;
 
     UpdaterWindow m_updater;
@@ -130,16 +128,12 @@ private:
 
     int m_mousePressX;
     int m_mousePressY;
-    int m_noteCounter;
     int m_trashCounter;
     int m_layoutMargin;
     int m_shadowWidth;
     int m_noteListWidth;
     bool m_canMoveWindow;
     bool m_canStretchWindow;
-    bool m_isTemp;
-    bool m_isListViewScrollBarHidden;
-    bool m_isContentModified;
     bool m_isOperationRunning;
     bool m_dontShowUpdateWindow;
     bool m_alwaysStayOnTop;
@@ -148,37 +142,25 @@ private:
     void setupFonts();
     void setupTrayIcon();
     void setupKeyboardShortcuts();
-    void setupNewNoteButtonAndTrahButton();
     void setupSplitter();
     void setupLine();
     void setupRightFrame();
     void setupTitleBarButtons();
     void setupSignalsSlots();
     void autoCheckForUpdates();
-    void setupSearchEdit();
     void setupTextEdit();
     void setupDatabases();
-    void setupModelView();
     void initializeSettingsDatabase();
-    void createNewNoteIfEmpty();
     void setLayoutForScrollArea();
     void setButtonsAndFieldsEnabled(bool doEnable);
     void restoreStates();
     QString getFirstLine(const QString& str);
     QString getNoteDateEditor (QString dateEdited);
-    NoteData* generateNote(const int noteID);
     QDateTime getQDateTime(QString date);
     void showNoteInEditor(const QModelIndex& noteIndex);
-    void sortNotesList(QStringList &stringNotesList);
-    void loadNotes();
     void saveNoteToDB(const QModelIndex& noteIndex);
     void removeNoteFromDB(const QModelIndex& noteIndex);
-    void selectFirstNote();
-    void moveNoteToTop();
-    void clearSearch();
     void highlightSearch() const;
-    void findNotesContain(const QString &keyword);
-    void selectNote(const QModelIndex& noteIndex);
     void checkMigration();
     void executeImport(const bool replace);
     void migrateNote(QString notePath);
@@ -192,28 +174,15 @@ private:
 
 private slots:
     void InitData();
-    void onNewNoteButtonPressed();
-    void onNewNoteButtonClicked();
-    void onTrashButtonPressed();
-    void onTrashButtonClicked();
     void onDotsButtonPressed();
     void onDotsButtonClicked();
-    void onNotePressed(const QModelIndex &index);
     void onTextEditTextChanged();
-    void onSearchEditTextChanged(const QString& keyword);
-    void onClearButtonClicked();
     void onGreenMaximizeButtonPressed ();
     void onYellowMinimizeButtonPressed ();
     void onRedCloseButtonPressed ();
     void onGreenMaximizeButtonClicked();
     void onYellowMinimizeButtonClicked();
     void onRedCloseButtonClicked();
-    void createNewNote();
-    void deleteNote(const QModelIndex& noteIndex, bool isFromUser=true);
-    void deleteSelectedNote();
-    void setFocusOnCurrentNote();
-    void selectNoteDown();
-    void selectNoteUp();
     void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();
@@ -221,8 +190,8 @@ private slots:
     void QuitApplication();
     void checkForUpdates (const bool clicked);
     void collapseNoteList();
-    void expandNoteList();
-    void toggleNoteList();
+    void expandNoteWidget();
+    void toggleNoteWidget();
     void importNotesFile(const bool clicked);
     void exportNotesFile(const bool clicked);
     void restoreNotesFile (const bool clicked);

@@ -83,7 +83,7 @@ bool NoteModel::moveRow(const QModelIndex &sourceParent, int sourceRow, const QM
 void NoteModel::clearNotes()
 {
     beginResetModel();
-    m_noteList.clear();
+    qDeleteAll(m_noteList);
     endResetModel();
 }
 

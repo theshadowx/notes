@@ -26,7 +26,22 @@ public:
     explicit NoteWidget(QWidget *parent = 0);
     ~NoteWidget();
 
-//private:
+    void initNoteWidget(QList<NoteData*>& noteList);
+    QModelIndex getCurrentSelectedIndex() const;
+    NoteData* getNoteData(const QModelIndex noteIndex);
+    void initNoteCounter(const int count);
+    int getNotesLastIndex() const;
+    int getNotesCount() const;
+    QString getSearchText() const;
+    void updateContent(QString title, QString text, QDateTime modificationDateTime);
+    void updateScrollBarPos(QModelIndex noteIndex, int pos);
+
+
+
+protected:
+    bool eventFilter(QObject* object, QEvent* event) Q_DECL_OVERRIDE;
+
+private:
     Ui::NoteWidget*        ui;
 
     QLineEdit*             m_searchEdit;
@@ -46,32 +61,33 @@ public:
     DBManager*             m_dbManager;
     QSettings*             m_settingsDatabase;
 
-    bool                   m_isTemp;
-    bool                   m_isContentModified;
+    bool                   m_isCurrentNoteTemp;
     int                    m_noteCounter;
 
     void setupNoteWidget();
     void setupModelView();
     void setupSearchEdit();
     void setupNewNoteButtonAndTrahButton();
+    void setupConnections();
 
-    void clearSearch();
     void selectNote(const QModelIndex& noteIndex);
     void selectFirstNote();
     void findNotesContain(const QString &keyword);
     void moveNoteToTop();
+    void deleteNote(const QModelIndex& noteIndex);
 
     void createNewNoteIfEmpty();
     NoteData* generateNote(const int noteID);
-    void loadNotes();
+
 
 public slots:
     void setFocusOnCurrentNote();
     void selectNoteUp();
     void selectNoteDown();
+    void focusOnSearch();
+    void clearSearch();
     void createNewNote();
-    void deleteSelectedNote();
-    void deleteNote(const QModelIndex& noteIndex, bool isFromUser=true);
+    void deleteCurrentNote();
     void onClearButtonClicked();
     void onTrashButtonPressed();
     void onTrashButtonClicked();
@@ -79,6 +95,15 @@ public slots:
     void onNewNoteButtonClicked();
     void onNotePressed(const QModelIndex &index);
     void onSearchEditTextChanged(const QString& keyword);
+    void loadNotes(QList<NoteData*>& noteList);
+    void resetNoteWidget();
+
+signals:
+    void searchCleared();
+    void noteSelectionChanged(QModelIndex selected, QModelIndex deselected);
+    void noteAdded(const NoteData* noteData);
+    void noteUpdated(const NoteData* noteData);
+    void noteDeleted(NoteData* noteData);
 
 };
 

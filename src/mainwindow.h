@@ -95,48 +95,47 @@ protected:
 
 private:
 
-    Ui::MainWindow* ui;
+    Ui::MainWindow*     ui;
 
-    NoteWidget* m_noteWidget;
+    NoteWidget*         m_noteWidget;
 
-    QTimer* m_autoSaveTimer;
-    QSettings* m_settingsDatabase;
+    QTimer*             m_autoSaveTimer;
+    QSettings*          m_settingsDatabase;
 
-    QPushButton* m_greenMaximizeButton;
-    QPushButton* m_redCloseButton;
-    QPushButton* m_yellowMinimizeButton;
-    QPushButton* m_dotsButton;
-    QTextEdit* m_textEdit;
-    QLineEdit* m_searchEdit;
-    QLabel* m_editorDateLabel;
-    QSplitter *m_splitter;
-    QSystemTrayIcon* m_trayIcon;
-    QAction* m_restoreAction;
-    QAction* m_quitAction;
-    QMenu* m_trayIconMenu;
-    QHBoxLayout m_trafficLightLayout;
+    QPushButton*        m_greenMaximizeButton;
+    QPushButton*        m_redCloseButton;
+    QPushButton*        m_yellowMinimizeButton;
+    QPushButton*        m_dotsButton;
+    QTextEdit*          m_textEdit;
+    QLabel*             m_editorDateLabel;
+    QSplitter*          m_splitter;
+    QSystemTrayIcon*    m_trayIcon;
+    QAction*            m_restoreAction;
+    QAction*            m_quitAction;
+    QMenu*              m_trayIconMenu;
+    QHBoxLayout*        m_trafficLightLayout;
+    QFrame*             m_titleBar;
 
-    NoteView* m_noteView;
-    NoteModel* m_noteModel;
-    NoteModel* m_deletedNotesModel;
-    QSortFilterProxyModel* m_proxyModel;
-    DBManager* m_dbManager;
+    NoteModel*          m_deletedNotesModel;
+    DBManager*          m_dbManager;
 
-    UpdaterWindow m_updater;
-    StretchSide m_stretchSide;
-    Autostart m_autostart;
+    UpdaterWindow       m_updater;
+    StretchSide         m_stretchSide;
+    Autostart           m_autostart;
 
-    int m_mousePressX;
-    int m_mousePressY;
-    int m_trashCounter;
-    int m_layoutMargin;
-    int m_shadowWidth;
-    int m_noteListWidth;
-    bool m_canMoveWindow;
-    bool m_canStretchWindow;
-    bool m_isOperationRunning;
-    bool m_dontShowUpdateWindow;
-    bool m_alwaysStayOnTop;
+
+    int                 m_mousePressX;
+    int                 m_mousePressY;
+    int                 m_trashCounter;
+    int                 m_layoutMargin;
+    int                 m_shadowWidth;
+    int                 m_noteListWidth;
+    bool                m_canMoveWindow;
+    bool                m_canStretchWindow;
+    bool                m_isOperationRunning;
+    bool                m_dontShowUpdateWindow;
+    bool                m_alwaysStayOnTop;
+    bool                m_isContentModified;
 
     void setupMainWindow();
     void setupFonts();
@@ -147,6 +146,7 @@ private:
     void setupRightFrame();
     void setupTitleBarButtons();
     void setupSignalsSlots();
+    void setupDotesButton();
     void autoCheckForUpdates();
     void setupTextEdit();
     void setupDatabases();
@@ -158,8 +158,7 @@ private:
     QString getNoteDateEditor (QString dateEdited);
     QDateTime getQDateTime(QString date);
     void showNoteInEditor(const QModelIndex& noteIndex);
-    void saveNoteToDB(const QModelIndex& noteIndex);
-    void removeNoteFromDB(const QModelIndex& noteIndex);
+    void clearTextAndHeader();
     void highlightSearch() const;
     void checkMigration();
     void executeImport(const bool replace);
@@ -177,13 +176,13 @@ private slots:
     void onDotsButtonPressed();
     void onDotsButtonClicked();
     void onTextEditTextChanged();
+    void onNoteSelectionChanged(QModelIndex selectedNoteIndex, QModelIndex deselectedNoteIndex);
     void onGreenMaximizeButtonPressed ();
     void onYellowMinimizeButtonPressed ();
     void onRedCloseButtonPressed ();
     void onGreenMaximizeButtonClicked();
     void onYellowMinimizeButtonClicked();
     void onRedCloseButtonClicked();
-    void setFocusOnText();
     void fullscreenWindow();
     void maximizeWindow();
     void minimizeWindow();
@@ -197,6 +196,8 @@ private slots:
     void restoreNotesFile (const bool clicked);
     void stayOnTop(bool checked);
     void toggleStayOnTop();
+    void saveNoteToDB(QModelIndex noteIndex);
+    void removeNoteFromDB(NoteData* noteData);
 };
 
 #endif // MAINWINDOW_H

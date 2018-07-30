@@ -117,7 +117,7 @@ QList<NoteData *> DBManager::getAllNotes()
     return noteList;
 }
 
-bool DBManager::addNote(NoteData* note)
+bool DBManager::addNote(const NoteData* note)
 {
     QSqlQuery query;
     QString emptyStr;
@@ -131,7 +131,9 @@ bool DBManager::addNote(NoteData* note)
                         .replace("'","''")
                         .replace(QChar('\x0'), emptyStr);
 
-    qint64 epochTimeDateLastModified = note->lastModificationdateTime().isNull() ? epochTimeDateCreated :  note->lastModificationdateTime().toMSecsSinceEpoch();
+    qint64 epochTimeDateLastModified =
+            note->lastModificationdateTime().isNull() ? epochTimeDateCreated :
+                                                        note->lastModificationdateTime().toMSecsSinceEpoch();
 
     QString queryStr = QString("INSERT INTO active_notes (creation_date, modification_date, deletion_date, content, full_title) "
                                "VALUES (%1, %2, -1, '%3', '%4');")
@@ -181,6 +183,8 @@ bool DBManager::removeNote(NoteData* note)
     query.exec(queryStr);
     bool addedToTrashDB = (query.numRowsAffected() == 1);
 
+    delete note;
+
     return (removed && addedToTrashDB);
 }
 
@@ -189,7 +193,7 @@ bool DBManager::permanantlyRemoveAllNotes() {
     return query.exec(QString("DELETE FROM active_notes"));
 }
 
-bool DBManager::modifyNote(NoteData* note)
+bool DBManager::modifyNote(const NoteData* note)
 {
     QSqlQuery query;
     QString emptyStr;

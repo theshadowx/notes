@@ -24,9 +24,9 @@ signals:
 
 public slots:
     QList<NoteData*> getAllNotes();
-    bool addNote(NoteData* note);
+    bool addNote(const NoteData* note);
     bool removeNote(NoteData* note);
-    bool modifyNote(NoteData* note);
+    bool modifyNote(const NoteData* note);
     bool migrateNote(NoteData* note);
     bool migrateTrash(NoteData* note);
     int getLastRowID();

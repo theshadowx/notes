@@ -182,7 +182,7 @@ NoteData #dateLabel{
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>25</height>
+               <height>24</height>
               </size>
              </property>
             </spacer>

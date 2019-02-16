@@ -13,6 +13,7 @@ NoteWidget::NoteWidget(QWidget *parent) :
     m_newNoteButton     (Q_NULLPTR),
     m_trashButton       (Q_NULLPTR),
     m_clearButton       (Q_NULLPTR),
+    m_noteCountView     (Q_NULLPTR),
     m_noteView          (Q_NULLPTR),
     m_noteModel         (new NoteModel(this)),
     m_proxyModel        (new QSortFilterProxyModel(this)),
@@ -27,6 +28,7 @@ NoteWidget::NoteWidget(QWidget *parent) :
     setupModelView();
     setupSearchEdit();
     setupConnections();
+    setupStylesheet();
 }
 
 NoteWidget::~NoteWidget()
@@ -124,6 +126,7 @@ void NoteWidget::setupNoteWidget()
     m_newNoteButton = ui->newNoteButton;
     m_trashButton   = ui->trashButton;
     m_searchEdit    = ui->searchEdit;
+    m_noteCountView = ui->noteCountView;
 
     m_newNoteButton->setToolTip("Create New Note");
     m_trashButton->setToolTip("Delete Selected Note");
@@ -150,24 +153,6 @@ void NoteWidget::setupModelView()
 
 void NoteWidget::setupSearchEdit()
 {
-    int frameWidth = m_searchEdit->style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-    QString ss = QString("QLineEdit{ "
-                         "  padding-right: %1px; "
-                         "  padding-left: 21px;"
-                         "  padding-right: 19px;"
-                         "  border: 1px solid rgb(205, 205, 205);"
-                         "  border-radius: 3px;"
-                         "  background: rgb(255, 255, 255);"
-                         "  selection-background-color: rgb(61, 155, 218);"
-                         "} "
-                         "QToolButton { "
-                         "  border: none; "
-                         "  padding: 0px;"
-                         "}"
-                         ).arg(frameWidth + 1);
-
-    m_searchEdit->setStyleSheet(ss);
-
     // clear button
     m_clearButton = new QToolButton(m_searchEdit);
     QPixmap pixmap(":images/closeButton.png");
@@ -198,14 +183,6 @@ void NoteWidget::setupSearchEdit()
 
 void NoteWidget::setupNewNoteButtonAndTrahButton()
 {
-    QString ss = "QPushButton { "
-                 "  border: none; "
-                 "  padding: 0px; "
-                 "}";
-
-    m_newNoteButton->setStyleSheet(ss);
-    m_trashButton->setStyleSheet(ss);
-
     m_newNoteButton->installEventFilter(this);
     m_trashButton->installEventFilter(this);
 }
@@ -226,18 +203,75 @@ void NoteWidget::setupConnections()
 
     connect(m_searchEdit, &QLineEdit::textChanged, this, &NoteWidget::onSearchEditTextChanged);
 
-    // note pressed
+    // noteView pressed
     connect(m_noteView, &NoteView::pressed, this, &NoteWidget::onNotePressed);
-    // note model rows moved
+    // note model rows moved/removed
     connect(m_noteModel, &NoteModel::rowsAboutToBeMoved, m_noteView, &NoteView::rowsAboutToBeMoved);
     connect(m_noteModel, &NoteModel::rowsMoved, m_noteView, &NoteView::rowsMoved);
-    // delete note button
-    connect(m_trashButton, &QPushButton::pressed, this, &NoteWidget::onTrashButtonPressed);
-    connect(m_trashButton, &QPushButton::clicked, this, &NoteWidget::onTrashButtonClicked);
     connect(m_noteModel, &NoteModel::rowsRemoved, [this](){m_trashButton->setEnabled(true);});
+    // delete note button
+    connect(m_trashButton, &QPushButton::clicked, this, &NoteWidget::onTrashButtonClicked);
     // new note button
-    connect(m_newNoteButton, &QPushButton::pressed, this, &NoteWidget::onNewNoteButtonPressed);
     connect(m_newNoteButton, &QPushButton::clicked, this, &NoteWidget::onNewNoteButtonClicked);
+    // update note count
+    connect(m_proxyModel, &QSortFilterProxyModel::rowsRemoved, this, &NoteWidget::updateNoteCount);
+    connect(m_proxyModel, &QSortFilterProxyModel::rowsInserted, this, &NoteWidget::updateNoteCount);
+}
+
+void NoteWidget::setupStylesheet()
+{
+    QString noteWidgetStyle = "#searchEdit{"
+                              "  padding-left: 21px;"
+                              "  padding-right: 19px;"
+                              "  border: 1px solid rgb(205, 205, 205);"
+                              "  border-radius: 3px;"
+                              "  background: rgb(255, 255, 255);"
+                              "  selection-background-color: rgb(61, 155, 218);"
+                              "}"
+                              "#searchEdit:focus{ "
+                              "  border: 2px solid rgb(61, 155, 218);"
+                              "}"
+                              "QToolButton { "
+                              "  border: none; "
+                              "  padding: 0px;"
+                              "}"
+                              "QPushButton { "
+                              "  border: none;"
+                              "  padding: 0px;"
+                              "}"
+                              "#trashButton{"
+                              "  margin: 2px 2px 2px 2px;"
+                              "  image:url(:/images/trashCan_Regular.png);"
+                              "}"
+                              "#trashButton:pressed{"
+                              "  margin: 3px 2px 2px 3px;"
+                              "  image:url(:/images/trashCan_Pressed.png);"
+                              "}"
+                              "#trashButton:hover{"
+                              "  image:url(:/images/trashCan_Hovered.png);"
+                              "}"
+                              "#trashButton:disabled{"
+                              "  image:url(:/images/trashCan_Hovered.png);"
+                              "}"
+                              "#newNoteButton{"
+                              "  margin: 2px 2px 2px 2px;"
+                              "  image:url(:/images/newNote_Regular.png);"
+                              "}"
+                              "#newNoteButton:pressed{"
+                              "  margin: 3px 2px 2px 3px;"
+                              "  image:url(:/images/newNote_Pressed.png);"
+                              "}"
+                              "#newNoteButton:hover{"
+                              "  image:url(:/images/newNote_Hovered.png);"
+                              "}"
+                              "#newNoteButton:disabled{"
+                              "  image:url(:/images/newNote_Hovered.png);"
+                              "}"
+                              "#noteCountView{"
+                              "  font-size:8pt;"
+                              "}";
+
+    this->setStyleSheet(noteWidgetStyle);
 }
 
 void NoteWidget::clearSearch()
@@ -357,71 +391,24 @@ bool NoteWidget::eventFilter(QObject* object, QEvent* event)
         if(qApp->applicationState() == Qt::ApplicationActive){
             if(object == m_newNoteButton){
                 this->setCursor(Qt::PointingHandCursor);
-                m_newNoteButton->setIcon(QIcon(":/images/newNote_Hovered.png"));
             }else if(object == m_trashButton){
                 this->setCursor(Qt::PointingHandCursor);
-                m_trashButton->setIcon(QIcon(":/images/trashCan_Hovered.png"));
             }
         }
-
     }else if(event->type() == QEvent::Leave){
         if(qApp->applicationState() == Qt::ApplicationActive){
             if(object == m_newNoteButton){
                 this->unsetCursor();
-                m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
             }else if(object == m_trashButton){
                 this->unsetCursor();
-                m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
             }
         }
     }else if(event->type() == QEvent::WindowDeactivate){
-        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
-
         m_newNoteButton->setDisabled(true);
         m_trashButton->setDisabled(true);
     }else if(event->type() == QEvent::WindowActivate){
-        m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-        m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
-
         m_newNoteButton->setEnabled(true);
         m_trashButton->setEnabled(true);
-    }else if(event->type() == QEvent::FocusOut){
-        if(object == m_searchEdit){
-            QString ss = QString("QLineEdit{ "
-                                 "  padding-left: 21px;"
-                                 "  padding-right: 19px;"
-                                 "  border: 1px solid rgb(205, 205, 205);"
-                                 "  border-radius: 3px;"
-                                 "  background: rgb(255, 255, 255);"
-                                 "  selection-background-color: rgb(61, 155, 218);"
-                                 "} "
-                                 "QToolButton { "
-                                 "  border: none; "
-                                 "  padding: 0px;"
-                                 "}"
-                                 );
-
-            m_searchEdit->setStyleSheet(ss);
-        }
-    }else if(event->type() == QEvent::FocusIn){
-        if(object == m_searchEdit){
-            QString ss = QString("QLineEdit{ "
-                                 "  padding-left: 21px;"
-                                 "  padding-right: 19px;"
-                                 "  border: 2px solid rgb(61, 155, 218);"
-                                 "  border-radius: 3px;"
-                                 "  background: rgb(255, 255, 255);"
-                                 "  selection-background-color: rgb(61, 155, 218);"
-                                 "} "
-                                 "QToolButton { "
-                                 "  border: none; "
-                                 "  padding: 0px;"
-                                 "}"
-                                 );
-
-            m_searchEdit->setStyleSheet(ss);
-        }
     }
 
     return QWidget::eventFilter(object, event);
@@ -444,6 +431,11 @@ void NoteWidget::resetNoteWidget()
     m_noteCounter = 0;
 
     emit noteSelectionChanged(QModelIndex(), QModelIndex());
+}
+
+void NoteWidget::updateNoteCount()
+{
+   m_noteCountView->setText(QString("Number of Notes : %1").arg(m_proxyModel->rowCount()));
 }
 
 void NoteWidget::setFocusOnCurrentNote()
@@ -563,7 +555,6 @@ void NoteWidget::deleteCurrentNote()
                 }
             }
         }else{
-
             if(m_noteModel->rowCount() > 1){
                 // update the index of the selected note before searching
                 QModelIndex currentIndexInSource = m_proxyModel->mapToSource(m_currentSelectedNoteProxy);
@@ -600,29 +591,15 @@ void NoteWidget::onClearButtonClicked()
     m_selectedNoteBeforeSearchingInSource = QModelIndex();
 }
 
-void NoteWidget::onTrashButtonPressed()
-{
-    m_trashButton->setIcon(QIcon(":/images/trashCan_Pressed.png"));
-}
-
 void NoteWidget::onTrashButtonClicked()
 {
-    m_trashButton->setIcon(QIcon(":/images/trashCan_Regular.png"));
-
     m_trashButton->blockSignals(true);
     deleteCurrentNote();
     m_trashButton->blockSignals(false);
 }
 
-void NoteWidget::onNewNoteButtonPressed()
-{
-    m_newNoteButton->setIcon(QIcon(":/images/newNote_Pressed.png"));
-}
-
 void NoteWidget::onNewNoteButtonClicked()
 {
-    m_newNoteButton->setIcon(QIcon(":/images/newNote_Regular.png"));
-
     if(!m_searchEdit->text().isEmpty()){
         m_noteView->setAnimationEnabled(false);
         clearSearch();

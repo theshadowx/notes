@@ -49,6 +49,8 @@ private:
     QPushButton*           m_trashButton;
     QToolButton*           m_clearButton;
 
+    QLineEdit*             m_noteCountView;
+
     NoteView*              m_noteView;
     NoteModel*             m_noteModel;
     NoteModel*             m_deletedNotesModel;
@@ -69,6 +71,7 @@ private:
     void setupSearchEdit();
     void setupNewNoteButtonAndTrahButton();
     void setupConnections();
+    void setupStylesheet();
 
     void selectNote(const QModelIndex& noteIndex);
     void selectFirstNote();
@@ -89,14 +92,13 @@ public slots:
     void createNewNote();
     void deleteCurrentNote();
     void onClearButtonClicked();
-    void onTrashButtonPressed();
     void onTrashButtonClicked();
-    void onNewNoteButtonPressed();
     void onNewNoteButtonClicked();
     void onNotePressed(const QModelIndex &index);
     void onSearchEditTextChanged(const QString& keyword);
     void loadNotes(QList<NoteData*>& noteList);
     void resetNoteWidget();
+    void updateNoteCount();
 
 signals:
     void searchCleared();

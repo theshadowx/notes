@@ -20,11 +20,6 @@ environment:
     qt: 5.6
     compiler: msvc2015_64
 
-  - name: win64_57
-    platformEnv: amd64
-    qt: 5.7
-    compiler: msvc2015_64
-
   # MinGW
   - name: win32_56
     platformEnv: mingw

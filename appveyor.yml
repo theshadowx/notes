@@ -3,35 +3,53 @@ version: '1.0.0-{Build}'
 
 environment:
   matrix:
-  # MSVC x86
-  - name: win32_56
+  # MSVC x86------------------------------------
+  - name : msvc_win32_513
     platformEnv: amd64_x86
-    qt: 5.6
-    compiler: msvc2015
+    qt: 5.13
+    compiler: msvc2017
 
-  - name: win32_57
+  - name : msvc_win32_512
     platformEnv: amd64_x86
-    qt: 5.7
-    compiler: msvc2015
+    qt: 5.12.5
+    compiler: msvc2017
 
-  # MSVC x64
-  - name: win64_56
+  # MSVC x64------------------------------------
+  - name : msvc_win64_513
     platformEnv: amd64
-    qt: 5.6
-    compiler: msvc2015_64
+    qt: 5.13
+    compiler: msvc2017_64
+    
+  - name : msvc_win64_512
+    platformEnv: amd64
+    qt: 5.12.5
+    compiler: msvc2017_64
 
-  # MinGW
-  - name: win32_56
+  # MinGW x32-----------------------------------
+  - name: mingw_win32_513
     platformEnv: mingw
-    qt: 5.6
-    compiler: mingw49_32
-    tools: mingw492_32
-
-  - name: win32_57
+    qt: 5.13
+    compiler: mingw73_32
+    tools: mingw73_32
+    
+  - name: mingw_win32_512
     platformEnv: mingw
-    qt: 5.7
-    compiler: mingw53_32
-    tools: mingw530_32
+    qt: 5.12.5
+    compiler: mingw73_32
+    tools: mingw73_32
+    
+  # MinGW x64-----------------------------------
+  - name: mingw_win64_513
+    platformEnv: mingw
+    qt: 5.13
+    compiler: mingw73_64
+    tools: mingw73_64
+    
+  - name: mingw_win64_512
+    platformEnv: mingw
+    qt: 5.12.5
+    compiler: mingw73_64
+    tools: mingw73_64
 
 configuration: Release
 
@@ -48,7 +66,9 @@ install:
   - set PATH=C:\\Program Files (x86)\\Inno Setup 5;%PATH%
   - if %platformEnv%==mingw set PATH=C:\Qt\Tools\%tools%\bin;%PATH%
   - set PATH=C:\Qt\%qt%\%compiler%\bin;%PATH%
-  - if not %platformEnv%==mingw call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %platformEnv%
+  - if %platformEnv%==amd64_32  call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - if %platformEnv%==amd64     call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+
 
 build_script:
   - cd C:\ci\notes\src
@@ -57,10 +77,10 @@ build_script:
   - if not %platformEnv%==mingw (nmake install) else (mingw32-make install)
   - cd C:\ci\notes\bin
   - windeployqt .
-  - if %compiler%==msvc2015 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll" .
-  - if %compiler%==msvc2015 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll" .
-  - if %compiler%==msvc2015_64 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll" .
-  - if %compiler%==msvc2015_64 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\vcruntime140.dll" .
+#  - if %compiler%==msvc2017 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll" .
+#  - if %compiler%==msvc2017 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll" .
+#  - if %compiler%==msvc2017_64 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll" .
+#  - if %compiler%==msvc2017_64 copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\vcruntime140.dll" .
   - iscc C:\ci\notes\packaging\windows\Notes_Inno_Script.iss
   - cd C:\ci\notes\installer
   - dir
